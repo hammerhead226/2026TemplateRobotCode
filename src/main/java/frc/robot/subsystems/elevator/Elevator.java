@@ -126,9 +126,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setPositionExtend(double position, double velocity) {
-    elevator.setPositionSetpoint(
-        position,
-        elevatorFFModel.calculate(LinearVelocity.ofBaseUnits(velocity, InchesPerSecond)).in(Volts));
+    elevator.setPositionSetpoint(position, elevatorFFModel.calculate(velocity));
   }
 
   public void elevatorStop() {

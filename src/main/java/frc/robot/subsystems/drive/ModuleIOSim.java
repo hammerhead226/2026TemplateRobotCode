@@ -1,4 +1,4 @@
-// Copyright 2021-2024 FRC 6328
+// Copyright 2021-2025 FRC 6328
 // http://github.com/Mechanical-Advantage
 //
 // This program is free software; you can redistribute it and/or
@@ -13,8 +13,9 @@
 
 package frc.robot.subsystems.drive;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -23,7 +24,6 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.constants.SubsystemConstants;
 
 /**
  * Physics sim implementation of module IO. The sim models are configured using a set of module
@@ -36,7 +36,7 @@ public class ModuleIOSim implements ModuleIO {
   private static final double DRIVE_KS = 0.0;
   private static final double DRIVE_KV_ROT =
       0.91035; // Same units as TunerConstants: (volt * secs) / rotation
-  private static final double DRIVE_KV = 1 / Units.rotationsToRadians(1.0 / DRIVE_KV_ROT);
+  private static final double DRIVE_KV = 1.0 / Units.rotationsToRadians(1.0 / DRIVE_KV_ROT);
   private static final double TURN_KP = 8.0;
   private static final double TURN_KD = 0.0;
   private static final DCMotor DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);
@@ -53,7 +53,9 @@ public class ModuleIOSim implements ModuleIO {
   private double driveAppliedVolts = 0.0;
   private double turnAppliedVolts = 0.0;
 
-  public ModuleIOSim(SwerveModuleConstants constants) {
+  public ModuleIOSim(
+      SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+          constants) {
     // Create drive and turn sim models
     driveSim =
         new DCMotorSim(
@@ -88,8 +90,8 @@ public class ModuleIOSim implements ModuleIO {
     // Update simulation state
     driveSim.setInputVoltage(MathUtil.clamp(driveAppliedVolts, -12.0, 12.0));
     turnSim.setInputVoltage(MathUtil.clamp(turnAppliedVolts, -12.0, 12.0));
-    driveSim.update(SubsystemConstants.LOOP_PERIOD_SECONDS);
-    turnSim.update(SubsystemConstants.LOOP_PERIOD_SECONDS);
+    driveSim.update(0.02);
+    turnSim.update(0.02);
 
     // Update drive inputs
     inputs.driveConnected = true;

@@ -4,12 +4,9 @@
 
 package frc.robot.subsystems.arms;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.Volts;
-
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -103,11 +100,8 @@ public class Arm extends SubsystemBase {
     // positionDegs = MathUtil.clamp(positionDegs, 33, 120);
     arm.setPositionSetpointDegs(
         positionDegs,
-        armFFModel
-            .calculate(
-                Angle.ofBaseUnits(positionDegs, Degrees),
-                AngularVelocity.ofBaseUnits(velocityDegsPerSec, DegreesPerSecond))
-            .in(Volts));
+        armFFModel.calculate(
+            Units.degreesToRadians(positionDegs), Units.degreesToRadians(velocityDegsPerSec)));
   }
 
   public void armStop() {

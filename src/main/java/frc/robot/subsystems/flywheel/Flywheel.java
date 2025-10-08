@@ -82,8 +82,7 @@ public class Flywheel extends SubsystemBase {
     io.setVelocity(
         velocityRadPerSec,
         ffModel
-            .calculate(AngularVelocity.ofBaseUnits(velocityRadPerSec, RadiansPerSecond))
-            .in(Volts));
+            .calculate(velocityRadPerSec));
 
     // Log flywheel setpoint
     Logger.recordOutput("Flywheel/SetpointRPM", velocityRPM);

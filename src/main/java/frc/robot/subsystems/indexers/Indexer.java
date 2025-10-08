@@ -99,8 +99,8 @@ public class Indexer extends SubsystemBase {
     indexer.setPositionSetpoint(
         indexerCurrentStateRotations.position * 360,
         ff.calculate(
-                LinearVelocity.ofBaseUnits(indexerCurrentStateRotations.velocity, InchesPerSecond))
-            .in(Volts));
+                indexerCurrentStateRotations.velocity) // in inches... I think? - Devin
+            );
 
     Logger.processInputs("Indexer", iInputs);
   }
