@@ -20,13 +20,6 @@ public final class SubsystemConstants {
   public static final String CANBUS = "CAN Bus 2";
   public static final double LOOP_PERIOD_SECONDS = 0.02;
 
-  public static class IntakeConstants {
-    public static final double CURRENT_LIMIT = 40.0;
-    public static final boolean CURRENT_LIMIT_ENABLED = true;
-  }
-
-  public static final class shooterConstants {}
-
   public static class ElevatorConstants {
     public static final double CURRENT_LIMIT = 40.0;
     public static final boolean CURRENT_LIMIT_ENABLED = true;
@@ -51,13 +44,6 @@ public final class SubsystemConstants {
 
     public static final double ARM_ZERO_ANGLE = 0;
     public static final double STOW_SETPOINT_DEG = 0;
-  }
-
-  public static class LEDConstants {
-    public static final double COLOR_BLUE = 0.87;
-    public static final double COLOR_RED = 0.61;
-    public static final double COLOR_YELLOW = 0.66;
-    public static final double COLOR_VIOLET = 0.91;
   }
 
   public static enum LED_STATE {
