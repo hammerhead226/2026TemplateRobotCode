@@ -34,9 +34,7 @@ public class Vision extends SubsystemBase {
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
-
   private final Alert[] disconnectedAlerts;
-  private static final double POSE_BUFFER_SIZE_SECONDS = 1.5;
 
   public Vision(VisionConsumer consumer, VisionIO... io) {
     this.consumer = consumer;
@@ -182,10 +180,6 @@ public class Vision extends SubsystemBase {
         "Vision/Summary/RobotPosesRejected",
         allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
   }
-
-  // ----
-
-  // rejectyiong old posiutions
 
   @FunctionalInterface
   public static interface VisionConsumer {
