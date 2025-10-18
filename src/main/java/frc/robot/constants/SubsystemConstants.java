@@ -31,6 +31,10 @@ public final class SubsystemConstants {
     public static final double CURRENT_LIMIT = 40.0;
     public static final boolean CURRENT_LIMIT_ENABLED = true;
 
+    // the circumerfence of the sprocket that actually touches and drives the elevator chain
+    // in 2025 22t 1/2* Hen Bore Hub 25 Chain Sprocket (217-2640) was 1.751 * Math.PI
+    public static final double SPROCKET_CIRCUMFERENCE_INCH = 1.751 * Math.PI; 
+
     public static final double RETRACT_SETPOINT_INCH = 0;
     public static final double EXTEND_SETPOINT_INCH = 0;
     public static final double DEFAULT_THRESHOLD = 1;

@@ -58,12 +58,12 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     inputs.elevatorPositionInch =
         Conversions.motorRotToInches(
             elevatorPosition.getValueAsDouble(),
-            5.97,
+            SubsystemConstants.ElevatorConstants.SPROCKET_CIRCUMFERENCE_INCH,
             SubsystemConstants.ElevatorConstants.ELEVATOR_GEAR_RATIO);
     inputs.elevatorVelocityInchesPerSecond =
         Conversions.motorRotToInches(
             elevatorVelocity.getValueAsDouble() * 60.,
-            5.97,
+            SubsystemConstants.ElevatorConstants.SPROCKET_CIRCUMFERENCE_INCH,
             SubsystemConstants.ElevatorConstants.ELEVATOR_GEAR_RATIO);
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
     inputs.currentAmps = currentAmps.getValueAsDouble();
@@ -81,7 +81,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     leader.setControl(
         new PositionVoltage(
             Conversions.inchesToMotorRot(
-                position, 5.97, SubsystemConstants.ElevatorConstants.ELEVATOR_GEAR_RATIO)));
+                position, SubsystemConstants.ElevatorConstants.SPROCKET_CIRCUMFERENCE_INCH, SubsystemConstants.ElevatorConstants.ELEVATOR_GEAR_RATIO)));
   }
 
   @Override
