@@ -45,9 +45,9 @@ public final class SubsystemConstants {
     public static final double ARM_ZERO_ANGLE = 0;
     public static final double STOW_SETPOINT_DEG = 0;
   }
-  public static final class pathConstants{
-    public static final double DEFAULT_VEL = 2.5; // default velocity
-    public static final double DEFAULT_ACC = 2.5; // default acceleration
+  public static final class PathConstants{
+    public static final double DEFAULT_VEL = 5; // default velocity
+    public static final double DEFAULT_ACC = 5; // default acceleration
   }
 
   public static enum LED_STATE {

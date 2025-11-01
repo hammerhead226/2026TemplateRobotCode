@@ -29,7 +29,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.onTheFlyPath;
+import frc.robot.commands.OnTheFlyPath;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -70,8 +70,8 @@ public class RobotContainer {
 
   Pose2d targetPoseTest =
     new Pose2d( 
-      Units.inchesToMeters(33.526),
-      Units.inchesToMeters(291.176),
+      Units.inchesToMeters(31.526),
+      Units.inchesToMeters(297.176),
       Rotation2d.fromDegrees(90 - 144.011)
       );
 
@@ -203,7 +203,7 @@ public class RobotContainer {
     controller
         .a()
         .whileTrue(
-           new onTheFlyPath(drive,  targetPoseTest, drive.getRotation()) 
+           new OnTheFlyPath(drive,  targetPoseTest, drive.getRotation()) 
         );
         
   }
