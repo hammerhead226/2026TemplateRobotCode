@@ -77,7 +77,7 @@ public class OnTheFlyPath extends Command {
         (targetPose.getTranslation());
         pathCommand.execute();
 
-        if(driverController.getRightTriggerAxis()>0.5 || driverController.getLeftTriggerAxis()>0.5){
+        if(driverController.getLeftX()>0.5 || driverController.getLeftY()>0.5){
             pathCommand.end(true);
         }
         
@@ -85,10 +85,12 @@ public class OnTheFlyPath extends Command {
 
     public void end (boolean interrupted) {
         drive.stop();
+        
 
         if(distanceToTarget<=Units.inchesToMeters(4)){
             drive.stop();
         }
+
     }
     public boolean isFinished() {
         return distanceToTarget<=Units.inchesToMeters(4);
