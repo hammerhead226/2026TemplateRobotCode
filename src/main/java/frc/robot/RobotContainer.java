@@ -55,6 +55,8 @@ import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.ControlsUtil;
 import frc.robot.util.FieldMirroring;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -72,6 +74,7 @@ public class RobotContainer {
   private final ObjectDetection object;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
+  PPHolonomicDriveController baseController;
 
   Pose2d targetPoseTest =
     new Pose2d( 
@@ -228,8 +231,8 @@ public class RobotContainer {
 
     controller
         .a()
-        .whileTrue(
-           new OnTheFlyPath(drive,  targetPoseTest, drive.getRotation()) 
+        .onTrue(
+           new OnTheFlyPath(drive,  targetPoseTest, drive.getRotation(), baseController, controller) 
         );
         
   }
