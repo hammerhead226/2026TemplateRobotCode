@@ -1,18 +1,23 @@
 package frc.robot.commands;
 
+import frc.robot.constants.SubsystemConstants;
 import frc.robot.subsystems.drive.Drive;
 import edu.wpi.first.math.geometry.Pose2d;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.Command;
 
 
 
-public class onTheFlyPath{
+
+public class onTheFlyPath extends Command {
 
     private final Drive drive; 
     Pose2d startPose;
@@ -20,6 +25,10 @@ public class onTheFlyPath{
     private final Rotation2d goalAngle;
     private final double vel;
     private final double acc;
+    boolean Finished; 
+    BooleanSupplier continuePath;
+    Command pathCommand;
+    double distanceToTarget;
 
 
     public onTheFlyPath(Drive drive, Pose2d startPose, Pose2d targetPose, Rotation2d goalAngle, double vel, double acc) { 
@@ -35,21 +44,38 @@ public class onTheFlyPath{
         this.startPose = startPose;
         this.targetPose = targetPose; 
         this.goalAngle = goalAngle;  
-        this.vel = 2.5; // default velocity
-        this.acc = 2.5; // default acceleration
+        this.vel = SubsystemConstants.pathConstants.DEFAULT_VEL; // default velocity
+        this.acc = SubsystemConstants.pathConstants.DEFAULT_ACC; // default acceleration
     }
       
     public void initialize() {
-        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
-            new Pose2d (drive.getPose().getX(), drive.getPose().getY(), drive.getRotation()),
-            new Pose2d (targetPose.getX(), targetPose.getY(), goalAngle));
+        
+        PathConstraints constraints = 
+        new PathConstraints(vel, acc, Math.toRadians(180), Math.toRadians(200)); 
+         pathCommand = AutoBuilder.pathfindToPose(targetPose, constraints);
+         pathCommand.initialize();
 
-        PathConstraints constraints = new PathConstraints(vel, acc, Math.toRadians(100), Math.toRadians(100)); 
-
-        PathPlannerPath path = new PathPlannerPath(waypoints, constraints, null,
-         new GoalEndState(0.0, Rotation2d.fromDegrees(0.0)));
+        
         
     }
+    
+    public void execute() {
+        distanceToTarget = drive.getPose()
+        .getTranslation()
+        .getDistance
+        (targetPose.getTranslation());
+        pathCommand.execute();
+        
+    }   
 
+    public void end (boolean interrupted) {
+        drive.stop();
 
+        if(distanceToTarget<=Units.inchesToMeters(4)){
+            drive.stop();
+        }
+    }
+    public boolean isFinished() {
+        return distanceToTarget<=Units.inchesToMeters(4);
+    }
 }
