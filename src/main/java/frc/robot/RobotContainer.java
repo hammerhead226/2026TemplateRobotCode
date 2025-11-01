@@ -20,6 +20,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -27,6 +28,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.drive.JoystickDrive;
+import frc.robot.commands.drive.JoystickDriveAtAngle;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -47,6 +50,8 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.util.ControlsUtil;
+import frc.robot.util.FieldMirroring;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -171,12 +176,33 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    // deadband and sqaure inputs for better control
     drive.setDefaultCommand(
-        DriveCommands.joystickDrive(
+        new JoystickDrive(
             drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            () ->
+                ControlsUtil.squareNorm(
+                    ControlsUtil.applyDeadband(
+                        new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
+            () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
+
+    // example usage of joystick drive at angle
+    // drive.setDefaultCommand(
+    //     new JoystickDriveAtAngle(
+    //         drive,
+    //         () ->
+    //             ControlsUtil.squareNorm(
+    //                 ControlsUtil.applyDeadband(
+    //                     new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
+    //         () -> {
+    //           double deadband = 0.4;
+    //           if (Math.hypot(controller.getRightX(), controller.getRightY()) <= deadband) {
+    //             return Rotation2d.kZero;
+    //           }
+    //           return new Rotation2d(-controller.getRightY(), -controller.getRightX())
+    //               .plus(FieldMirroring.driverStationFacing());
+    //         }));
+    
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
         .b()
