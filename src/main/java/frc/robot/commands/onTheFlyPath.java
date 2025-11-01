@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 public class onTheFlyPath extends Command {
 
     private final Drive drive; 
-    Pose2d startPose;
     Pose2d targetPose;
     private final Rotation2d goalAngle;
     private final double vel;
@@ -31,17 +30,15 @@ public class onTheFlyPath extends Command {
     double distanceToTarget;
 
 
-    public onTheFlyPath(Drive drive, Pose2d startPose, Pose2d targetPose, Rotation2d goalAngle, double vel, double acc) { 
+    public onTheFlyPath(Drive drive,  Pose2d targetPose, Rotation2d goalAngle, double vel, double acc) { 
         this.drive = drive;
-        this.startPose = startPose;
         this.targetPose = targetPose; 
         this.goalAngle = goalAngle;  
         this.vel = vel;
         this.acc = acc;
     }
-    public onTheFlyPath(Drive drive, Pose2d startPose, Pose2d targetPose, Rotation2d goalAngle) { 
+    public onTheFlyPath(Drive drive,  Pose2d targetPose, Rotation2d goalAngle) { 
         this.drive = drive;
-        this.startPose = startPose;
         this.targetPose = targetPose; 
         this.goalAngle = goalAngle;  
         this.vel = SubsystemConstants.pathConstants.DEFAULT_VEL; // default velocity
