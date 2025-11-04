@@ -15,6 +15,8 @@
 
 package frc.robot.constants;
 
+import com.pathplanner.lib.path.PathConstraints;
+
 public final class SubsystemConstants {
 
   public static final String CANBUS = "CAN Bus 2";
@@ -46,8 +48,12 @@ public final class SubsystemConstants {
     public static final double STOW_SETPOINT_DEG = 0;
   }
   public static final class PathConstants{
-    public static final double DEFAULT_VEL = 5; // default velocity
-    public static final double DEFAULT_ACC = 5; // default acceleration
+    public static final PathConstraints DEFAULT_PATH_CONSTRAINTS = new PathConstraints(
+      5, // m/s
+      5, // m/s^2
+      Math.toRadians(180), // rad/s
+      Math.toRadians(200) // rad/s^2
+    );
   }
 
   public static enum LED_STATE {

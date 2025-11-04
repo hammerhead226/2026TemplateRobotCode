@@ -32,7 +32,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.drive.JoystickDrive;
 import frc.robot.commands.drive.JoystickDriveAtAngle;
-import frc.robot.commands.OnTheFlyPath;
+import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -54,7 +54,6 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.ControlsUtil;
-import frc.robot.util.FieldMirroring;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -229,7 +228,7 @@ public class RobotContainer {
     controller
         .a()
         .whileTrue(
-           new OnTheFlyPath(drive,  targetPoseTest, drive.getRotation()) 
+           new PathfindToPose(drive, targetPoseTest, drive.getRotation()).untilTrajectoryTimeout()
         );
         
   }
