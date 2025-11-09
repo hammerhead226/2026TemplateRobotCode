@@ -120,6 +120,13 @@ public class VisionIOLimelight implements VisionIO {
     for (var rawSample : megatag2Subscriber.readQueue()) {
       if (rawSample.value.length == 0) continue;
       for (int i = 11; i < rawSample.value.length; i += 7) {
+        fiducials.add(new Fiducial(
+          (int) rawSample.value[i],
+          rawSample.value[i+1],
+          rawSample.value[i+2],
+          rawSample.value[i+3]
+        ));
+
         tagIds.add((int) rawSample.value[i]);
       }
       poseObservations.add(
