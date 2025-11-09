@@ -18,9 +18,12 @@ import static frc.robot.constants.VisionConstants.*;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.photonvision.PhotonCamera;
 
@@ -46,7 +49,7 @@ public class VisionIOPhotonVision implements VisionIO {
 
     // Read new camera observations
     Set<Short> tagIds = new HashSet<>();
-    List<Fiducial> fiducials = new LinkedList<>();
+    Map<Integer, Fiducial> fiducials = new HashMap<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
     for (var result : camera.getAllUnreadResults()) {
       // Update latest target observation
@@ -78,7 +81,7 @@ public class VisionIOPhotonVision implements VisionIO {
         tagIds.addAll(multitagResult.fiducialIDsUsed);
 
         for (var target : result.targets) {
-          fiducials.add(new Fiducial(target.fiducialId, target.getYaw(), target.getPitch(), target.getArea()));
+          fiducials.put(target.fiducialId, new Fiducial(target.fiducialId, target.getYaw(), target.getPitch(), target.getArea()));
         }
 
         // Add observation
@@ -107,7 +110,7 @@ public class VisionIOPhotonVision implements VisionIO {
           // Add tag ID
           tagIds.add((short) target.fiducialId);
 
-          fiducials.add(new Fiducial(target.fiducialId, target.getYaw(), target.getPitch(), target.getArea()));
+          fiducials.put(target.fiducialId, new Fiducial(target.fiducialId, target.getYaw(), target.getPitch(), target.getArea()));
 
           // Add observation
           poseObservations.add(
@@ -129,14 +132,15 @@ public class VisionIOPhotonVision implements VisionIO {
     }
 
     // Save per-fiducial metrics to inputs objects
+    int i = 0;
     inputs.fiducials = new Fiducial[fiducials.size()];
-    for (int i = 0; i < fiducials.size(); i++) {
-      inputs.fiducials[i] = fiducials.get(i);
+    for (Fiducial fiducial : fiducials.values()) {
+      inputs.fiducials[i++] = fiducial;
     }
 
     // Save tag IDs to inputs objects
     inputs.tagIds = new int[tagIds.size()];
-    int i = 0;
+    i = 0;
     for (int id : tagIds) {
       inputs.tagIds[i++] = id;
     }

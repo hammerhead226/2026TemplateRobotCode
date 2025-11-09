@@ -22,9 +22,12 @@ import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
+
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -82,18 +85,19 @@ public class VisionIOLimelight implements VisionIO {
 
     // Read new pose observations from NetworkTables
     Set<Integer> tagIds = new HashSet<>();
-    List<Fiducial> fiducials = new LinkedList<>();
+    Map<Integer, Fiducial> fiducials = new HashMap<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
     for (var rawSample : megatag1Subscriber.readQueue()) {
       if (rawSample.value.length == 0) continue;
       for (int i = 11; i < rawSample.value.length; i += 7) {
         // https://docs.limelightvision.io/docs/docs-limelight/software-change-log#include-per-fiducial-metrics-in-botpose-botpose_wpiblue-and-botpose_wpired
-        fiducials.add(new Fiducial(
-          (int) rawSample.value[i],
-          rawSample.value[i+1],
-          rawSample.value[i+2],
-          rawSample.value[i+3]
-        ));
+        fiducials.put((int) rawSample.value[i], new Fiducial(
+            (int) rawSample.value[i],
+            rawSample.value[i+1],
+            rawSample.value[i+2],
+            rawSample.value[i+3]
+          )
+        );
 
         tagIds.add((int) rawSample.value[i]);
       }
@@ -120,12 +124,14 @@ public class VisionIOLimelight implements VisionIO {
     for (var rawSample : megatag2Subscriber.readQueue()) {
       if (rawSample.value.length == 0) continue;
       for (int i = 11; i < rawSample.value.length; i += 7) {
-        fiducials.add(new Fiducial(
-          (int) rawSample.value[i],
-          rawSample.value[i+1],
-          rawSample.value[i+2],
-          rawSample.value[i+3]
-        ));
+        // https://docs.limelightvision.io/docs/docs-limelight/software-change-log#include-per-fiducial-metrics-in-botpose-botpose_wpiblue-and-botpose_wpired
+        fiducials.put((int) rawSample.value[i], new Fiducial(
+            (int) rawSample.value[i],
+            rawSample.value[i+1],
+            rawSample.value[i+2],
+            rawSample.value[i+3]
+          )
+        );
 
         tagIds.add((int) rawSample.value[i]);
       }
@@ -157,14 +163,15 @@ public class VisionIOLimelight implements VisionIO {
     }
 
     // Save per-fiducial metrics to inputs objects
+    int i = 0;
     inputs.fiducials = new Fiducial[fiducials.size()];
-    for (int i = 0; i < fiducials.size(); i++) {
-      inputs.fiducials[i] = fiducials.get(i);
+    for (Fiducial fiducial : fiducials.values()) {
+      inputs.fiducials[i++] = fiducial;
     }
 
     // Save tag IDs to inputs objects
+    i = 0;
     inputs.tagIds = new int[tagIds.size()];
-    int i = 0;
     for (int id : tagIds) {
       inputs.tagIds[i++] = id;
     }
