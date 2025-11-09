@@ -46,6 +46,7 @@ public class VisionIOPhotonVision implements VisionIO {
 
     // Read new camera observations
     Set<Short> tagIds = new HashSet<>();
+    List<Fiducial> fiducials = new LinkedList<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
     for (var result : camera.getAllUnreadResults()) {
       // Update latest target observation
@@ -76,6 +77,10 @@ public class VisionIOPhotonVision implements VisionIO {
         // Add tag IDs
         tagIds.addAll(multitagResult.fiducialIDsUsed);
 
+        for (var target : result.targets) {
+          fiducials.add(new Fiducial(target.fiducialId, target.getYaw(), target.getPitch(), target.getArea()));
+        }
+
         // Add observation
         poseObservations.add(
             new PoseObservation(
@@ -102,6 +107,8 @@ public class VisionIOPhotonVision implements VisionIO {
           // Add tag ID
           tagIds.add((short) target.fiducialId);
 
+          fiducials.add(new Fiducial(target.fiducialId, target.getYaw(), target.getPitch(), target.getArea()));
+
           // Add observation
           poseObservations.add(
               new PoseObservation(
@@ -119,6 +126,12 @@ public class VisionIOPhotonVision implements VisionIO {
     inputs.poseObservations = new PoseObservation[poseObservations.size()];
     for (int i = 0; i < poseObservations.size(); i++) {
       inputs.poseObservations[i] = poseObservations.get(i);
+    }
+
+    // Save per-fiducial metrics to inputs objects
+    inputs.fiducials = new Fiducial[fiducials.size()];
+    for (int i = 0; i < fiducials.size(); i++) {
+      inputs.fiducials[i] = fiducials.get(i);
     }
 
     // Save tag IDs to inputs objects
