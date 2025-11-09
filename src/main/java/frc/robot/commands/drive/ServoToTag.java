@@ -10,6 +10,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO.Fiducial;
 
+// TODO: test
 public class ServoToTag extends Command {
     private final Drive drive;
     private final Vision vision;
@@ -53,7 +54,6 @@ public class ServoToTag extends Command {
 
         double omega = angleController.calculate(lastOkTxRadians);
 
-        // Convert to field relative speeds & send command
         ChassisSpeeds speeds = new ChassisSpeeds(0,0,omega);
         drive.runVelocity(speeds);
     }

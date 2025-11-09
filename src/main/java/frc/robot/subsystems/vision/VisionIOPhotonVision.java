@@ -47,6 +47,8 @@ public class VisionIOPhotonVision implements VisionIO {
   public void updateInputs(VisionIOInputs inputs) {
     inputs.connected = camera.isConnected();
 
+    inputs.robotToCamera = robotToCamera;
+
     // Read new camera observations
     Set<Short> tagIds = new HashSet<>();
     Map<Integer, Fiducial> fiducials = new HashMap<>();

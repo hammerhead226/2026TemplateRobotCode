@@ -16,6 +16,7 @@ package frc.robot.subsystems.vision;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
@@ -40,6 +41,7 @@ public class VisionIOLimelight implements VisionIO {
   private final DoubleSubscriber txSubscriber;
   private final DoubleSubscriber tySubscriber;
   private final DoubleSubscriber hbSubscriber;
+  private final DoubleArraySubscriber robotToCameraSubscriber;
   private final DoubleArraySubscriber megatag1Subscriber;
   private final DoubleArraySubscriber megatag2Subscriber;
 
@@ -57,6 +59,7 @@ public class VisionIOLimelight implements VisionIO {
     txSubscriber = table.getDoubleTopic("tx").subscribe(0.0);
     tySubscriber = table.getDoubleTopic("ty").subscribe(0.0);
     hbSubscriber = table.getDoubleTopic("hb").subscribe(0.0);
+    robotToCameraSubscriber = table.getDoubleArrayTopic("camerapose_robotspace").subscribe(new double[] {});
     megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[] {});
     megatag2Subscriber =
         table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[] {});
@@ -70,6 +73,18 @@ public class VisionIOLimelight implements VisionIO {
 
     // Update heartbeat
     inputs.heartBeat = hbSubscriber.get();
+
+    // Update robotToPose transformation
+    // Arugably an unneeded use of NT, but keeps LimeLight('s web GUI) as the single source of truth
+    double[] robotToCameraRaw = robotToCameraSubscriber.get();
+    if (robotToCameraRaw.length != 0) {
+      inputs.robotToCamera = new Transform3d(
+        robotToCameraRaw[0],
+        robotToCameraRaw[1],
+        robotToCameraRaw[2],
+        new Rotation3d(robotToCameraRaw[3],robotToCameraRaw[4],robotToCameraRaw[5])
+      );
+    }
 
 
     // Update target observation
