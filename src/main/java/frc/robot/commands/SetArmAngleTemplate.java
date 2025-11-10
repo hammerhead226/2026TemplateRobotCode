@@ -7,14 +7,14 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.arms.Arm;
 
-public class setArmAngleTemplate extends Command {
+public class SetArmAngleTemplate extends Command {
   /** Creates a new setArmAngle. */
   private final Arm arm;
 
   private final double setpointDegs;
   private final double thresholdDegs;
 
-  public setArmAngleTemplate(Arm arm, double setpointDegs, double thresholdDegs) {
+  public SetArmAngleTemplate(Arm arm, double setpointDegs, double thresholdDegs) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.arm = arm;
     this.setpointDegs = setpointDegs;
