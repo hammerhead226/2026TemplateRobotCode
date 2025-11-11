@@ -28,7 +28,7 @@ public final class SubsystemConstants {
 
     // the circumerfence of the sprocket that actually touches and drives the elevator chain
     // in 2025 22t 1/2* Hex Bore Hub 25 Chain Sprocket (217-2640) was 5.5
-    public static final double SPROCKET_CIRCUMFERENCE_INCH = 5.5; 
+    public static final double SPROCKET_CIRCUMFERENCE_INCH = 5.5;
 
     public static final double RETRACT_SETPOINT_INCH = 0;
     public static final double EXTEND_SETPOINT_INCH = 0;
@@ -47,13 +47,15 @@ public final class SubsystemConstants {
     public static final double ARM_ZERO_ANGLE = 0;
     public static final double STOW_SETPOINT_DEG = 0;
   }
-  public static final class PathConstants{
-    public static final PathConstraints DEFAULT_PATH_CONSTRAINTS = new PathConstraints(
-      5, // m/s
-      5, // m/s^2
-      Math.toRadians(180), // rad/s
-      Math.toRadians(200) // rad/s^2
-    );
+
+  public static final class PathConstants {
+    public static final PathConstraints DEFAULT_PATH_CONSTRAINTS =
+        new PathConstraints(
+            5, // m/s
+            5, // m/s^2
+            Math.toRadians(180), // rad/s
+            Math.toRadians(200) // rad/s^2
+            );
   }
 
   public static enum LED_STATE {

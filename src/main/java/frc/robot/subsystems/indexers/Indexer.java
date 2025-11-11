@@ -4,12 +4,8 @@
 
 package frc.robot.subsystems.indexers;
 
-import static edu.wpi.first.units.Units.InchesPerSecond;
-import static edu.wpi.first.units.Units.Volts;
-
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -98,9 +94,8 @@ public class Indexer extends SubsystemBase {
 
     indexer.setPositionSetpoint(
         indexerCurrentStateRotations.position * 360,
-        ff.calculate(
-                indexerCurrentStateRotations.velocity) // in inches... I think? - Devin
-            );
+        ff.calculate(indexerCurrentStateRotations.velocity) // in inches... I think? - Devin
+        );
 
     Logger.processInputs("Indexer", iInputs);
   }

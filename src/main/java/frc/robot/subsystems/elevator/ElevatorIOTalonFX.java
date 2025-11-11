@@ -81,7 +81,9 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     leader.setControl(
         new PositionVoltage(
             Conversions.inchesToMotorRot(
-                position, SubsystemConstants.ElevatorConstants.SPROCKET_CIRCUMFERENCE_INCH, SubsystemConstants.ElevatorConstants.ELEVATOR_GEAR_RATIO)));
+                position,
+                SubsystemConstants.ElevatorConstants.SPROCKET_CIRCUMFERENCE_INCH,
+                SubsystemConstants.ElevatorConstants.ELEVATOR_GEAR_RATIO)));
   }
 
   @Override

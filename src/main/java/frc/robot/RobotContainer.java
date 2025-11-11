@@ -26,12 +26,9 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.DriveCommands;
 import frc.robot.commands.drive.JoystickDrive;
-import frc.robot.commands.drive.JoystickDriveAtAngle;
 import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
@@ -54,7 +51,6 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.ControlsUtil;
-
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -73,13 +69,10 @@ public class RobotContainer {
   private final CommandXboxController controller = new CommandXboxController(0);
 
   Pose2d targetPoseTest =
-    new Pose2d( 
-      Units.inchesToMeters(31.526),
-      Units.inchesToMeters(297.176),
-      Rotation2d.fromDegrees(90 - 144.011)
-      );
-
-   
+      new Pose2d(
+          Units.inchesToMeters(31.526),
+          Units.inchesToMeters(297.176),
+          Rotation2d.fromDegrees(90 - 144.011));
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -126,7 +119,13 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        vision = new Vision(drive::addVisionMeasurement, new VisionIOPhotonVisionSim(camera0Name, VisionConstants.robotToCamera0, drive::getPose), new VisionIOPhotonVisionSim(camera1Name, VisionConstants.robotToCamera1, drive::getPose));
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOPhotonVisionSim(
+                    camera0Name, VisionConstants.robotToCamera0, drive::getPose),
+                new VisionIOPhotonVisionSim(
+                    camera1Name, VisionConstants.robotToCamera1, drive::getPose));
         object = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
         flywheel = new Flywheel(new FlywheelIOSim());
 
@@ -213,7 +212,7 @@ public class RobotContainer {
     //           return new Rotation2d(-controller.getRightY(), -controller.getRightX())
     //               .plus(FieldMirroring.driverStationFacing());
     //         }));
-    
+
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
         .b()
@@ -228,9 +227,8 @@ public class RobotContainer {
     controller
         .a()
         .whileTrue(
-           new PathfindToPose(drive, targetPoseTest, drive.getRotation()).untilTrajectoryTimeout()
-        );
-        
+            new PathfindToPose(drive, targetPoseTest, drive.getRotation())
+                .untilTrajectoryTimeout());
   }
 
   /**
