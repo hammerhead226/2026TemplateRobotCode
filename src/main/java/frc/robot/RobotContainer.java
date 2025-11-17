@@ -227,8 +227,8 @@ public class RobotContainer {
 
     controller
         .a()
-        .whileTrue(
-           new PathfindToPose(drive, targetPoseTest, drive.getRotation()).untilTrajectoryTimeout()
+        .onTrue(
+           new PathfindToPose(drive, targetPoseTest, drive.getRotation())
         );
         
   }
