@@ -383,4 +383,8 @@ public class Drive extends SubsystemBase {
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
   }
+
+  public boolean isNear(Translation2d location, double magnitude){
+    return location.getDistance(this.getPose().getTranslation()) < magnitude;
+  }
 }
