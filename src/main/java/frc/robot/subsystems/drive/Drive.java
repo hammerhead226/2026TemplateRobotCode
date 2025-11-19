@@ -52,6 +52,7 @@ import frc.robot.constants.SimConstants;
 import frc.robot.constants.SimConstants.Mode;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.RotationUtil;
 import frc.robot.subsystems.vision.ObjectDetection;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -384,7 +385,17 @@ public class Drive extends SubsystemBase {
     };
   }
 
-  public boolean isNear(Translation2d location, double magnitude){
-    return location.getDistance(this.getPose().getTranslation()) < magnitude;
+  public boolean isNear(Translation2d location, double distanceThresholdMeters) {
+    return location.getDistance(this.getPose().getTranslation()) <= distanceThresholdMeters;
+  }
+
+  public boolean isNear(double xMeters, double yMeters, double distanceThresholdMeters) {
+    double robotXMeters = this.getPose().getX();
+    double robotYMeters = this.getPose().getY();
+    return Math.hypot(robotXMeters-xMeters, robotYMeters-yMeters) <= distanceThresholdMeters;
+  }
+
+  public boolean isNearRotation(Rotation2d rotation, double angleThresholdDegrees) {
+    return Math.abs(RotationUtil.deltaAngleDegrees(this.getPose().getRotation(), rotation)) <= angleThresholdDegrees;
   }
 }
