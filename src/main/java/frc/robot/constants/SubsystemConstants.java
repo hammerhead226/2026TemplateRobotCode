@@ -21,6 +21,7 @@ public final class SubsystemConstants {
 
   public static final String CANBUS = "CAN Bus 2";
   public static final double LOOP_PERIOD_SECONDS = 0.02;
+  public static final boolean TUNING_MODE = false;
 
   public static class ElevatorConstants {
     public static final double CURRENT_LIMIT = 40.0;
@@ -38,14 +39,37 @@ public final class SubsystemConstants {
   }
 
   public static final class ArmConstants {
+    public static final String ARM_STRING = "defaultArm";
     public static final double CURRENT_LIMIT = 35.0;
     public static final boolean CURRENT_LIMIT_ENABLED = true;
+
+    public static final double MAX_ACCELERATION_DEG_PER_SEC_SQUARED = 1;
+    public static final double MAX_VELOCITY_DEG_PER_SEC = 1;
+
+    public static final double ARM_INITIAL_POSITION = 0;
+    public static final double ARM_DEFAULT_POSITION = 0;
+   
+
+
+    //TODO: After tuning on Elastic, update these values:
+    //Note: These are real constants and apply to the physical robot.
+    public static final class TuningConstants {
+
+    public static final double kP = 0;
+    public static final double kI = 0;
+    public static final double kS = 0;
+    public static final double kG = 0;
+    public static final double kV = 0;
+    public static final double kA = 0;
+    public static final double kD = 0;
+
+    }
 
     public static final double DEFAULT_THRESHOLD = 1;
     public static final double ARM_GEAR_RATIO = 1;
 
-    public static final double ARM_ZERO_ANGLE = 0;
-    public static final double STOW_SETPOINT_DEG = 0;
+    public static final double LOWER_BOUND = 30;
+    public static final double HIGHER_BOUND = 120;
   }
   public static final class PathConstants{
     public static final PathConstraints DEFAULT_PATH_CONSTRAINTS = new PathConstraints(

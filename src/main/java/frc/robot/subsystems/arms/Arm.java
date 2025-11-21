@@ -4,28 +4,37 @@
 
 package frc.robot.subsystems.arms;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.SubsystemConstants;
+import frc.robot.constants.SubsystemConstants.ArmConstants.TuningConstants;
+import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
+import frc.robot.constants.SubsystemConstants.ArmConstants;
 
 public class Arm extends SubsystemBase {
+  private static final String armName = ArmConstants.ARM_STRING;
   private final ArmIO arm;
-  private final ArmIOInputsAutoLogged pInputs = new ArmIOInputsAutoLogged();
+  private final ArmIOInputsAutoLogged armInputs = new ArmIOInputsAutoLogged();
 
-  private static double kP;
-  private static double kG;
-  private static double kV;
+  private static LoggedTunableNumber kP = new LoggedTunableNumber("Chico/kP");
+  private static LoggedTunableNumber kG = new LoggedTunableNumber(armName + "/kG");
+  private static LoggedTunableNumber kV = new LoggedTunableNumber(armName + "/kV");
+  private static LoggedTunableNumber kA = new LoggedTunableNumber(armName + "/kA");
+  private static LoggedTunableNumber kS = new LoggedTunableNumber(armName + "/kS");
+  private static LoggedTunableNumber kI = new LoggedTunableNumber(armName + "/kI");
+  private static LoggedTunableNumber kD = new LoggedTunableNumber(armName + "/kD");
 
-  private static double maxVelocityDegPerSec;
-  private static double maxAccelerationDegPerSecSquared;
+  private static LoggedTunableNumber maxVelocityDegPerSec = new LoggedTunableNumber(armName + "/maxVelocityDegPerSec",
+      ArmConstants.MAX_VELOCITY_DEG_PER_SEC);
+  private static LoggedTunableNumber maxAccelerationDegPerSecSquared = new LoggedTunableNumber(
+      armName + "/maxAccelerationDegPerSecSquared", ArmConstants.MAX_ACCELERATION_DEG_PER_SEC_SQUARED);
 
   private TrapezoidProfile armProfile;
   private TrapezoidProfile.Constraints armConstraints;
@@ -42,42 +51,51 @@ public class Arm extends SubsystemBase {
     this.arm = arm;
     switch (SimConstants.currentMode) {
       case REAL:
-        kG = 0.29;
-        kV = 1;
-        kP = 1.123;
+        kG.initDefault(TuningConstants.kP);
+        kV.initDefault(TuningConstants.kV);
+        kP.initDefault(TuningConstants.kP);
+        kA.initDefault(TuningConstants.kA);
+        kI.initDefault(TuningConstants.kI);
+        kS.initDefault(TuningConstants.kS);
+        kD.initDefault(TuningConstants.kD);
         break;
       case REPLAY:
-        kG = 0.29;
-        kV = 1;
-        kP = 1.123;
+        kG.initDefault(0);
+        kV.initDefault(0);
+        kP.initDefault(0);
+        kA.initDefault(0);
+        kI.initDefault(0);
+        kS.initDefault(0);
+        kD.initDefault(0);
         break;
       case SIM:
-        kG = 0.29;
-        kV = 1;
-        kP = 1.123;
+        kG.initDefault(0);
+        kV.initDefault(0);
+        kP.initDefault(0);
+        kA.initDefault(0);
+        kI.initDefault(0);
+        kS.initDefault(0);
+        kD.initDefault(0);
         break;
       default:
-        kG = 0.29;
-        kV = 1;
-        kP = 1.123;
+        kG.initDefault(TuningConstants.kP);
+        kV.initDefault(TuningConstants.kV);
+        kP.initDefault(TuningConstants.kP);
+        kA.initDefault(TuningConstants.kA);
+        kI.initDefault(TuningConstants.kI);
+        kS.initDefault(TuningConstants.kS);
+        kD.initDefault(TuningConstants.kD);
         break;
     }
 
-    // CHANGE PER ARM
-    maxVelocityDegPerSec = 1;
-    maxAccelerationDegPerSecSquared = 1;
-    // maxAccelerationDegPerSecSquared = 180;
-
-    armConstraints =
-        new TrapezoidProfile.Constraints(maxVelocityDegPerSec, maxAccelerationDegPerSecSquared);
+    armConstraints = new TrapezoidProfile.Constraints(maxVelocityDegPerSec.get(),
+        maxAccelerationDegPerSecSquared.get());
     armProfile = new TrapezoidProfile(armConstraints);
 
-    // setArmGoal(90);
-    // setArmCurrent(getArmPositionDegs());
     armCurrentStateDegrees = armProfile.calculate(0, armCurrentStateDegrees, armGoalStateDegrees);
 
-    arm.configurePID(kP, 0, 0);
-    armFFModel = new ArmFeedforward(0, kG, kV, 0);
+    arm.configurePID(kP.get(), kI.get(), kD.get());
+    armFFModel = new ArmFeedforward(kS.get(), kG.get(), kV.get(), kA.get());
   }
 
   public void setBrakeMode(boolean bool) {
@@ -85,19 +103,19 @@ public class Arm extends SubsystemBase {
   }
 
   public double getArmPositionDegs() {
-    return pInputs.positionDegs;
+    return armInputs.positionDegs;
   }
 
   public boolean atGoal(double threshold) {
-    return (Math.abs(pInputs.positionDegs - goalDegrees) <= threshold);
+    return (Math.abs(armInputs.positionDegs - goalDegrees) <= threshold);
   }
 
   private double getArmError() {
-    return pInputs.positionSetpointDegs - pInputs.positionDegs;
+    return armInputs.positionSetpointDegs - armInputs.positionDegs;
   }
 
   public void setPositionDegs(double positionDegs, double velocityDegsPerSec) {
-    // positionDegs = MathUtil.clamp(positionDegs, 33, 120);
+    positionDegs = MathUtil.clamp(positionDegs, ArmConstants.LOWER_BOUND, ArmConstants.HIGHER_BOUND);
     arm.setPositionSetpointDegs(
         positionDegs,
         armFFModel.calculate(
@@ -125,18 +143,31 @@ public class Arm extends SubsystemBase {
 
   @Override
   public void periodic() {
-    arm.updateInputs(pInputs);
+    arm.updateInputs(armInputs);
 
-    armCurrentStateDegrees =
-        armProfile.calculate(
-            SubsystemConstants.LOOP_PERIOD_SECONDS, armCurrentStateDegrees, armGoalStateDegrees);
+    armCurrentStateDegrees = armProfile.calculate(
+        SubsystemConstants.LOOP_PERIOD_SECONDS, armCurrentStateDegrees, armGoalStateDegrees);
 
     setPositionDegs(armCurrentStateDegrees.position, armCurrentStateDegrees.velocity);
 
-    Logger.processInputs("Arm", pInputs);
-    Logger.recordOutput("arm error", getArmError());
+    Logger.processInputs("Arm", armInputs);
+    Logger.recordOutput("Arm Error", getArmError());
 
-    Logger.recordOutput("arm goal", goalDegrees);
+    Logger.recordOutput("Arm Goal", goalDegrees);
     // This method will be called once per scheduler run
+
+    updateTunableNumbers();
+
+  }
+
+  private void updateTunableNumbers() {
+    if (kP.hasChanged(hashCode()) || kI.hasChanged(hashCode()) || kD.hasChanged(hashCode())) {
+      arm.configurePID(kP.get(), kI.get(), 0);
+    }
+
+    if (kA.hasChanged(hashCode()) || kS.hasChanged(hashCode()) || kV.hasChanged(hashCode())
+        || kG.hasChanged(hashCode())) {
+      armFFModel = new ArmFeedforward(kS.get(), kG.get(), kV.get(), kA.get());
+    }
   }
 }

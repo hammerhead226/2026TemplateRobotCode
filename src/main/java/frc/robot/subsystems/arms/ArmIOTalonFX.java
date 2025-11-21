@@ -70,11 +70,10 @@ public class ArmIOTalonFX implements ArmIO {
     appliedVolts = leader.getMotorVoltage();
     currentAmps = leader.getStatorCurrent();
 
-    // leader.get
 
-    positionSetpointDegs = SubsystemConstants.ArmConstants.STOW_SETPOINT_DEG;
+    positionSetpointDegs = SubsystemConstants.ArmConstants.ARM_DEFAULT_POSITION;
 
-    Logger.recordOutput("start angle", startAngleDegs);
+    Logger.recordOutput("Starting Angle", startAngleDegs);
 
     pigeon.optimizeBusUtilization();
     leader.optimizeBusUtilization();
@@ -83,20 +82,19 @@ public class ArmIOTalonFX implements ArmIO {
     BaseStatusSignal.setUpdateFrequencyForAll(
         100, leaderPositionDegs, velocityDegsPerSec, appliedVolts, currentAmps, pitch);
 
-    // setBrakeMode(false);
-  }
+      }
 
   @Override
   public void updateInputs(ArmIOInputs inputs) {
     BaseStatusSignal.refreshAll(
         leaderPositionDegs, velocityDegsPerSec, appliedVolts, currentAmps, pitch);
     inputs.gyroConnected = BaseStatusSignal.refreshAll(pitch).equals(StatusCode.OK);
-    inputs.pitch = pitch.getValueAsDouble() + SubsystemConstants.ArmConstants.ARM_ZERO_ANGLE;
+    inputs.pitch = pitch.getValueAsDouble() + SubsystemConstants.ArmConstants.ARM_INITIAL_POSITION;
     inputs.positionDegs =
         Conversions.falconToDegrees(
                 (leaderPositionDegs.getValueAsDouble()),
                 SubsystemConstants.ArmConstants.ARM_GEAR_RATIO)
-            + SubsystemConstants.ArmConstants.ARM_ZERO_ANGLE;
+            + SubsystemConstants.ArmConstants.ARM_INITIAL_POSITION;
 
     inputs.velocityDegsPerSec = velocityDegsPerSec.getValueAsDouble();
     inputs.appliedVolts = appliedVolts.getValueAsDouble();
@@ -125,7 +123,7 @@ public class ArmIOTalonFX implements ArmIO {
             Conversions.degreesToFalcon(
                 positionDegs,
                 SubsystemConstants.ArmConstants
-                    .ARM_GEAR_RATIO))); // CHECK FOR STOW ANGLE (positionDegs - 59)
+                    .ARM_GEAR_RATIO)));
   }
 
   @Override
