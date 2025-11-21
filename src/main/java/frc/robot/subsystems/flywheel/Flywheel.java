@@ -28,14 +28,14 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Flywheel extends SubsystemBase {
-  private final FlywheelIO io;
+  private final FlywheelIO flywheel;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
   private final SimpleMotorFeedforward ffModel;
   private final SysIdRoutine sysId;
 
   /** Creates a new Flywheel. */
-  public Flywheel(FlywheelIO io) {
-    this.io = io;
+  public Flywheel(FlywheelIO flywheel) {
+    this.flywheel = flywheel;
 
     // Switch constants based on mode (the physics simulator is treated as a
     // separate robot with different tuning)
@@ -43,11 +43,11 @@ public class Flywheel extends SubsystemBase {
       case REAL:
       case REPLAY:
         ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        io.configurePID(0.0, 0.0, 0.0);
+        flywheel.configurePID(0.0, 0.0, 0.0);
         break;
       case SIM:
         ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        io.configurePID(0.0, 0.0, 0.0);
+        flywheel.configurePID(0.0, 0.0, 0.0);
         break;
       default:
         ffModel = new SimpleMotorFeedforward(0.0, 0.0);
@@ -67,19 +67,19 @@ public class Flywheel extends SubsystemBase {
 
   @Override
   public void periodic() {
-    io.updateInputs(inputs);
+    flywheel.updateInputs(inputs);
     Logger.processInputs("Flywheel", inputs);
   }
 
   /** Run open loop at the specified voltage. */
   public void runVolts(double volts) {
-    io.setVoltage(volts);
+    flywheel.setVoltage(volts);
   }
 
   /** Run closed loop at the specified velocity. */
   public void runVelocity(double velocityRPM) {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
-    io.setVelocity(
+    flywheel.setVelocity(
         velocityRadPerSec,
         ffModel
             .calculate(velocityRadPerSec));
@@ -104,7 +104,7 @@ public class Flywheel extends SubsystemBase {
 
   /** Stops the flywheel. */
   public void stop() {
-    io.stop();
+    flywheel.stop();
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */

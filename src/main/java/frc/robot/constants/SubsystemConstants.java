@@ -38,6 +38,10 @@ public final class SubsystemConstants {
     public static final double ELEVATOR_GEAR_RATIO = 1;
   }
 
+  public static class FlywheelConstants {
+    public static final double GEAR_RATIO = 1.5;
+  }
+
   public static final class ArmConstants {
     public static final String ARM_STRING = "defaultArm";
     public static final double CURRENT_LIMIT = 35.0;
