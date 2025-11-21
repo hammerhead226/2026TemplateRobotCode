@@ -225,13 +225,30 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    controller
-        .a()
-        .onTrue(
-           new PathfindToPose(drive, targetPoseTest, drive.getRotation())
-        );
-        
+                controller.a().onTrue(
+    new PathfindToPose(
+        drive,
+        targetPoseTest,
+        drive.getRotation(),
+        controller,
+        () -> ControlsUtil.squareNorm(
+                ControlsUtil.applyDeadband(-controller.getLeftY())
+        ),
+        () -> ControlsUtil.squareNorm(
+                ControlsUtil.applyDeadband(-controller.getLeftX())
+        ),
+        () -> ControlsUtil.squareNorm(
+                ControlsUtil.applyDeadband(controller.getRightX())
+        )
+    )
+);                
   }
+
+//   () ->
+//                 ControlsUtil.squareNorm(
+//                     ControlsUtil.applyDeadband(
+//                         new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
+//             () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
