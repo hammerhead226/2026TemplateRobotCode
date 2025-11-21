@@ -8,7 +8,10 @@ public class RobotMap {
 
   public static class indexerIDs {}
 
-  public static class indexderIDs {}
+  public static class flywheelIDs {
+    public static final int DEFAULT_FOLLOWER_ID = 0;
+    public static final int DEFAULT_LEADER_ID = 1;
+  }
 
   public static class ledIDs {}
 

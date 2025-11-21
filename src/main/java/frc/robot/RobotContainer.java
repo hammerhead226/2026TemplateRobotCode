@@ -33,6 +33,7 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.drive.JoystickDrive;
 import frc.robot.commands.drive.JoystickDriveAtAngle;
 import frc.robot.commands.drive.PathfindToPose;
+import frc.robot.constants.RobotMap;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -97,7 +98,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
 
-        flywheel = new Flywheel(new FlywheelIOTalonFX());
+        flywheel = new Flywheel(new FlywheelIOTalonFX(RobotMap.flywheelIDs.DEFAULT_LEADER_ID, RobotMap.flywheelIDs.DEFAULT_FOLLOWER_ID));
         vision =
             new Vision(
                 drive::addVisionMeasurement,
