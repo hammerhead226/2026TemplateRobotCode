@@ -92,7 +92,7 @@ PPHolonomicDriveController holonomicDriveController =
 
 
     public void end(boolean interrupted) {
-        PPHolonomicDriveController.clearFeedbackOverrides();
+        
 
         drive.stop();
     }

@@ -232,13 +232,13 @@ public class RobotContainer {
         drive.getRotation(),
         controller,
         () -> ControlsUtil.squareNorm(
-                ControlsUtil.applyDeadband(-controller.getLeftY())
+                ControlsUtil.applyDeadband(-controller.getLeftY())*drive.getMaxLinearSpeedMetersPerSec()
         ),
         () -> ControlsUtil.squareNorm(
-                ControlsUtil.applyDeadband(-controller.getLeftX())
+                ControlsUtil.applyDeadband(-controller.getLeftX())*drive.getMaxLinearSpeedMetersPerSec()
         ),
         () -> ControlsUtil.squareNorm(
-                ControlsUtil.applyDeadband(controller.getRightX())
+                ControlsUtil.applyDeadband(controller.getRightX())*drive.getMaxAngularSpeedRadPerSec()
         )
     )
 );                
