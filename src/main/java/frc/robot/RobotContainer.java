@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.drive.HeadingLock;
 import frc.robot.commands.drive.JoystickDrive;
 import frc.robot.commands.drive.JoystickDriveAtAngle;
 import frc.robot.commands.drive.PathfindToPose;
@@ -189,7 +190,7 @@ public class RobotContainer {
   private void configureButtonBindings() {
     // deadband and sqaure inputs for better control
     drive.setDefaultCommand(
-        new JoystickDrive(
+        new HeadingLock(
             drive,
             () ->
                 ControlsUtil.squareNorm(
