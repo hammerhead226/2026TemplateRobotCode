@@ -52,6 +52,7 @@ import frc.robot.constants.SimConstants.Mode;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.vision.ObjectDetection;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.RotationUtil;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -390,10 +391,11 @@ public class Drive extends SubsystemBase {
   public boolean isNear(double xMeters, double yMeters, double distanceThresholdMeters) {
     double robotXMeters = this.getPose().getX();
     double robotYMeters = this.getPose().getY();
-    return Math.hypot(robotXMeters-xMeters, robotYMeters-yMeters) <= distanceThresholdMeters;
+    return Math.hypot(robotXMeters - xMeters, robotYMeters - yMeters) <= distanceThresholdMeters;
   }
 
   public boolean isNearRotation(Rotation2d rotation, double angleThresholdDegrees) {
-    return Math.abs(RotationUtil.deltaAngleDegrees(this.getPose().getRotation(), rotation)) <= angleThresholdDegrees;
+    return Math.abs(RotationUtil.deltaAngleDegrees(this.getPose().getRotation(), rotation))
+        <= angleThresholdDegrees;
   }
 }
