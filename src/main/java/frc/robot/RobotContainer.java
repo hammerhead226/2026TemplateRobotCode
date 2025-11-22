@@ -36,6 +36,10 @@ import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.arms.Arm;
+import frc.robot.subsystems.arms.ArmIO;
+import frc.robot.subsystems.arms.ArmIOSim;
+import frc.robot.subsystems.arms.ArmIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -68,6 +72,7 @@ public class RobotContainer {
   public static Drive drive;
   private final Flywheel flywheel;
   private final Vision vision;
+  private final Arm arm;
   private final ObjectDetection object;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -89,6 +94,7 @@ public class RobotContainer {
     switch (SimConstants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
+        arm = new Arm(new ArmIOTalonFX(0, 0, 0));
         drive =
             new Drive(
                 new GyroIOPigeon2(),
@@ -119,6 +125,7 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
+        arm = new Arm(new ArmIOSim());
         drive =
             new Drive(
                 new GyroIO() {},
@@ -134,6 +141,7 @@ public class RobotContainer {
 
       default:
         // Replayed robot, disable IO implementations
+        arm = new Arm(new ArmIO() {});
         drive =
             new Drive(
                 new GyroIO() {},
@@ -178,6 +186,10 @@ public class RobotContainer {
 
     // Configure the button bindings
     configureButtonBindings();
+  }
+
+  public Arm getArm() {
+    return arm;
   }
 
   /**
