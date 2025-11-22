@@ -16,8 +16,12 @@ package frc.robot;
 import static frc.robot.constants.VisionConstants.camera0Name;
 import static frc.robot.constants.VisionConstants.camera1Name;
 
+import java.util.Set;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathConstraints;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -26,13 +30,16 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.drive.HardStagedAlign;
 import frc.robot.commands.drive.JoystickDrive;
 import frc.robot.commands.drive.JoystickDriveAtAngle;
 import frc.robot.commands.drive.PathfindToPose;
+import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -230,7 +237,23 @@ public class RobotContainer {
         .whileTrue(
            new PathfindToPose(drive, targetPoseTest, drive.getRotation()).untilTrajectoryTimeout()
         );
-        
+    
+    controller
+        .y()
+        .onTrue(
+            new DeferredCommand(
+                () -> new HardStagedAlign(
+                    drive,
+                    new Translation2d(2,1),
+                    new Translation2d(2,0), 
+                    PathConstraints.unlimitedConstraints(12.0), // 12 volts from battery 
+                    new PathConstraints(
+                        drive.getMaxLinearSpeedMetersPerSec()*0.5,
+                        1.5,
+                        drive.getMaxAngularSpeedRadPerSec()*0.5,
+                        Math.toRadians(200)
+                    )),
+                Set.of(drive)));
   }
 
   /**

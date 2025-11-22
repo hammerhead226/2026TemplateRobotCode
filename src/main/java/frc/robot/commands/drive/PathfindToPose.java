@@ -2,12 +2,10 @@ package frc.robot.commands.drive;
 
 import frc.robot.constants.SubsystemConstants;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.util.RotationUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 
 public class PathfindToPose extends Command {
@@ -52,7 +50,7 @@ public class PathfindToPose extends Command {
 
     // custom decorator
     // due to type safety, must be used before WPIlib's Command decorators
-    // as Commands cannot be readily coverted back to OnTheFlyPath commands
+    // as Commands cannot be readily coverted back to PathfindToPose commands
     public PathfindToPose untilTrajectoryTimeout() {
         untilTrajectoryTimeoutCalled = true;
         return this;
