@@ -14,101 +14,96 @@ import frc.robot.constants.SubsystemConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Indexer extends SubsystemBase {
-  /** Creates a new Indexer. */
-  private final IndexerIO indexer;
+    /** Creates a new Indexer. */
+    private final IndexerIO indexer;
 
-  private final IndexerIOInputsAutoLogged iInputs = new IndexerIOInputsAutoLogged();
+    private final IndexerIOInputsAutoLogged iInputs = new IndexerIOInputsAutoLogged();
 
-  private static double kP;
-  private static double kG;
-  private static double kV;
+    private static double kP;
+    private static double kG;
+    private static double kV;
 
-  private static double maxVelocityRotPerSec;
-  private static double maxAccelerationRotPerSecSquared;
+    private static double maxVelocityRotPerSec;
+    private static double maxAccelerationRotPerSecSquared;
 
-  private TrapezoidProfile indexerProfile;
-  private TrapezoidProfile.Constraints indexerConstraints;
+    private TrapezoidProfile indexerProfile;
+    private TrapezoidProfile.Constraints indexerConstraints;
 
-  private TrapezoidProfile.State indexerGoalStateRotations = new TrapezoidProfile.State();
-  private TrapezoidProfile.State indexerCurrentStateRotations = new TrapezoidProfile.State();
+    private TrapezoidProfile.State indexerGoalStateRotations = new TrapezoidProfile.State();
+    private TrapezoidProfile.State indexerCurrentStateRotations = new TrapezoidProfile.State();
 
-  private ElevatorFeedforward ff;
+    private ElevatorFeedforward ff;
 
-  public Indexer(IndexerIO indexer) {
-    this.indexer = indexer;
+    public Indexer(IndexerIO indexer) {
+        this.indexer = indexer;
 
-    switch (SimConstants.currentMode) {
-      case REAL:
-        kG = 0.0;
-        kV = 0.0;
-        kP = 0.0;
-        break;
-      case REPLAY:
-        kG = 0.0;
-        kV = 0.0;
-        kP = 0.0;
-        break;
-      case SIM:
-        kG = 0.0;
-        kV = 0.0;
-        kP = 0.0;
-        break;
-      default:
-        kG = 0.0;
-        kV = 0.0;
-        kP = 0.0;
-        break;
+        switch (SimConstants.currentMode) {
+            case REAL:
+                kG = 0.0;
+                kV = 0.0;
+                kP = 0.0;
+                break;
+            case REPLAY:
+                kG = 0.0;
+                kV = 0.0;
+                kP = 0.0;
+                break;
+            case SIM:
+                kG = 0.0;
+                kV = 0.0;
+                kP = 0.0;
+                break;
+            default:
+                kG = 0.0;
+                kV = 0.0;
+                kP = 0.0;
+                break;
+        }
+
+        // CHANGE THESE VALUES TO MATCH THE INDEXER
+        maxVelocityRotPerSec = 1;
+        maxAccelerationRotPerSecSquared = 1;
+
+        indexerConstraints = new TrapezoidProfile.Constraints(maxVelocityRotPerSec, maxAccelerationRotPerSecSquared);
+        indexerProfile = new TrapezoidProfile(indexerConstraints);
+
+        indexerCurrentStateRotations =
+                indexerProfile.calculate(0, indexerCurrentStateRotations, indexerGoalStateRotations);
+
+        indexer.configurePID(kP, 0, 0);
+        ff = new ElevatorFeedforward(0, kG, kV);
     }
 
-    // CHANGE THESE VALUES TO MATCH THE INDEXER
-    maxVelocityRotPerSec = 1;
-    maxAccelerationRotPerSecSquared = 1;
+    public boolean indexerAtGoal(double thersholdInches) {
 
-    indexerConstraints =
-        new TrapezoidProfile.Constraints(maxVelocityRotPerSec, maxAccelerationRotPerSecSquared);
-    indexerProfile = new TrapezoidProfile(indexerConstraints);
+        return (Math.abs(indexerCurrentStateRotations.position - indexerGoalStateRotations.position)
+                <= thersholdInches);
+    }
 
-    indexerCurrentStateRotations =
-        indexerProfile.calculate(0, indexerCurrentStateRotations, indexerGoalStateRotations);
+    @Override
+    public void periodic() {
+        // This method will be called once per scheduler run
+        indexer.updateInputs(iInputs);
 
-    indexer.configurePID(kP, 0, 0);
-    ff = new ElevatorFeedforward(0, kG, kV);
-  }
+        indexerCurrentStateRotations = indexerProfile.calculate(
+                SubsystemConstants.LOOP_PERIOD_SECONDS, indexerCurrentStateRotations, indexerGoalStateRotations);
 
-  public boolean indexerAtGoal(double thersholdInches) {
+        indexer.setPositionSetpoint(
+                indexerCurrentStateRotations.position * 360,
+                ff.calculate(indexerCurrentStateRotations.velocity) // in inches... I think? - Devin
+                );
 
-    return (Math.abs(indexerCurrentStateRotations.position - indexerGoalStateRotations.position)
-        <= thersholdInches);
-  }
+        Logger.processInputs("Indexer", iInputs);
+    }
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-    indexer.updateInputs(iInputs);
+    public void index(double linearDistanceInches) {
 
-    indexerCurrentStateRotations =
-        indexerProfile.calculate(
-            SubsystemConstants.LOOP_PERIOD_SECONDS,
-            indexerCurrentStateRotations,
-            indexerGoalStateRotations);
+        double rollerDiameterInches = 1;
+        indexerGoalStateRotations.position += linearDistanceInches / (rollerDiameterInches * Math.PI);
+    }
 
-    indexer.setPositionSetpoint(
-        indexerCurrentStateRotations.position * 360,
-        ff.calculate(indexerCurrentStateRotations.velocity) // in inches... I think? - Devin
-        );
+    public Command indexCommand(double linearDistanceInches, double thersholdInches) {
 
-    Logger.processInputs("Indexer", iInputs);
-  }
-
-  public void index(double linearDistanceInches) {
-
-    double rollerDiameterInches = 1;
-    indexerGoalStateRotations.position += linearDistanceInches / (rollerDiameterInches * Math.PI);
-  }
-
-  public Command indexCommand(double linearDistanceInches, double thersholdInches) {
-
-    return new InstantCommand(() -> index(linearDistanceInches), this)
-        .until(() -> indexerAtGoal(thersholdInches));
-  }
+        return new InstantCommand(() -> index(linearDistanceInches), this).until(() -> indexerAtGoal(thersholdInches));
+    }
 }

@@ -15,65 +15,64 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 
 public class IndexerIOTalonFX implements IndexerIO {
-  private final TalonFX talon;
+    private final TalonFX talon;
 
-  private final StatusSignal<Angle> positionRads;
-  private final StatusSignal<AngularVelocity> velocityRadsPerSec;
-  private final StatusSignal<Voltage> appliedVolts;
-  private final StatusSignal<Current> currentAmps;
+    private final StatusSignal<Angle> positionRads;
+    private final StatusSignal<AngularVelocity> velocityRadsPerSec;
+    private final StatusSignal<Voltage> appliedVolts;
+    private final StatusSignal<Current> currentAmps;
 
-  public IndexerIOTalonFX(int motorID) {
-    talon = new TalonFX(motorID);
+    public IndexerIOTalonFX(int motorID) {
+        talon = new TalonFX(motorID);
 
-    TalonFXConfiguration configs = new TalonFXConfiguration();
-    configs.CurrentLimits.SupplyCurrentLimit = 30.0;
-    configs.CurrentLimits.SupplyCurrentLimitEnable = true;
-    configs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        TalonFXConfiguration configs = new TalonFXConfiguration();
+        configs.CurrentLimits.SupplyCurrentLimit = 30.0;
+        configs.CurrentLimits.SupplyCurrentLimitEnable = true;
+        configs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
-    talon.getConfigurator().apply(configs);
+        talon.getConfigurator().apply(configs);
 
-    positionRads = talon.getPosition();
-    velocityRadsPerSec = talon.getVelocity();
-    appliedVolts = talon.getMotorVoltage();
-    currentAmps = talon.getSupplyCurrent();
+        positionRads = talon.getPosition();
+        velocityRadsPerSec = talon.getVelocity();
+        appliedVolts = talon.getMotorVoltage();
+        currentAmps = talon.getSupplyCurrent();
 
-    BaseStatusSignal.setUpdateFrequencyForAll(
-        50, positionRads, velocityRadsPerSec, appliedVolts, currentAmps);
-    talon.optimizeBusUtilization();
-  }
+        BaseStatusSignal.setUpdateFrequencyForAll(50, positionRads, velocityRadsPerSec, appliedVolts, currentAmps);
+        talon.optimizeBusUtilization();
+    }
 
-  @Override
-  public void updateInputs(IndexerIOInputs inputs) {
-    BaseStatusSignal.refreshAll(positionRads, velocityRadsPerSec, appliedVolts, currentAmps);
+    @Override
+    public void updateInputs(IndexerIOInputs inputs) {
+        BaseStatusSignal.refreshAll(positionRads, velocityRadsPerSec, appliedVolts, currentAmps);
 
-    inputs.indexerPositionInch = positionRads.getValueAsDouble();
-    inputs.indexerVelocityInchesPerSecond = velocityRadsPerSec.getValueAsDouble();
-    inputs.appliedVolts = appliedVolts.getValueAsDouble();
-    inputs.currentAmps = currentAmps.getValueAsDouble();
-  }
+        inputs.indexerPositionInch = positionRads.getValueAsDouble();
+        inputs.indexerVelocityInchesPerSecond = velocityRadsPerSec.getValueAsDouble();
+        inputs.appliedVolts = appliedVolts.getValueAsDouble();
+        inputs.currentAmps = currentAmps.getValueAsDouble();
+    }
 
-  @Override
-  public void runCharacterization(double volts) {
-    talon.setControl(new VoltageOut(volts));
-  }
+    @Override
+    public void runCharacterization(double volts) {
+        talon.setControl(new VoltageOut(volts));
+    }
 
-  @Override
-  public void setPositionSetpoint(double positionDegs, double ffVolts) {
-    talon.setControl(new PositionVoltage(Units.degreesToRotations(positionDegs)));
-  }
+    @Override
+    public void setPositionSetpoint(double positionDegs, double ffVolts) {
+        talon.setControl(new PositionVoltage(Units.degreesToRotations(positionDegs)));
+    }
 
-  @Override
-  public void stop() {
-    talon.stopMotor();
-  }
+    @Override
+    public void stop() {
+        talon.stopMotor();
+    }
 
-  @Override
-  public void configurePID(double kP, double kI, double kD) {
-    var config = new Slot0Configs();
-    config.kP = kP;
-    config.kI = kI;
-    config.kD = kD;
+    @Override
+    public void configurePID(double kP, double kI, double kD) {
+        var config = new Slot0Configs();
+        config.kP = kP;
+        config.kI = kI;
+        config.kD = kD;
 
-    talon.getConfigurator().apply(config);
-  }
+        talon.getConfigurator().apply(config);
+    }
 }

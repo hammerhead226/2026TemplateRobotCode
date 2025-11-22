@@ -26,100 +26,96 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Flywheel extends SubsystemBase {
-  private final FlywheelIO io;
-  private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
-  private final SimpleMotorFeedforward ffModel;
-  private final SysIdRoutine sysId;
+    private final FlywheelIO io;
+    private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
+    private final SimpleMotorFeedforward ffModel;
+    private final SysIdRoutine sysId;
 
-  /** Creates a new Flywheel. */
-  public Flywheel(FlywheelIO io) {
-    this.io = io;
+    /** Creates a new Flywheel. */
+    public Flywheel(FlywheelIO io) {
+        this.io = io;
 
-    // Switch constants based on mode (the physics simulator is treated as a
-    // separate robot with different tuning)
-    switch (SimConstants.currentMode) {
-      case REAL:
-      case REPLAY:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        io.configurePID(0.0, 0.0, 0.0);
-        break;
-      case SIM:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        io.configurePID(0.0, 0.0, 0.0);
-        break;
-      default:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        break;
+        // Switch constants based on mode (the physics simulator is treated as a
+        // separate robot with different tuning)
+        switch (SimConstants.currentMode) {
+            case REAL:
+            case REPLAY:
+                ffModel = new SimpleMotorFeedforward(0.0, 0.0);
+                io.configurePID(0.0, 0.0, 0.0);
+                break;
+            case SIM:
+                ffModel = new SimpleMotorFeedforward(0.0, 0.0);
+                io.configurePID(0.0, 0.0, 0.0);
+                break;
+            default:
+                ffModel = new SimpleMotorFeedforward(0.0, 0.0);
+                break;
+        }
+
+        // Configure SysId
+        sysId = new SysIdRoutine(
+                new SysIdRoutine.Config(
+                        null, null, null, (state) -> Logger.recordOutput("Flywheel/SysIdState", state.toString())),
+                new SysIdRoutine.Mechanism((voltage) -> runVolts(voltage.in(Volts)), null, this));
     }
 
-    // Configure SysId
-    sysId =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,
-                null,
-                null,
-                (state) -> Logger.recordOutput("Flywheel/SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism((voltage) -> runVolts(voltage.in(Volts)), null, this));
-  }
+    @Override
+    public void periodic() {
+        io.updateInputs(inputs);
+        Logger.processInputs("Flywheel", inputs);
+    }
 
-  @Override
-  public void periodic() {
-    io.updateInputs(inputs);
-    Logger.processInputs("Flywheel", inputs);
-  }
+    /** Run open loop at the specified voltage. */
+    public void runVolts(double volts) {
+        io.setVoltage(volts);
+    }
 
-  /** Run open loop at the specified voltage. */
-  public void runVolts(double volts) {
-    io.setVoltage(volts);
-  }
+    /** Run closed loop at the specified velocity. */
+    public void runVelocity(double velocityRPM) {
+        var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+        io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
 
-  /** Run closed loop at the specified velocity. */
-  public void runVelocity(double velocityRPM) {
-    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
-    io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+        // Log flywheel setpoint
+        Logger.recordOutput("Flywheel/SetpointRPM", velocityRPM);
+    }
 
-    // Log flywheel setpoint
-    Logger.recordOutput("Flywheel/SetpointRPM", velocityRPM);
-  }
+    public Command runVoltsCommmand(double volts) {
 
-  public Command runVoltsCommmand(double volts) {
+        return new InstantCommand(() -> runVolts(volts), this);
+    }
 
-    return new InstantCommand(() -> runVolts(volts), this);
-  }
+    public Command runVelocityCommand(double velocityRPM) {
 
-  public Command runVelocityCommand(double velocityRPM) {
+        return new InstantCommand(() -> runVelocity(velocityRPM), this);
+    }
 
-    return new InstantCommand(() -> runVelocity(velocityRPM), this);
-  }
+    public Command flywheelStop() {
+        return new InstantCommand(() -> stop(), this);
+    }
 
-  public Command flywheelStop() {
-    return new InstantCommand(() -> stop(), this);
-  }
+    /** Stops the flywheel. */
+    public void stop() {
+        io.stop();
+    }
 
-  /** Stops the flywheel. */
-  public void stop() {
-    io.stop();
-  }
+    /** Returns a command to run a quasistatic test in the specified direction. */
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return sysId.quasistatic(direction);
+    }
 
-  /** Returns a command to run a quasistatic test in the specified direction. */
-  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    return sysId.quasistatic(direction);
-  }
+    /** Returns a command to run a dynamic test in the specified direction. */
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return sysId.dynamic(direction);
+    }
 
-  /** Returns a command to run a dynamic test in the specified direction. */
-  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    return sysId.dynamic(direction);
-  }
+    /** Returns the current velocity in RPM. */
+    @AutoLogOutput
+    public double getVelocityRPM() {
+        return Units.radiansPerSecondToRotationsPerMinute(inputs.velocityRadPerSec);
+    }
 
-  /** Returns the current velocity in RPM. */
-  @AutoLogOutput
-  public double getVelocityRPM() {
-    return Units.radiansPerSecondToRotationsPerMinute(inputs.velocityRadPerSec);
-  }
-
-  /** Returns the current velocity in radians per second. */
-  public double getCharacterizationVelocity() {
-    return inputs.velocityRadPerSec;
-  }
+    /** Returns the current velocity in radians per second. */
+    public double getCharacterizationVelocity() {
+        return inputs.velocityRadPerSec;
+    }
 }

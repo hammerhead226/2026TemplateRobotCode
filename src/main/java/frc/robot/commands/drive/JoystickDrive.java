@@ -9,28 +9,25 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class JoystickDrive extends Command {
-  private Drive drive;
-  private Supplier<Translation2d> translationSupplier;
-  private DoubleSupplier omegaSupplier;
+    private Drive drive;
+    private Supplier<Translation2d> translationSupplier;
+    private DoubleSupplier omegaSupplier;
 
-  public JoystickDrive(
-      Drive drive, Supplier<Translation2d> translationSupplier, DoubleSupplier omegaSupplier) {
-    addRequirements(drive);
-    this.drive = drive;
-    this.translationSupplier = translationSupplier;
-    this.omegaSupplier = omegaSupplier;
-  }
+    public JoystickDrive(Drive drive, Supplier<Translation2d> translationSupplier, DoubleSupplier omegaSupplier) {
+        addRequirements(drive);
+        this.drive = drive;
+        this.translationSupplier = translationSupplier;
+        this.omegaSupplier = omegaSupplier;
+    }
 
-  @Override
-  public void execute() {
-    // Convert to field relative speeds & send command
-    ChassisSpeeds speeds =
-        new ChassisSpeeds(
-            translationSupplier.get().getX() * drive.getMaxLinearSpeedMetersPerSec(),
-            translationSupplier.get().getY() * drive.getMaxLinearSpeedMetersPerSec(),
-            omegaSupplier.getAsDouble() * drive.getMaxAngularSpeedRadPerSec());
-    drive.runVelocity(
-        ChassisSpeeds.fromFieldRelativeSpeeds(
-            speeds, drive.getPose().getRotation().plus(FieldMirroring.driverStationFacing())));
-  }
+    @Override
+    public void execute() {
+        // Convert to field relative speeds & send command
+        ChassisSpeeds speeds = new ChassisSpeeds(
+                translationSupplier.get().getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                translationSupplier.get().getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                omegaSupplier.getAsDouble() * drive.getMaxAngularSpeedRadPerSec());
+        drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
+                speeds, drive.getPose().getRotation().plus(FieldMirroring.driverStationFacing())));
+    }
 }

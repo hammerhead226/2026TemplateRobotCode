@@ -15,126 +15,122 @@ import frc.robot.constants.SubsystemConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Arm extends SubsystemBase {
-  private final ArmIO arm;
-  private final ArmIOInputsAutoLogged pInputs = new ArmIOInputsAutoLogged();
+    private final ArmIO arm;
+    private final ArmIOInputsAutoLogged pInputs = new ArmIOInputsAutoLogged();
 
-  private static double kP;
-  private static double kG;
-  private static double kV;
+    private static double kP;
+    private static double kG;
+    private static double kV;
 
-  private static double maxVelocityDegPerSec;
-  private static double maxAccelerationDegPerSecSquared;
+    private static double maxVelocityDegPerSec;
+    private static double maxAccelerationDegPerSecSquared;
 
-  private TrapezoidProfile armProfile;
-  private TrapezoidProfile.Constraints armConstraints;
+    private TrapezoidProfile armProfile;
+    private TrapezoidProfile.Constraints armConstraints;
 
-  private TrapezoidProfile.State armGoalStateDegrees = new TrapezoidProfile.State();
-  private TrapezoidProfile.State armCurrentStateDegrees = new TrapezoidProfile.State();
+    private TrapezoidProfile.State armGoalStateDegrees = new TrapezoidProfile.State();
+    private TrapezoidProfile.State armCurrentStateDegrees = new TrapezoidProfile.State();
 
-  double goalDegrees;
+    double goalDegrees;
 
-  private ArmFeedforward armFFModel;
+    private ArmFeedforward armFFModel;
 
-  /** Creates a new Arm. */
-  public Arm(ArmIO arm) {
-    this.arm = arm;
-    switch (SimConstants.currentMode) {
-      case REAL:
-        kG = 0.29;
-        kV = 1;
-        kP = 1.123;
-        break;
-      case REPLAY:
-        kG = 0.29;
-        kV = 1;
-        kP = 1.123;
-        break;
-      case SIM:
-        kG = 0.29;
-        kV = 1;
-        kP = 1.123;
-        break;
-      default:
-        kG = 0.29;
-        kV = 1;
-        kP = 1.123;
-        break;
+    /** Creates a new Arm. */
+    public Arm(ArmIO arm) {
+        this.arm = arm;
+        switch (SimConstants.currentMode) {
+            case REAL:
+                kG = 0.29;
+                kV = 1;
+                kP = 1.123;
+                break;
+            case REPLAY:
+                kG = 0.29;
+                kV = 1;
+                kP = 1.123;
+                break;
+            case SIM:
+                kG = 0.29;
+                kV = 1;
+                kP = 1.123;
+                break;
+            default:
+                kG = 0.29;
+                kV = 1;
+                kP = 1.123;
+                break;
+        }
+
+        // CHANGE PER ARM
+        maxVelocityDegPerSec = 1;
+        maxAccelerationDegPerSecSquared = 1;
+        // maxAccelerationDegPerSecSquared = 180;
+
+        armConstraints = new TrapezoidProfile.Constraints(maxVelocityDegPerSec, maxAccelerationDegPerSecSquared);
+        armProfile = new TrapezoidProfile(armConstraints);
+
+        // setArmGoal(90);
+        // setArmCurrent(getArmPositionDegs());
+        armCurrentStateDegrees = armProfile.calculate(0, armCurrentStateDegrees, armGoalStateDegrees);
+
+        arm.configurePID(kP, 0, 0);
+        armFFModel = new ArmFeedforward(0, kG, kV, 0);
     }
 
-    // CHANGE PER ARM
-    maxVelocityDegPerSec = 1;
-    maxAccelerationDegPerSecSquared = 1;
-    // maxAccelerationDegPerSecSquared = 180;
+    public void setBrakeMode(boolean bool) {
+        arm.setBrakeMode(bool);
+    }
 
-    armConstraints =
-        new TrapezoidProfile.Constraints(maxVelocityDegPerSec, maxAccelerationDegPerSecSquared);
-    armProfile = new TrapezoidProfile(armConstraints);
+    public double getArmPositionDegs() {
+        return pInputs.positionDegs;
+    }
 
-    // setArmGoal(90);
-    // setArmCurrent(getArmPositionDegs());
-    armCurrentStateDegrees = armProfile.calculate(0, armCurrentStateDegrees, armGoalStateDegrees);
+    public boolean atGoal(double threshold) {
+        return (Math.abs(pInputs.positionDegs - goalDegrees) <= threshold);
+    }
 
-    arm.configurePID(kP, 0, 0);
-    armFFModel = new ArmFeedforward(0, kG, kV, 0);
-  }
+    private double getArmError() {
+        return pInputs.positionSetpointDegs - pInputs.positionDegs;
+    }
 
-  public void setBrakeMode(boolean bool) {
-    arm.setBrakeMode(bool);
-  }
+    public void setPositionDegs(double positionDegs, double velocityDegsPerSec) {
+        // positionDegs = MathUtil.clamp(positionDegs, 33, 120);
+        arm.setPositionSetpointDegs(
+                positionDegs,
+                armFFModel.calculate(Units.degreesToRadians(positionDegs), Units.degreesToRadians(velocityDegsPerSec)));
+    }
 
-  public double getArmPositionDegs() {
-    return pInputs.positionDegs;
-  }
+    public void armStop() {
+        arm.stop();
+    }
 
-  public boolean atGoal(double threshold) {
-    return (Math.abs(pInputs.positionDegs - goalDegrees) <= threshold);
-  }
+    public void setArmGoal(double goalDegrees) {
+        this.goalDegrees = goalDegrees;
+        armGoalStateDegrees = new TrapezoidProfile.State(goalDegrees, 0);
+    }
 
-  private double getArmError() {
-    return pInputs.positionSetpointDegs - pInputs.positionDegs;
-  }
+    public void setArmCurrent(double currentDegrees) {
+        armCurrentStateDegrees = new TrapezoidProfile.State(currentDegrees, 0);
+    }
 
-  public void setPositionDegs(double positionDegs, double velocityDegsPerSec) {
-    // positionDegs = MathUtil.clamp(positionDegs, 33, 120);
-    arm.setPositionSetpointDegs(
-        positionDegs,
-        armFFModel.calculate(
-            Units.degreesToRadians(positionDegs), Units.degreesToRadians(velocityDegsPerSec)));
-  }
+    public Command setArmTarget(double goalDegrees, double thresholdDegrees) {
 
-  public void armStop() {
-    arm.stop();
-  }
+        return new InstantCommand(() -> setArmGoal(goalDegrees), this).until(() -> atGoal(thresholdDegrees));
+    }
 
-  public void setArmGoal(double goalDegrees) {
-    this.goalDegrees = goalDegrees;
-    armGoalStateDegrees = new TrapezoidProfile.State(goalDegrees, 0);
-  }
+    @Override
+    public void periodic() {
+        arm.updateInputs(pInputs);
 
-  public void setArmCurrent(double currentDegrees) {
-    armCurrentStateDegrees = new TrapezoidProfile.State(currentDegrees, 0);
-  }
+        armCurrentStateDegrees = armProfile.calculate(
+                SubsystemConstants.LOOP_PERIOD_SECONDS, armCurrentStateDegrees, armGoalStateDegrees);
 
-  public Command setArmTarget(double goalDegrees, double thresholdDegrees) {
+        setPositionDegs(armCurrentStateDegrees.position, armCurrentStateDegrees.velocity);
 
-    return new InstantCommand(() -> setArmGoal(goalDegrees), this)
-        .until(() -> atGoal(thresholdDegrees));
-  }
+        Logger.processInputs("Arm", pInputs);
+        Logger.recordOutput("arm error", getArmError());
 
-  @Override
-  public void periodic() {
-    arm.updateInputs(pInputs);
-
-    armCurrentStateDegrees =
-        armProfile.calculate(
-            SubsystemConstants.LOOP_PERIOD_SECONDS, armCurrentStateDegrees, armGoalStateDegrees);
-
-    setPositionDegs(armCurrentStateDegrees.position, armCurrentStateDegrees.velocity);
-
-    Logger.processInputs("Arm", pInputs);
-    Logger.recordOutput("arm error", getArmError());
-
-    Logger.recordOutput("arm goal", goalDegrees);
-    // This method will be called once per scheduler run
-  }
+        Logger.recordOutput("arm goal", goalDegrees);
+        // This method will be called once per scheduler run
+    }
 }
