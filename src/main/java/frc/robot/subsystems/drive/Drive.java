@@ -382,4 +382,18 @@ public class Drive extends SubsystemBase {
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
   }
+
+  public boolean isNear(Translation2d location, double distanceThresholdMeters) {
+    return location.getDistance(this.getPose().getTranslation()) <= distanceThresholdMeters;
+  }
+
+  public boolean isNear(double xMeters, double yMeters, double distanceThresholdMeters) {
+    double robotXMeters = this.getPose().getX();
+    double robotYMeters = this.getPose().getY();
+    return Math.hypot(robotXMeters-xMeters, robotYMeters-yMeters) <= distanceThresholdMeters;
+  }
+
+  public boolean isNearRotation(Rotation2d rotation, double angleThresholdDegrees) {
+    return Math.abs(RotationUtil.deltaAngleDegrees(this.getPose().getRotation(), rotation)) <= angleThresholdDegrees;
+  }
 }
