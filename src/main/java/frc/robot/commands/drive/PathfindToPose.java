@@ -1,21 +1,17 @@
 package frc.robot.commands.drive;
 
-import frc.robot.constants.SubsystemConstants;
-import frc.robot.subsystems.drive.Drive;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.math.geometry.Translation2d;
-
+import frc.robot.constants.SubsystemConstants;
+import frc.robot.subsystems.drive.Drive;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -35,11 +31,8 @@ public class PathfindToPose extends Command {
 
     private boolean untilTrajectoryTimeoutCalled = false;
 
-PPHolonomicDriveController holonomicDriveController =
-        new PPHolonomicDriveController(
-            new PIDConstants(1.0, 0.0, 0.0),   
-            new PIDConstants(1.0, 0.0, 0.0)  
-     );            
+    PPHolonomicDriveController holonomicDriveController =
+            new PPHolonomicDriveController(new PIDConstants(1.0, 0.0, 0.0), new PIDConstants(1.0, 0.0, 0.0));
 
     public PathfindToPose(Drive drive, Pose2d targetPose, PathConstraints constraints) {
         this.drive = drive;
@@ -57,15 +50,13 @@ PPHolonomicDriveController holonomicDriveController =
             CommandXboxController Xcon,
             DoubleSupplier XSup,
             DoubleSupplier YSup,
-            DoubleSupplier omegaSupplier
-            
-    ) {
+            DoubleSupplier omegaSupplier) {
+
         this(drive, targetPose, SubsystemConstants.PathConstants.DEFAULT_PATH_CONSTRAINTS);
 
         this.Xcon = Xcon;
         this.XSup = XSup;
         this.YSup = YSup;
-
 
         this.omegaSupplier = omegaSupplier;
     }
@@ -74,12 +65,12 @@ PPHolonomicDriveController holonomicDriveController =
     public void initialize() {
 
         PathPlannerTrajectoryState targetState = new PathPlannerTrajectoryState();
-        
+
         // if(Xcon.getLeftX()>0.7||Xcon.getLeftY()>0.7){
         // holonomicDriveController.calculateRobotRelativeSpeeds(drive.getPose(), targetState);
         // }
         PPHolonomicDriveController.overrideRotationFeedback(omegaSupplier);
-        //should be a percentage of the robot max speed, because right now max speed is 1m/s
+        // should be a percentage of the robot max speed, because right now max speed is 1m/s
         PPHolonomicDriveController.overrideXFeedback(XSup);
         PPHolonomicDriveController.overrideYFeedback(YSup);
         pathCommand.initialize();
@@ -90,19 +81,15 @@ PPHolonomicDriveController holonomicDriveController =
         pathCommand.execute();
     }
 
-
     public void end(boolean interrupted) {
-        
 
         drive.stop();
     }
 
     @Override
     public boolean isFinished() {
-        if (untilTrajectoryTimeoutCalled)
-            if (pathCommand.isFinished())
-                return true;
-        
+        if (untilTrajectoryTimeoutCalled) if (pathCommand.isFinished()) return true;
+
         return false;
     }
 
