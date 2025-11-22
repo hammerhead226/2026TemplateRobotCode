@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.drive.JoystickDrive;
 import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.constants.SimConstants;
+import frc.robot.constants.SubsystemConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -51,6 +52,7 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.ControlsUtil;
+import frc.robot.util.FieldMirroring;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -199,24 +201,16 @@ public class RobotContainer {
 
         controller
                 .a()
-                .onTrue(new PathfindToPose(
+                .whileTrue(new PathfindToPose(
                         drive,
                         targetPoseTest,
-                        drive.getRotation(),
-                        controller,
-                        () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY())
-                                * drive.getMaxLinearSpeedMetersPerSec()),
-                        () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX())
-                                * drive.getMaxLinearSpeedMetersPerSec()),
-                        () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX())
-                                * drive.getMaxAngularSpeedRadPerSec())));
+                        SubsystemConstants.PathConstants.DEFAULT_PATH_CONSTRAINTS,
+                        () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY()))
+                                * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
+                        () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX()))
+                                * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
+                        () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
     }
-
-    //   () ->
-    //                 ControlsUtil.squareNorm(
-    //                     ControlsUtil.applyDeadband(
-    //                         new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
-    //             () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
