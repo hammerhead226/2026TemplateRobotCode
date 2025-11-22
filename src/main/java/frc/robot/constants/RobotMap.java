@@ -4,13 +4,15 @@ public class RobotMap {
 
   public static class elevatorIDs {}
 
-  public static class armIDs {}
+  public static class armIDs {
+    public static final int DEFAULT_ID = 0;
+  }
 
   public static class indexerIDs {}
 
   public static class flywheelIDs {
-    public static final int DEFAULT_FOLLOWER_ID = 0;
-    public static final int DEFAULT_LEADER_ID = 1;
+    public static final int DEFAULT_FOLLOWER_ID = 1;
+    public static final int DEFAULT_LEADER_ID = 0;
   }
 
   public static class ledIDs {}

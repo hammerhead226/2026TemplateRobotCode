@@ -16,6 +16,7 @@ import frc.robot.constants.SubsystemConstants;
 import frc.robot.constants.SubsystemConstants.ArmConstants.TuningConstants;
 import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
+
 import frc.robot.constants.SubsystemConstants.ArmConstants;
 
 public class Arm extends SubsystemBase {
@@ -23,7 +24,8 @@ public class Arm extends SubsystemBase {
   private final ArmIO arm;
   private final ArmIOInputsAutoLogged armInputs = new ArmIOInputsAutoLogged();
 
-  private static LoggedTunableNumber kP = new LoggedTunableNumber("Chico/kP");
+
+  private static LoggedTunableNumber kP = new LoggedTunableNumber(armName +"/kP");
   private static LoggedTunableNumber kG = new LoggedTunableNumber(armName + "/kG");
   private static LoggedTunableNumber kV = new LoggedTunableNumber(armName + "/kV");
   private static LoggedTunableNumber kA = new LoggedTunableNumber(armName + "/kA");
@@ -33,8 +35,7 @@ public class Arm extends SubsystemBase {
 
   private static LoggedTunableNumber maxVelocityDegPerSec = new LoggedTunableNumber(armName + "/maxVelocityDegPerSec",
       ArmConstants.MAX_VELOCITY_DEG_PER_SEC);
-  private static LoggedTunableNumber maxAccelerationDegPerSecSquared = new LoggedTunableNumber(
-      armName + "/maxAccelerationDegPerSecSquared", ArmConstants.MAX_ACCELERATION_DEG_PER_SEC_SQUARED);
+  private static LoggedTunableNumber maxAccelerationDegPerSecSquared = new LoggedTunableNumber(armName + "/maxAccelerationDegPerSecSquared", ArmConstants.MAX_ACCELERATION_DEG_PER_SEC_SQUARED);
 
   private TrapezoidProfile armProfile;
   private TrapezoidProfile.Constraints armConstraints;
@@ -96,6 +97,7 @@ public class Arm extends SubsystemBase {
 
     arm.configurePID(kP.get(), kI.get(), kD.get());
     armFFModel = new ArmFeedforward(kS.get(), kG.get(), kV.get(), kA.get());
+    updateTunableNumbers();
   }
 
   public void setBrakeMode(boolean bool) {
@@ -143,6 +145,9 @@ public class Arm extends SubsystemBase {
 
   @Override
   public void periodic() {
+
+    // This method will be called once per scheduler run
+
     arm.updateInputs(armInputs);
 
     armCurrentStateDegrees = armProfile.calculate(
@@ -154,7 +159,6 @@ public class Arm extends SubsystemBase {
     Logger.recordOutput("Arm Error", getArmError());
 
     Logger.recordOutput("Arm Goal", goalDegrees);
-    // This method will be called once per scheduler run
 
     updateTunableNumbers();
 

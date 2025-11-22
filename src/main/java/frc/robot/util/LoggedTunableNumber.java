@@ -26,6 +26,7 @@ public class LoggedTunableNumber {
    */
   public LoggedTunableNumber(String dashboardKey) {
     this.key = tableKey + "/SmartDashboard/" + dashboardKey;
+    // this.key = dashboardKey;
   }
 
   /**

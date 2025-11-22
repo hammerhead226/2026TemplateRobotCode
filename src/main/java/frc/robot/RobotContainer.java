@@ -37,6 +37,8 @@ import frc.robot.constants.RobotMap;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.arms.Arm;
+import frc.robot.subsystems.arms.ArmIO;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -55,6 +57,9 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.ControlsUtil;
+import frc.robot.subsystems.arms.ArmIOTalonFX;
+import frc.robot.subsystems.arms.ArmIOSim;
+
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -69,6 +74,7 @@ public class RobotContainer {
   public static Drive drive;
   private final Flywheel flywheel;
   private final Vision vision;
+  private final Arm arm;
   private final ObjectDetection object;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -90,6 +96,7 @@ public class RobotContainer {
     switch (SimConstants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
+        arm = new Arm(new ArmIOTalonFX(RobotMap.armIDs.DEFAULT_ID, 1, 0));
         drive =
             new Drive(
                 new GyroIOPigeon2(),
@@ -109,17 +116,12 @@ public class RobotContainer {
                 drive::addObjectMeasurement,
                 new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
 
-        // drive = new Drive(
-        // new GyroIOPigeon2(true),
-        // new ModuleIOTalonFX(0),
-        // new ModuleIOTalonFX(1),
-        // new ModuleIOTalonFX(2),
-        // new ModuleIOTalonFX(3));
-        // flywheel = new Flywheel(new FlywheelIOTalonFX());
         break;
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
+        arm = new Arm(new ArmIOSim());
+
         drive =
             new Drive(
                 new GyroIO() {},
@@ -130,11 +132,11 @@ public class RobotContainer {
         vision = new Vision(drive::addVisionMeasurement, new VisionIOPhotonVisionSim(camera0Name, VisionConstants.robotToCamera0, drive::getPose), new VisionIOPhotonVisionSim(camera1Name, VisionConstants.robotToCamera1, drive::getPose));
         object = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
         flywheel = new Flywheel(new FlywheelIOSim());
-
         break;
 
       default:
-        // Replayed robot, disable IO implementations
+
+        arm = new Arm(new ArmIO() {});
         drive =
             new Drive(
                 new GyroIO() {},
@@ -198,7 +200,8 @@ public class RobotContainer {
                         new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
             () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
 
-    // example usage of joystick drive at angle
+    //Examples Usage of JoystickDriveAtAngle:
+
     // drive.setDefaultCommand(
     //     new JoystickDriveAtAngle(
     //         drive,

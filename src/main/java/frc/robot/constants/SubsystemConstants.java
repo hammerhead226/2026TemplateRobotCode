@@ -21,7 +21,7 @@ public final class SubsystemConstants {
 
   public static final String CANBUS = "CAN Bus 2";
   public static final double LOOP_PERIOD_SECONDS = 0.02;
-  public static final boolean TUNING_MODE = false;
+  public static final boolean TUNING_MODE = true;
 
   public static class ElevatorConstants {
     public static final double CURRENT_LIMIT = 40.0;
