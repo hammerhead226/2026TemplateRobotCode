@@ -51,6 +51,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.SimConstants.Mode;
 import frc.robot.generated.TunerConstants;
+import frc.robot.util.FieldMirroring;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.subsystems.vision.ObjectDetection;
 import java.util.concurrent.locks.Lock;
@@ -141,7 +142,7 @@ public class Drive extends SubsystemBase {
         new PPHolonomicDriveController(
             new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
         PP_CONFIG,
-        () -> false,
+        FieldMirroring::shouldApply,
         this);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(

@@ -7,6 +7,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.ConstraintsZone;
 import com.pathplanner.lib.path.GoalEndState;
@@ -14,6 +16,7 @@ import com.pathplanner.lib.path.IdealStartingState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
+import com.pathplanner.lib.util.FlippingUtil;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -61,6 +64,14 @@ public class SoftStagedAlign extends Command {
             new Pose2d(roughTranslation, alignmentHeading), 
             new Pose2d(preciseTranslation, alignmentHeading)
         );
+
+        Logger.recordOutput("AutoBuilder/shouldFlip()", AutoBuilder.shouldFlip());
+
+        if (AutoBuilder.shouldFlip()) {
+            for (int i = 0; i < waypoints.size(); i++) {
+                waypoints.set(i,waypoints.get(i).flip());
+            }
+        }
 
         List<ConstraintsZone> constraintsZones = new ArrayList<>();
         constraintsZones.add(new ConstraintsZone(0.0,ROUGH_CONSTRAINTS_MAX_POSITION,roughConstraints));

@@ -235,16 +235,16 @@ public class RobotContainer {
     controller
         .a()
         .whileTrue(
-           new PathfindToPose(drive, targetPoseTest, drive.getRotation()).untilTrajectoryTimeout()
+           new PathfindToPose(drive, new Pose2d(2,0,Rotation2d.kZero), drive.getRotation()).untilTrajectoryTimeout()
         );
     
     controller
         .y()
-        .onTrue(
+        .whileTrue(
             new DeferredCommand(
-                () -> new HardStagedAlign(
+                () -> new SoftStagedAlign(
                     drive,
-                    new Translation2d(2,1),
+                    new Translation2d(2,2),
                     new Translation2d(2,0), 
                     PathConstraints.unlimitedConstraints(12.0), // 12 volts from battery 
                     new PathConstraints(

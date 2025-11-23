@@ -68,11 +68,20 @@ public class HardStagedAlign extends SequentialCommandGroup {
             new Pose2d(drive.getPose().getTranslation(), startingHeading),
             new Pose2d(roughTranslation, alignmentHeading)
         );
-
+        
         List<Waypoint> preciseWaypoints = PathPlannerPath.waypointsFromPoses(
             new Pose2d(roughTranslation, alignmentHeading), 
             new Pose2d(preciseTranslation, alignmentHeading)
         );
+
+        if (AutoBuilder.shouldFlip()) {
+            for (int i = 0; i < roughWaypoints.size(); i++) {
+                roughWaypoints.set(i,roughWaypoints.get(i).flip());
+            }
+            for (int i = 0; i < preciseWaypoints.size(); i++) {
+                preciseWaypoints.set(i,preciseWaypoints.get(i).flip());
+            }
+        }
 
         PathPlannerPath roughPath = new PathPlannerPath(
             roughWaypoints, 
