@@ -13,10 +13,13 @@
 
 package frc.robot.subsystems.vision;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.LimelightHelpers;
 
 /** IO implementation for real Limelight hardware. */
 public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
@@ -28,12 +31,28 @@ public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
   private final DoubleSubscriber tySubscriber;
   private final DoubleSubscriber hbSubscriber;
 
+  InterpolatingDoubleTreeMap distanceToObjectX = new InterpolatingDoubleTreeMap();
+    InterpolatingDoubleTreeMap distanceToObjectY = new InterpolatingDoubleTreeMap();
+
   public ObjectDetectionIOLimelight(String name) {
     var table = NetworkTableInstance.getDefault().getTable(name);
     latencySubscriber = table.getDoubleTopic("tl").subscribe(0.0);
     txSubscriber = table.getDoubleTopic("tx").subscribe(0.0);
     tySubscriber = table.getDoubleTopic("ty").subscribe(0.0);
     hbSubscriber = table.getDoubleTopic("hb").subscribe(0.0);
+
+    distanceToObjectX.put(1.0, 57.80 + 4.0);
+    distanceToObjectX.put(1.5, 49.00 + 2.5);
+    distanceToObjectX.put(2.0, 42.75);
+    distanceToObjectX.put(2.5, 36.70);
+    distanceToObjectX.put(3.0, 34.00);
+    distanceToObjectX.put(3.5, 31.20);
+    distanceToObjectY.put(4.0, 29.50);
+    distanceToObjectY.put(4.5, 27.50);
+    distanceToObjectY.put(5.0, 26.00);
+    distanceToObjectY.put(5.5, 24.85);
+    distanceToObjectY.put(6.0, 23.60);
+    distanceToObjectY.put(6.5, 22.80);
   }
 
   @Override
@@ -50,4 +69,9 @@ public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
     inputs.iTY = tySubscriber.get();
     inputs.timestamp = txSubscriber.getAtomic().timestamp;
   }
+
+  public Pose2d getPose() { 
+    return new Pose2d(distanceToObjectX.get(Double.valueOf(LimelightHelpers.getTX(null))),
+     distanceToObjectY.get(Double.valueOf(LimelightHelpers.getTY(null))), null);
+    }
 }

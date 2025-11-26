@@ -22,6 +22,9 @@ import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.LimelightHelpers;
+import frc.robot.LimelightHelpers.LimelightResults;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,10 +60,12 @@ public class VisionIOLimelight implements VisionIO {
     megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[] {});
     megatag2Subscriber =
         table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[] {});
+        
   }
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
+    LimelightHelpers.PoseEstimate limelightMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
     // Update connection status based on whether an update has been seen in the last 250ms
     inputs.connected = (RobotController.getFPGATime() - latencySubscriber.getLastChange()) < 250;
 
@@ -70,7 +75,7 @@ public class VisionIOLimelight implements VisionIO {
     // Update target observation
     inputs.latestTargetObservation =
         new TargetObservation(
-            Rotation2d.fromDegrees(txSubscriber.get()), Rotation2d.fromDegrees(tySubscriber.get()));
+            Rotation2d.fromDegrees(LimelightHelpers.getTX(null)), Rotation2d.fromDegrees(LimelightHelpers.getTY(null)));
 
     // Update orientation for MegaTag 2
     orientationPublisher.accept(
@@ -90,19 +95,19 @@ public class VisionIOLimelight implements VisionIO {
       poseObservations.add(
           new PoseObservation(
               // Timestamp, based on server timestamp of publish and latency
-              rawSample.timestamp * 1.0e-9 - rawSample.value[7] * 1.0e-3,
+              limelightMeasurement.timestampSeconds,
 
               // 3D pose estimate
-              parsePose(rawSample.value),
+              LimelightHelpers.getBotPose3d_wpiBlue(null),
 
               // Ambiguity, using only the first tag because ambiguity isn't applicable for multitag
-              rawSample.value.length >= 17 ? rawSample.value[16] : 0.0,
+              limelightMeasurement.tagCount >= 17 ? rawSample.value[16] : 0.0,
 
               // Tag count
-              (int) rawSample.value[8],
+              limelightMeasurement.tagCount,
 
               // Average tag distance
-              rawSample.value[10],
+              limelightMeasurement.avgTagDist,
 
               // Observation type
               PoseObservationType.MEGATAG_1));
@@ -115,19 +120,19 @@ public class VisionIOLimelight implements VisionIO {
       poseObservations.add(
           new PoseObservation(
               // Timestamp, based on server timestamp of publish and latency
-              rawSample.timestamp * 1.0e-9 - rawSample.value[7] * 1.0e-3,
+              limelightMeasurement.timestampSeconds,
 
               // 3D pose estimate
-              parsePose(rawSample.value),
+              LimelightHelpers.getBotPose3d_wpiBlue(null),
 
               // Ambiguity, zeroed because the pose is already disambiguated
               0.0,
 
               // Tag count
-              (int) rawSample.value[8],
+              limelightMeasurement.tagCount,
 
               // Average tag distance
-              rawSample.value[10],
+              limelightMeasurement.avgTagDist,
 
               // Observation type
               PoseObservationType.MEGATAG_2));
