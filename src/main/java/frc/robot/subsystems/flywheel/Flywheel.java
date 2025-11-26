@@ -24,6 +24,9 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.SimConstants;
+import frc.robot.constants.SubsystemConstants.FlywheelConstants;
+import frc.robot.util.LoggedTunableNumber;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -32,6 +35,11 @@ public class Flywheel extends SubsystemBase {
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
   private final SimpleMotorFeedforward ffModel;
   private final SysIdRoutine sysId;
+
+  private static final String flywheelName = FlywheelConstants.FLYWHEEL_STRING;
+  private static LoggedTunableNumber kP = new LoggedTunableNumber(flywheelName + "/kP", 0);
+  private static LoggedTunableNumber kI = new LoggedTunableNumber(flywheelName + "/kI", 0);
+  private static LoggedTunableNumber kD = new LoggedTunableNumber(flywheelName + "/kD", 0);
 
   /** Creates a new Flywheel. */
   public Flywheel(FlywheelIO flywheel) {
@@ -43,11 +51,11 @@ public class Flywheel extends SubsystemBase {
       case REAL:
       case REPLAY:
         ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        flywheel.configurePID(0.0, 0.0, 0.0);
+        flywheel.configurePID(kP.get(), kI.get(), kD.get());
         break;
       case SIM:
         ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        flywheel.configurePID(0.0, 0.0, 0.0);
+        flywheel.configurePID(kP.get(), kI.get(), kD.get());
         break;
       default:
         ffModel = new SimpleMotorFeedforward(0.0, 0.0);
@@ -69,6 +77,8 @@ public class Flywheel extends SubsystemBase {
   public void periodic() {
     flywheel.updateInputs(inputs);
     Logger.processInputs("Flywheel", inputs);
+
+    updateTunableNumbers();
   }
 
   /** Run open loop at the specified voltage. */
@@ -126,5 +136,11 @@ public class Flywheel extends SubsystemBase {
   /** Returns the current velocity in radians per second. */
   public double getCharacterizationVelocity() {
     return inputs.velocityRadPerSec;
+  }
+
+  public void updateTunableNumbers() {
+    if(kP.hasChanged(hashCode()) || kI.hasChanged(hashCode()) || kD.hasChanged(hashCode())) {
+      flywheel.configurePID(kP.get(), kI.get(), kD.get());
+    }
   }
 }

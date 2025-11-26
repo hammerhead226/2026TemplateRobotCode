@@ -40,6 +40,7 @@ public final class SubsystemConstants {
 
   public static class FlywheelConstants {
     public static final double GEAR_RATIO = 1.5;
+    public static final String FLYWHEEL_STRING = "defaultFlywheel";
   }
 
   public static final class ArmConstants {

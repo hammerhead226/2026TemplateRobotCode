@@ -25,7 +25,7 @@ public class Arm extends SubsystemBase {
   private final ArmIOInputsAutoLogged armInputs = new ArmIOInputsAutoLogged();
 
 
-  private static LoggedTunableNumber kP = new LoggedTunableNumber(armName +"/kP");
+  private static LoggedTunableNumber kP = new LoggedTunableNumber(armName + "/kP");
   private static LoggedTunableNumber kG = new LoggedTunableNumber(armName + "/kG");
   private static LoggedTunableNumber kV = new LoggedTunableNumber(armName + "/kV");
   private static LoggedTunableNumber kA = new LoggedTunableNumber(armName + "/kA");
