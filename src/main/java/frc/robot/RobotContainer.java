@@ -18,11 +18,14 @@ import static frc.robot.constants.VisionConstants.camera1Name;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -30,9 +33,11 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.drive.HolonomicDrive;
 import frc.robot.commands.drive.JoystickDrive;
 import frc.robot.commands.drive.JoystickDriveAtAngle;
 import frc.robot.commands.drive.PathfindToPose;
+import frc.robot.commands.drive.JoystickControl;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -54,7 +59,10 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.ControlsUtil;
+import frc.robot.util.FieldMirroring;
+import frc.robot.util.Translation2dController;
 
+import org.ironmaple.utils.FieldMirroringUtils;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -188,14 +196,22 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // deadband and sqaure inputs for better control
+    // drive.setDefaultCommand(
+    //     new JoystickDrive(
+    //         drive,
+    //         () ->
+    //             ControlsUtil.squareNorm(
+    //                 ControlsUtil.applyDeadband(
+    //                     new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
+    //         () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
+
     drive.setDefaultCommand(
-        new JoystickDrive(
+        new HolonomicDrive(
             drive,
-            () ->
-                ControlsUtil.squareNorm(
-                    ControlsUtil.applyDeadband(
-                        new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
-            () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
+            () -> JoystickControl.getVelocity(controller.getLeftX(), controller.getLeftY()),
+            () -> JoystickControl.getOmega(controller.getRightX()),
+            true));
+
 
     // example usage of joystick drive at angle
     // drive.setDefaultCommand(
@@ -231,6 +247,10 @@ public class RobotContainer {
            new PathfindToPose(drive, targetPoseTest, drive.getRotation()).untilTrajectoryTimeout()
         );
         
+    // controller.y().whileTrue(
+    //     new HolonomicDrive(
+    //         drive, , null)
+    // );
   }
 
   /**

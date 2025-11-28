@@ -69,39 +69,15 @@ public class TrigSolveTag extends Command {
 
     @Override
     public void initialize() {
-        angleController.reset(0);
+        Transform2d error = getError();
+        xController.reset(error.getX(), drive.getChassisSpeeds().vxMetersPerSecond);
+        yController.reset(error.getY(), drive.getChassisSpeeds().vyMetersPerSecond);
+        angleController.reset(error.getRotation().getRadians(), drive.getChassisSpeeds().omegaRadiansPerSecond);
     }
 
     @Override
     public void execute() {
-        // get tx and ty from camera
-        Optional<Fiducial> fiducal = vision.getFiducial(cameraIndex, tagIndex);
-        if (fiducal.isPresent()) {
-            lastOkTx = fiducal.get().tx();
-            lastOkTy = fiducal.get().ty();
-        }
-        double lastOkTxRadians = Math.toRadians(lastOkTx);
-        double lastOkTyRadians = Math.toRadians(lastOkTy);
-    
-        // trig solve for the 2d distance and yaw to tag (on the ground plane)
-        double groundToTargetRadians = robotToCamera.getRotation().getY()+lastOkTyRadians;
-        double cameraToTargetMeters = (tagPose3d.getY()-robotToCamera.getY()) / Math.tan(groundToTargetRadians);
-        Rotation2d projectedGroundAngle = new Rotation2d(
-            Math.tan(lastOkTxRadians), 
-            Math.cos(groundToTargetRadians)
-        );
-
-        // find the error between the current robotToTarget and desired robotToTarget
-        Transform2d cameraToTarget = new Transform2d(
-            new Translation2d(cameraToTargetMeters,projectedGroundAngle),
-            projectedGroundAngle
-        );
-        Transform2d robotToCamera2d = new Transform2d(
-            robotToCamera.getTranslation().toTranslation2d(), 
-            robotToCamera.getRotation().toRotation2d()
-        );
-        Transform2d robotToTargetEstimate = cameraToTarget.plus(robotToCamera2d.inverse());
-        Transform2d error = robotToTargetEstimate.plus(robotToTargetIdeal.inverse());
+        Transform2d error = getError();
 
         ChassisSpeeds speeds = new ChassisSpeeds(
             xController.calculate(error.getX()),
@@ -109,5 +85,23 @@ public class TrigSolveTag extends Command {
             angleController.calculate(error.getRotation().getRadians())
         );
         drive.runVelocity(speeds);
+    }
+
+    private Transform2d getError() {
+        // get tx and ty from camera
+        Optional<Fiducial> fiducal = vision.getFiducial(cameraIndex, tagIndex);
+        if (fiducal.isPresent()) {
+            lastOkTx = fiducal.get().tx();
+            lastOkTy = fiducal.get().ty();
+        }
+    
+        Transform2d robotToTargetEstimate = TrigLocalization.robotToTarget(
+            Math.toRadians(lastOkTx),
+            Math.toRadians(lastOkTy),
+            vision,
+            cameraIndex,
+            tagPose3d.getY()
+        );
+        return robotToTargetEstimate.plus(robotToTargetIdeal.inverse());
     }
 }

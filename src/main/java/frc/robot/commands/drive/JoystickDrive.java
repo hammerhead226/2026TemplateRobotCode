@@ -10,24 +10,26 @@ import java.util.function.Supplier;
 
 public class JoystickDrive extends Command {
   private Drive drive;
-  private Supplier<Translation2d> translationSupplier;
+  private Supplier<Translation2d> velocitySupplier;
   private DoubleSupplier omegaSupplier;
 
   public JoystickDrive(
-      Drive drive, Supplier<Translation2d> translationSupplier, DoubleSupplier omegaSupplier) {
+      Drive drive, Supplier<Translation2d> velocitySupplier, DoubleSupplier omegaSupplier) {
     addRequirements(drive);
     this.drive = drive;
-    this.translationSupplier = translationSupplier;
+    this.velocitySupplier = velocitySupplier;
     this.omegaSupplier = omegaSupplier;
   }
 
   @Override
   public void execute() {
     // Convert to field relative speeds & send command
+
+    Translation2d velocity = velocitySupplier.get();
     ChassisSpeeds speeds =
         new ChassisSpeeds(
-            translationSupplier.get().getX() * drive.getMaxLinearSpeedMetersPerSec(),
-            translationSupplier.get().getY() * drive.getMaxLinearSpeedMetersPerSec(),
+            velocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+            velocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
             omegaSupplier.getAsDouble() * drive.getMaxAngularSpeedRadPerSec());
     drive.runVelocity(
         ChassisSpeeds.fromFieldRelativeSpeeds(
