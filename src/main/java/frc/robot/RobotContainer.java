@@ -173,10 +173,6 @@ public class RobotContainer {
                 () -> JoystickController.getSpeeds(
                         drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX())));
 
-        TrigController trigController =
-                new TrigController(drive, vision, 0, 0, new Transform2d(1, 1, Rotation2d.kZero));
-        controller.a().whileTrue(new HolonomicDrive(drive, trigController::getSpeeds, trigController::reset));
-
         // example usage of joystick drive at angle
         // drive.setDefaultCommand(
         //     new JoystickDriveAtAngle(
