@@ -16,14 +16,11 @@ package frc.robot;
 import static frc.robot.constants.VisionConstants.camera0Name;
 import static frc.robot.constants.VisionConstants.camera1Name;
 
-import java.util.function.DoubleSupplier;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -35,13 +32,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.drive.HeadingLock;
 import frc.robot.commands.drive.PathfindToPose;
-import frc.robot.commands.drive.holonomic.HolonomicDrive;
-import frc.robot.commands.drive.holonomic.JoystickController;
-import frc.robot.commands.drive.holonomic.TrigController;
 import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.constants.SimConstants;
-import frc.robot.constants.VisionConstants;
 import frc.robot.constants.SubsystemConstants;
+import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -61,7 +55,9 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.ControlsUtil;
-import frc.robot.util.FieldMirroring;import java.util.Set;
+import frc.robot.util.FieldMirroring;
+import java.util.Set;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -76,6 +72,7 @@ public class RobotContainer {
     private final Flywheel flywheel;
     private final Vision vision;
     private final ObjectDetection object;
+    private DoubleSupplier omegaSupp;
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -178,10 +175,12 @@ public class RobotContainer {
     private void configureButtonBindings() {
         // deadband and sqaure inputs for better control
 
-        drive.setDefaultCommand(new HolonomicDrive(
+        drive.setDefaultCommand(new HeadingLock(
                 drive,
-                () -> JoystickController.getSpeeds(
-                        drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX())));
+                // Translation supplier (X/Y only)
+                () -> new Translation2d(controller.getLeftX(), controller.getLeftY()),
+                // Rotation input supplier
+                () -> controller.getRightX()));
 
         // example usage of joystick drive at angle
         // drive.setDefaultCommand(
@@ -214,11 +213,14 @@ public class RobotContainer {
                         drive,
                         targetPoseTest,
                         SubsystemConstants.PathConstants.DEFAULT_PATH_CONSTRAINTS,
-                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY()))
-                                * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
-                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX()))
-                                * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
-                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
+                        (DoubleSupplier)
+                                () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY()))
+                                        * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
+                        (DoubleSupplier)
+                                () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX()))
+                                        * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
+                        (DoubleSupplier)
+                                () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
 
         controller
                 .y()
