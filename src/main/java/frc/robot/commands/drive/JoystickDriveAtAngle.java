@@ -10,6 +10,8 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldMirroring;
 import java.util.function.Supplier;
 
+// TODO: extract angle logic into its own drive controller class
+@Deprecated
 public class JoystickDriveAtAngle extends Command {
     private Drive drive;
     private Supplier<Translation2d> translationSupplier;

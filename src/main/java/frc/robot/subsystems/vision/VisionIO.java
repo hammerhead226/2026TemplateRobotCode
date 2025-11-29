@@ -15,6 +15,7 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface VisionIO {
@@ -26,6 +27,8 @@ public interface VisionIO {
         public PoseObservation[] poseObservations = new PoseObservation[0];
         public int[] tagIds = new int[0];
         public double poseTimeStamp = 0;
+        public Fiducial[] fiducials = new Fiducial[0];
+        public Transform3d robotToCamera = new Transform3d();
     }
 
     /** Represents the angle to a simple target, not used for pose estimation. */
@@ -45,6 +48,14 @@ public interface VisionIO {
         MEGATAG_2,
         PHOTONVISION
     }
+
+    public static record Fiducial(
+            int id,
+            double tx, // degrees, tncx for LimeLight
+            double ty, // degrees, tncy for LimeLight
+            double ta // portion of image [0,1]
+            ) {}
+    ;
 
     public default void updateInputs(VisionIOInputs inputs) {}
 }

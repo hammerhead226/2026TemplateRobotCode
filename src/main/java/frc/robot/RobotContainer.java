@@ -20,7 +20,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -28,10 +28,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.drive.JoystickDrive;
 import frc.robot.commands.drive.PathfindToPose;
+import frc.robot.commands.drive.holonomic.HolonomicDrive;
+import frc.robot.commands.drive.holonomic.JoystickController;
+import frc.robot.commands.drive.holonomic.TrigController;
 import frc.robot.constants.SimConstants;
-import frc.robot.constants.SubsystemConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -51,8 +52,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.util.ControlsUtil;
-import frc.robot.util.FieldMirroring;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -168,11 +167,11 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         // deadband and sqaure inputs for better control
-        drive.setDefaultCommand(new JoystickDrive(
+
+        drive.setDefaultCommand(new HolonomicDrive(
                 drive,
-                () -> ControlsUtil.squareNorm(
-                        ControlsUtil.applyDeadband(new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
-                () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
+                () -> JoystickController.getSpeeds(
+                        drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX())));
 
         // example usage of joystick drive at angle
         // drive.setDefaultCommand(
