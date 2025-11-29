@@ -16,6 +16,8 @@ package frc.robot;
 import static frc.robot.constants.VisionConstants.camera0Name;
 import static frc.robot.constants.VisionConstants.camera1Name;
 
+import java.util.function.DoubleSupplier;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -34,6 +36,7 @@ import frc.robot.commands.drive.holonomic.JoystickController;
 import frc.robot.commands.drive.holonomic.TrigController;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
+import frc.robot.constants.SubsystemConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -52,6 +55,8 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.util.ControlsUtil;
+import frc.robot.util.FieldMirroring;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -204,11 +209,11 @@ public class RobotContainer {
                         drive,
                         targetPoseTest,
                         SubsystemConstants.PathConstants.DEFAULT_PATH_CONSTRAINTS,
-                        () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY()))
+                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY()))
                                 * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
-                        () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX()))
+                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX()))
                                 * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
-                        () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
+                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
     }
 
     /**
