@@ -23,7 +23,6 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -36,7 +35,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
 import frc.robot.commands.drive.holonomic.JoystickController;
-import frc.robot.commands.drive.holonomic.TrigController;
 import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
@@ -73,7 +71,9 @@ public class RobotContainer {
     // Subsystems
     public static Drive drive;
     private final Flywheel flywheel;
+    @SuppressWarnings("unused")
     private final Vision vision;
+    @SuppressWarnings("unused")
     private final ObjectDetection object;
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);

@@ -17,13 +17,8 @@ import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 public class HardStagedAlign extends SequentialCommandGroup {
-    private final double ROUGH_CONSTRAINTS_MAX_POSITION = 0.9;
-
-    private final Drive drive;
     private final Command roughPathCommand;
     private final Command precisePathCommand;
-
-    private boolean untilTrajectoryTimeoutCalled = false;
 
     public HardStagedAlign(
             Drive drive,
@@ -32,7 +27,6 @@ public class HardStagedAlign extends SequentialCommandGroup {
             PathConstraints roughConstraints,
             PathConstraints preciseConstraints) {
         addRequirements(drive);
-        this.drive = drive;
 
         ChassisSpeeds fieldRelChassisSpeeds =
                 ChassisSpeeds.fromRobotRelativeSpeeds(drive.getChassisSpeeds(), drive.getRotation());
