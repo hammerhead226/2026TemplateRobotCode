@@ -36,7 +36,7 @@ public final class SubsystemConstants {
 
         public static final double ELEVATOR_GEAR_RATIO = 1;
 
-        //Place Holder Values
+        // Place Holder Values
         public static final double LOW_SETPOINT_INCH = 0;
         public static final double MID_SETPOINT_INCH = 0;
         public static final double HIGH_SETPOINT_INCH = 0;
@@ -54,17 +54,12 @@ public final class SubsystemConstants {
         public static final double ARM_ZERO_ANGLE = 0;
         public static final double STOW_SETPOINT_DEG = 0;
 
-        //Just fillers for state machine values
+        // Just fillers for state machine values
         public static final double LOW_SETPOINT_DEG = 0;
         public static final double MID_SETPOINT_DEG = 0;
         public static final double HIGH_SETPOINT_DEG = 0;
         public static final double INTAKE_ANGLE_DEGREES = 0;
-
-
-
     }
-
-    
 
     public static final class PathConstants {
         public static final PathConstraints DEFAULT_PATH_CONSTRAINTS = new PathConstraints(
@@ -99,33 +94,35 @@ public final class SubsystemConstants {
         SIM,
         REPLAY
     }
-    public static enum ArmStates{
+
+    public static enum ArmStates {
         STOW,
         INTAKE,
         LOW,
         MID,
         HIGH
     }
-    public static enum elevatorStates{
+
+    public static enum elevatorStates {
         STOW,
         INTAKE,
         LOW,
         MID,
         HIGH
     }
-    public static enum FlywheelStates
-    {
+
+    public static enum FlywheelStates {
         OFF,
         LOWGOAL,
         HIGHGOAL
     }
-    public static enum DriveStates
-    {
+
+    public static enum DriveStates {
         FULLSPEED,
         SLOW
     }
-    public static enum SuperstructureState
-    {
+
+    public static enum SuperstructureState {
         IDLE,
         INTAKE,
         SCORELOW,

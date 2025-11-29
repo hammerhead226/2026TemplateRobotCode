@@ -107,7 +107,6 @@ public class Elevator extends SubsystemBase {
     public boolean hasReachedGoal(double thresholdInches) {
         return Math.abs(eInputs.elevatorPositionInch - goal) <= thresholdInches;
     }
-    
 
     public double getElevatorPosition() {
         return eInputs.elevatorPositionInch;
@@ -148,7 +147,7 @@ public class Elevator extends SubsystemBase {
     public boolean isExtended() {
         return extenderGoal.position == SubsystemConstants.ElevatorConstants.EXTEND_SETPOINT_INCH;
     }
-    
+
     public Command setElevatorTarget(double goalInches, double thersholdInches) {
 
         return new InstantCommand(() -> setExtenderGoal(goalInches), this)

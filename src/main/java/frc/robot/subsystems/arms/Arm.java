@@ -88,10 +88,11 @@ public class Arm extends SubsystemBase {
     public boolean atGoal(double threshold) {
         return (Math.abs(pInputs.positionDegs - goalDegrees) <= threshold);
     }
+
     public boolean hasReachedGoal(double thresholdDegrees) {
         return Math.abs(pInputs.positionDegs - goalDegrees) <= thresholdDegrees;
     }
-    
+
     private double getArmError() {
         return pInputs.positionSetpointDegs - pInputs.positionDegs;
     }
