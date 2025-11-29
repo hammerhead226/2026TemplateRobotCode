@@ -16,22 +16,31 @@ package frc.robot;
 import static frc.robot.constants.VisionConstants.camera0Name;
 import static frc.robot.constants.VisionConstants.camera1Name;
 
+import java.util.function.DoubleSupplier;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.drive.JoystickDrive;
 import frc.robot.commands.drive.PathfindToPose;
+import frc.robot.commands.drive.holonomic.HolonomicDrive;
+import frc.robot.commands.drive.holonomic.JoystickController;
+import frc.robot.commands.drive.holonomic.TrigController;
+import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
+import frc.robot.constants.SubsystemConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -51,6 +60,7 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.ControlsUtil;
+import frc.robot.util.FieldMirroring;import java.util.Set;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -166,11 +176,11 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         // deadband and sqaure inputs for better control
-        drive.setDefaultCommand(new JoystickDrive(
+
+        drive.setDefaultCommand(new HolonomicDrive(
                 drive,
-                () -> ControlsUtil.squareNorm(
-                        ControlsUtil.applyDeadband(new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
-                () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
+                () -> JoystickController.getSpeeds(
+                        drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX())));
 
         // example usage of joystick drive at angle
         // drive.setDefaultCommand(
@@ -199,7 +209,30 @@ public class RobotContainer {
 
         controller
                 .a()
-                .whileTrue(new PathfindToPose(drive, targetPoseTest, drive.getRotation()).untilTrajectoryTimeout());
+                .whileTrue(new PathfindToPose(
+                        drive,
+                        targetPoseTest,
+                        SubsystemConstants.PathConstants.DEFAULT_PATH_CONSTRAINTS,
+                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY()))
+                                * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
+                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX()))
+                                * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
+                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
+
+        controller
+                .y()
+                .whileTrue(new DeferredCommand(
+                        () -> new SoftStagedAlign(
+                                drive,
+                                new Translation2d(2, 2),
+                                new Translation2d(2, 0),
+                                PathConstraints.unlimitedConstraints(12.0), // 12 volts from battery
+                                new PathConstraints(
+                                        drive.getMaxLinearSpeedMetersPerSec() * 0.5,
+                                        1.5,
+                                        drive.getMaxAngularSpeedRadPerSec() * 0.5,
+                                        Math.toRadians(200))),
+                        Set.of(drive)));
     }
 
     /**

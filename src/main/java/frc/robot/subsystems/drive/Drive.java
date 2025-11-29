@@ -43,7 +43,6 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -51,8 +50,8 @@ import frc.robot.constants.SimConstants;
 import frc.robot.constants.SimConstants.Mode;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.vision.ObjectDetection;
+import frc.robot.util.FieldMirroring;
 import frc.robot.util.LocalADStarAK;
-import frc.robot.util.RotationUtil;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -132,7 +131,7 @@ public class Drive extends SubsystemBase {
                 this::runVelocity,
                 new PPHolonomicDriveController(new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
                 PP_CONFIG,
-                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                FieldMirroring::shouldApply,
                 this);
         Pathfinding.setPathfinder(new LocalADStarAK());
         PathPlannerLogging.setLogActivePathCallback((activePath) -> {
@@ -266,7 +265,7 @@ public class Drive extends SubsystemBase {
 
     /** Returns the module states (turn angles and drive velocities) for all of the modules. */
     @AutoLogOutput(key = "SwerveStates/Measured")
-    private SwerveModuleState[] getModuleStates() {
+    public SwerveModuleState[] getModuleStates() {
         SwerveModuleState[] states = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
             states[i] = modules[i].getState();
@@ -275,7 +274,7 @@ public class Drive extends SubsystemBase {
     }
 
     /** Returns the module positions (turn angles and drive positions) for all of the modules. */
-    private SwerveModulePosition[] getModulePositions() {
+    public SwerveModulePosition[] getModulePositions() {
         SwerveModulePosition[] states = new SwerveModulePosition[4];
         for (int i = 0; i < 4; i++) {
             states[i] = modules[i].getPosition();
@@ -285,7 +284,7 @@ public class Drive extends SubsystemBase {
 
     /** Returns the measured chassis speeds of the robot. */
     @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-    private ChassisSpeeds getChassisSpeeds() {
+    public ChassisSpeeds getChassisSpeeds() {
         return kinematics.toChassisSpeeds(getModuleStates());
     }
 
@@ -356,20 +355,5 @@ public class Drive extends SubsystemBase {
             new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
             new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
         };
-    }
-
-    public boolean isNear(Translation2d location, double distanceThresholdMeters) {
-        return location.getDistance(this.getPose().getTranslation()) <= distanceThresholdMeters;
-    }
-
-    public boolean isNear(double xMeters, double yMeters, double distanceThresholdMeters) {
-        double robotXMeters = this.getPose().getX();
-        double robotYMeters = this.getPose().getY();
-        return Math.hypot(robotXMeters - xMeters, robotYMeters - yMeters) <= distanceThresholdMeters;
-    }
-
-    public boolean isNearRotation(Rotation2d rotation, double angleThresholdDegrees) {
-        return Math.abs(RotationUtil.deltaAngleDegrees(this.getPose().getRotation(), rotation))
-                <= angleThresholdDegrees;
     }
 }
