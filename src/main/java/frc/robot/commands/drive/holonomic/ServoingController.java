@@ -1,17 +1,16 @@
-package frc.robot.commands.drive;
+package frc.robot.commands.drive.holonomic;
 
 import java.util.Optional;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO.Fiducial;
 
 // TODO: test
-public class ServoToTag extends Command {
+public class ServoingController {
     private final Drive drive;
     private final Vision vision;
     private final int cameraIndex;
@@ -25,13 +24,11 @@ public class ServoToTag extends Command {
     private ProfiledPIDController angleController;
     private double lastOkTx;
 
-    public ServoToTag(Drive drive, Vision vision, int cameraIndex, int tagIndex) {
+    public ServoingController(Drive drive, Vision vision, int cameraIndex, int tagIndex) {
         this.drive = drive;
         this.vision = vision;
         this.cameraIndex = cameraIndex;
         this.tagIndex = tagIndex;
-        
-        addRequirements(drive);
 
         angleController = new ProfiledPIDController(
             ANGLE_KP, 
@@ -41,20 +38,21 @@ public class ServoToTag extends Command {
         angleController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
-    @Override
-    public void initialize() {
-        angleController.reset(0);
+    public void reset() {
+        double robotToTargetRadians = robotToTargetRadians();
+        angleController.reset(robotToTargetRadians, drive.getChassisSpeeds().omegaRadiansPerSecond);
     }
 
-    @Override
-    public void execute() {
+    public ChassisSpeeds getSpeeds() {
+        double robotToTargetRadians = robotToTargetRadians();
+        double omega = angleController.calculate(robotToTargetRadians);
+
+        return new ChassisSpeeds(0,0,omega * drive.getMaxAngularSpeedRadPerSec());
+    }
+
+    private double robotToTargetRadians() {
         Optional<Fiducial> fiducal = vision.getFiducial(cameraIndex, tagIndex);
         if (fiducal.isPresent()) lastOkTx = fiducal.get().tx();
-        double lastOkTxRadians = Math.toRadians(lastOkTx);
-
-        double omega = angleController.calculate(lastOkTxRadians);
-
-        ChassisSpeeds speeds = new ChassisSpeeds(0,0,omega);
-        drive.runVelocity(speeds);
+        return Math.toRadians(lastOkTx);
     }
 }

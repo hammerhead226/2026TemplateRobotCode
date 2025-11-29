@@ -1,4 +1,4 @@
-package frc.robot.commands.drive;
+package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -6,7 +6,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.subsystems.vision.Vision;
 
-public class TrigLocalization {
+public class TrigLocalizationUtil {
     public static Transform2d robotToTarget(double txRadians, double tyRadians, Transform3d robotToCamera, double targetY) {
         // trig solve for the distance and yaw from camera to target when projected onto the xy plane (the ground)
         double groundToTargetRadians = robotToCamera.getRotation().getY()+tyRadians;
