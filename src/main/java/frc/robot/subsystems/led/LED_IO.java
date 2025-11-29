@@ -9,16 +9,16 @@ import org.littletonrobotics.junction.AutoLog;
 
 /** Add your docs here. */
 public interface LED_IO {
-  @AutoLog
-  public static class LED_IOInputs {
-    public LED_STATE ledState = LED_STATE.OFF;
+    @AutoLog
+    public static class LED_IOInputs {
+        public LED_STATE ledState = LED_STATE.OFF;
 
-    public double currentAmps;
-  }
+        public double currentAmps;
+    }
 
-  public default void updateInputs(LED_IOInputs inputs) {}
+    public default void updateInputs(LED_IOInputs inputs) {}
 
-  public default void noBumpersPressed() {}
+    public default void noBumpersPressed() {}
 
-  public default void setLEDState(LED_STATE state) {}
+    public default void setLEDState(LED_STATE state) {}
 }
