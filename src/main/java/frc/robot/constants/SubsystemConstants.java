@@ -103,7 +103,7 @@ public final class SubsystemConstants {
         HIGH
     }
 
-    public static enum elevatorStates {
+    public static enum ElevatorStates {
         STOW,
         INTAKE,
         LOW,
