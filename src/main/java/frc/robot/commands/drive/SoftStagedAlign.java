@@ -1,14 +1,5 @@
 package frc.robot.commands.drive;
 
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.util.FieldMirroring;
-import edu.wpi.first.math.geometry.Pose2d;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.littletonrobotics.junction.Logger;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.ConstraintsZone;
 import com.pathplanner.lib.path.GoalEndState;
@@ -16,12 +7,15 @@ import com.pathplanner.lib.path.IdealStartingState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
-import com.pathplanner.lib.util.FlippingUtil;
-
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.drive.Drive;
+import java.util.ArrayList;
+import java.util.List;
+import org.littletonrobotics.junction.Logger;
 
 public class SoftStagedAlign extends Command {
     private final double ROUGH_CONSTRAINTS_MAX_POSITION = 0.9;
@@ -31,28 +25,35 @@ public class SoftStagedAlign extends Command {
 
     private boolean withTrajectoryTimeoutCalled = false;
 
-    public SoftStagedAlign(Drive drive, Translation2d roughTranslation, Translation2d preciseTranslation, PathConstraints roughConstraints, PathConstraints preciseConstraints) {
+    public SoftStagedAlign(
+            Drive drive,
+            Translation2d roughTranslation,
+            Translation2d preciseTranslation,
+            PathConstraints roughConstraints,
+            PathConstraints preciseConstraints) {
         addRequirements(drive);
         this.drive = drive;
 
-        ChassisSpeeds fieldRelChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(drive.getChassisSpeeds(), drive.getRotation());
-        double chassisSpeedsMagnitude = 
-            Math.hypot(
-                fieldRelChassisSpeeds.vxMetersPerSecond, fieldRelChassisSpeeds.vyMetersPerSecond);
+        ChassisSpeeds fieldRelChassisSpeeds =
+                ChassisSpeeds.fromRobotRelativeSpeeds(drive.getChassisSpeeds(), drive.getRotation());
+        double chassisSpeedsMagnitude =
+                Math.hypot(fieldRelChassisSpeeds.vxMetersPerSecond, fieldRelChassisSpeeds.vyMetersPerSecond);
 
         Rotation2d startingHeading;
         if (chassisSpeedsMagnitude >= 0.2) {
             // the robot's speed is substantial, consider it in the path's starting conditions
-            startingHeading = new Rotation2d(fieldRelChassisSpeeds.vxMetersPerSecond, fieldRelChassisSpeeds.vyMetersPerSecond);
+            startingHeading =
+                    new Rotation2d(fieldRelChassisSpeeds.vxMetersPerSecond, fieldRelChassisSpeeds.vyMetersPerSecond);
         } else {
             // the robot's speed is small, just head to the roughTranslation
-            Translation2d robotToRoughTranslation = roughTranslation.minus(drive.getPose().getTranslation());
+            Translation2d robotToRoughTranslation =
+                    roughTranslation.minus(drive.getPose().getTranslation());
 
             if (robotToRoughTranslation.getNorm() <= 1e-6) { // from Rotation2d's internal epilson value
                 // too close, instead default direction to 0
                 startingHeading = Rotation2d.kZero;
             } else {
-                startingHeading = new Rotation2d(robotToRoughTranslation.getX(),robotToRoughTranslation.getY());
+                startingHeading = new Rotation2d(robotToRoughTranslation.getX(), robotToRoughTranslation.getY());
             }
         }
 
@@ -60,43 +61,42 @@ public class SoftStagedAlign extends Command {
         Rotation2d alignmentHeading = new Rotation2d(roughToPrecise.getX(), roughToPrecise.getY());
 
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
-            new Pose2d(drive.getPose().getTranslation(), startingHeading),
-            new Pose2d(roughTranslation, alignmentHeading), 
-            new Pose2d(preciseTranslation, alignmentHeading)
-        );
+                new Pose2d(drive.getPose().getTranslation(), startingHeading),
+                new Pose2d(roughTranslation, alignmentHeading),
+                new Pose2d(preciseTranslation, alignmentHeading));
 
         Logger.recordOutput("AutoBuilder/shouldFlip()", AutoBuilder.shouldFlip());
 
         if (AutoBuilder.shouldFlip()) {
             for (int i = 0; i < waypoints.size(); i++) {
-                waypoints.set(i,waypoints.get(i).flip());
+                waypoints.set(i, waypoints.get(i).flip());
             }
         }
 
         List<ConstraintsZone> constraintsZones = new ArrayList<>();
-        constraintsZones.add(new ConstraintsZone(0.0,ROUGH_CONSTRAINTS_MAX_POSITION,roughConstraints));
+        constraintsZones.add(new ConstraintsZone(0.0, ROUGH_CONSTRAINTS_MAX_POSITION, roughConstraints));
 
         PathPlannerPath path = new PathPlannerPath(
-            waypoints, 
-            new ArrayList<>(), // holonomicRotations 
-            new ArrayList<>(), // pointTowardsZones 
-            constraintsZones, 
-            new ArrayList<>(), // eventMarkers
-            preciseConstraints, // globalConstraints
-            new IdealStartingState(chassisSpeedsMagnitude, drive.getRotation()), 
-            new GoalEndState(0.0, alignmentHeading), 
-            false);
-        
+                waypoints,
+                new ArrayList<>(), // holonomicRotations
+                new ArrayList<>(), // pointTowardsZones
+                constraintsZones,
+                new ArrayList<>(), // eventMarkers
+                preciseConstraints, // globalConstraints
+                new IdealStartingState(chassisSpeedsMagnitude, drive.getRotation()),
+                new GoalEndState(0.0, alignmentHeading),
+                false);
+
         pathCommand = AutoBuilder.followPath(path);
     }
-        
+
     public void initialize() {
         pathCommand.initialize();
     }
-    
+
     public void execute() {
         pathCommand.execute();
-    }   
+    }
 
     public void end(boolean interrupted) {
         drive.stop();
@@ -104,10 +104,8 @@ public class SoftStagedAlign extends Command {
 
     @Override
     public boolean isFinished() {
-        if (withTrajectoryTimeoutCalled)
-            if (pathCommand.isFinished())
-                return true;
-        
+        if (withTrajectoryTimeoutCalled) if (pathCommand.isFinished()) return true;
+
         return false;
     }
 
