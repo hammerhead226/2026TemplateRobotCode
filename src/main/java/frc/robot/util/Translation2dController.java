@@ -1,7 +1,5 @@
 package frc.robot.util;
 
-import java.util.function.Supplier;
-
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 
@@ -15,6 +13,7 @@ public record Translation2dController(ProfiledPIDController xController, Profile
     }
 
     public Translation2d calculate(double xMeasurement, double xGoal, double yMeasurement, double yGoal) {
-        return new Translation2d(xController.calculate(xMeasurement, xGoal), yController.calculate(yMeasurement, yGoal));
+        return new Translation2d(
+                xController.calculate(xMeasurement, xGoal), yController.calculate(yMeasurement, yGoal));
     }
 }

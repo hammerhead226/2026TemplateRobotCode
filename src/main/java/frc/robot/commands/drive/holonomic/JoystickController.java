@@ -2,9 +2,9 @@ package frc.robot.commands.drive.holonomic;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.ControlsUtil;
 import frc.robot.util.FieldMirroring;
-import frc.robot.subsystems.drive.Drive;
 
 public class JoystickController {
     public static ChassisSpeeds getSpeeds(Drive drive, double x, double y, double rotation) {
@@ -17,12 +17,11 @@ public class JoystickController {
         velocity = velocity.rotateBy(FieldMirroring.driverStationFacing());
 
         // scale to drive's max speed
-        ChassisSpeeds speeds =
-            new ChassisSpeeds(
+        ChassisSpeeds speeds = new ChassisSpeeds(
                 velocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                 velocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                 omega * drive.getMaxAngularSpeedRadPerSec());
-        
+
         // make field relative
         return ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation());
     }

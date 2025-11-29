@@ -1,13 +1,12 @@
 package frc.robot.commands.drive.holonomic;
 
-import java.util.Optional;
-
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO.Fiducial;
+import java.util.Optional;
 
 // TODO: test
 public class ServoingController {
@@ -15,7 +14,7 @@ public class ServoingController {
     private final Vision vision;
     private final int cameraIndex;
     private final int tagIndex;
-    
+
     private static final double ANGLE_KP = 5.0;
     private static final double ANGLE_KD = 0.4;
     private static final double ANGLE_MAX_VELOCITY = 8.0;
@@ -31,10 +30,7 @@ public class ServoingController {
         this.tagIndex = tagIndex;
 
         angleController = new ProfiledPIDController(
-            ANGLE_KP, 
-            0.0, 
-            ANGLE_KD, 
-            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+                ANGLE_KP, 0.0, ANGLE_KD, new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
         angleController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
@@ -47,7 +43,7 @@ public class ServoingController {
         double robotToTargetRadians = robotToTargetRadians();
         double omega = angleController.calculate(robotToTargetRadians);
 
-        return new ChassisSpeeds(0,0,omega * drive.getMaxAngularSpeedRadPerSec());
+        return new ChassisSpeeds(0, 0, omega * drive.getMaxAngularSpeedRadPerSec());
     }
 
     private double robotToTargetRadians() {

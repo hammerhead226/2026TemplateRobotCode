@@ -1,7 +1,5 @@
 package frc.robot.commands.drive.holonomic;
 
-import java.util.Optional;
-
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -12,6 +10,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO.Fiducial;
 import frc.robot.util.TrigLocalizationUtil;
+import java.util.Optional;
 
 // TODO: test
 public class TrigController {
@@ -31,7 +30,7 @@ public class TrigController {
     private static final double Y_KD = 0.4;
     private static final double Y_MAX_VELOCITY = 8.0;
     private static final double Y_MAX_ACCELERATION = 20.0;
-    
+
     private static final double ANGLE_KP = 5.0;
     private static final double ANGLE_KD = 0.4;
     private static final double ANGLE_MAX_VELOCITY = 8.0;
@@ -54,9 +53,12 @@ public class TrigController {
 
         tagPose3d = VisionConstants.aprilTagLayout.getTagPose(tagIndex).get();
 
-        xController = new ProfiledPIDController(X_KP, 0.0, X_KD, new TrapezoidProfile.Constraints(X_MAX_VELOCITY, X_MAX_ACCELERATION));
-        yController = new ProfiledPIDController(Y_KP, 0.0, Y_KD, new TrapezoidProfile.Constraints(Y_MAX_VELOCITY, Y_MAX_ACCELERATION));
-        angleController = new ProfiledPIDController(ANGLE_KP, 0.0, ANGLE_KD, new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+        xController = new ProfiledPIDController(
+                X_KP, 0.0, X_KD, new TrapezoidProfile.Constraints(X_MAX_VELOCITY, X_MAX_ACCELERATION));
+        yController = new ProfiledPIDController(
+                Y_KP, 0.0, Y_KD, new TrapezoidProfile.Constraints(Y_MAX_VELOCITY, Y_MAX_ACCELERATION));
+        angleController = new ProfiledPIDController(
+                ANGLE_KP, 0.0, ANGLE_KD, new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
         angleController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
@@ -75,10 +77,10 @@ public class TrigController {
         Transform2d robotToTarget = robotToTarget();
 
         return new ChassisSpeeds(
-            xController.calculate(robotToTarget.getX()) * drive.getMaxLinearSpeedMetersPerSec(),
-            yController.calculate(robotToTarget.getY()) * drive.getMaxLinearSpeedMetersPerSec(),
-            angleController.calculate(robotToTarget.getRotation().getRadians()) * drive.getMaxAngularSpeedRadPerSec()
-        );
+                xController.calculate(robotToTarget.getX()) * drive.getMaxLinearSpeedMetersPerSec(),
+                yController.calculate(robotToTarget.getY()) * drive.getMaxLinearSpeedMetersPerSec(),
+                angleController.calculate(robotToTarget.getRotation().getRadians())
+                        * drive.getMaxAngularSpeedRadPerSec());
     }
 
     private Transform2d robotToTarget() {
@@ -88,13 +90,8 @@ public class TrigController {
             lastOkTx = fiducal.get().tx();
             lastOkTy = fiducal.get().ty();
         }
-    
+
         return TrigLocalizationUtil.robotToTarget(
-            Math.toRadians(lastOkTx),
-            Math.toRadians(lastOkTy),
-            vision,
-            cameraIndex,
-            tagPose3d.getY()
-        );
+                Math.toRadians(lastOkTx), Math.toRadians(lastOkTy), vision, cameraIndex, tagPose3d.getY());
     }
 }

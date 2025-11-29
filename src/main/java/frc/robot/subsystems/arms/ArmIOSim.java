@@ -14,77 +14,73 @@ import frc.robot.constants.SubsystemConstants;
 /** Add your docs here. */
 public class ArmIOSim implements ArmIO {
 
-  // SIM VARIABLES (CHANGE)
-  private int gearBoxMotorCount = 1;
-  private double gearing = 1;
-  private double armLength = Units.inchesToMeters(1); // CHANGE PER ARM
-  private double momentOfInertia = SingleJointedArmSim.estimateMOI(armLength, 1); // CHANGE PER ARM
-  private double minAngleRadians = 0;
-  private double maxAngleRadians = Math.PI;
-  private boolean simulateGravity = true;
-  private double startingAngleRads = 0.0;
+    // SIM VARIABLES (CHANGE)
+    private int gearBoxMotorCount = 1;
+    private double gearing = 1;
+    private double armLength = Units.inchesToMeters(1); // CHANGE PER ARM
+    private double momentOfInertia = SingleJointedArmSim.estimateMOI(armLength, 1); // CHANGE PER ARM
+    private double minAngleRadians = 0;
+    private double maxAngleRadians = Math.PI;
+    private boolean simulateGravity = true;
+    private double startingAngleRads = 0.0;
 
-  private final DCMotor armGearbox = DCMotor.getFalcon500(gearBoxMotorCount);
-  private final SingleJointedArmSim sim =
-      new SingleJointedArmSim(
-          armGearbox,
-          gearing,
-          momentOfInertia,
-          armLength,
-          minAngleRadians,
-          maxAngleRadians,
-          simulateGravity,
-          startingAngleRads);
-  private final PIDController pid = new PIDController(0, 0, 0);
+    private final DCMotor armGearbox = DCMotor.getFalcon500(gearBoxMotorCount);
+    private final SingleJointedArmSim sim = new SingleJointedArmSim(
+            armGearbox,
+            gearing,
+            momentOfInertia,
+            armLength,
+            minAngleRadians,
+            maxAngleRadians,
+            simulateGravity,
+            startingAngleRads);
+    private final PIDController pid = new PIDController(0, 0, 0);
 
-  private double currentAmps = 0.0;
-  private double appliedVolts = 0.0;
-  private double velocityRadsPerSec = 0.0;
-  private double positionRads = 0.0;
-  private double positionSetpointRads = 0.0;
+    private double currentAmps = 0.0;
+    private double appliedVolts = 0.0;
+    private double velocityRadsPerSec = 0.0;
+    private double positionRads = 0.0;
+    private double positionSetpointRads = 0.0;
 
-  private double clampedValueLowVolts = -12.0;
-  private double clampedValueHighVolts = 12.0;
+    private double clampedValueLowVolts = -12.0;
+    private double clampedValueHighVolts = 12.0;
 
-  @Override
-  public void updateInputs(ArmIOInputs inputs) {
-    positionSetpointRads = pid.getSetpoint();
+    @Override
+    public void updateInputs(ArmIOInputs inputs) {
+        positionSetpointRads = pid.getSetpoint();
 
-    appliedVolts +=
-        MathUtil.clamp(
-            pid.calculate(sim.getAngleRads(), positionSetpointRads),
-            clampedValueLowVolts,
-            clampedValueHighVolts);
+        appliedVolts += MathUtil.clamp(
+                pid.calculate(sim.getAngleRads(), positionSetpointRads), clampedValueLowVolts, clampedValueHighVolts);
 
-    sim.setInputVoltage(appliedVolts);
+        sim.setInputVoltage(appliedVolts);
 
-    positionRads = sim.getAngleRads();
-    velocityRadsPerSec = sim.getVelocityRadPerSec();
-    currentAmps = sim.getCurrentDrawAmps();
+        positionRads = sim.getAngleRads();
+        velocityRadsPerSec = sim.getVelocityRadPerSec();
+        currentAmps = sim.getCurrentDrawAmps();
 
-    inputs.positionSetpointDegs = Math.toDegrees(positionSetpointRads);
-    inputs.appliedVolts = appliedVolts;
-    inputs.positionDegs = Math.toDegrees(positionRads);
-    inputs.velocityDegsPerSec = Math.toDegrees(velocityRadsPerSec);
-    inputs.currentAmps = currentAmps;
+        inputs.positionSetpointDegs = Math.toDegrees(positionSetpointRads);
+        inputs.appliedVolts = appliedVolts;
+        inputs.positionDegs = Math.toDegrees(positionRads);
+        inputs.velocityDegsPerSec = Math.toDegrees(velocityRadsPerSec);
+        inputs.currentAmps = currentAmps;
 
-    sim.update(SubsystemConstants.LOOP_PERIOD_SECONDS);
-  }
+        sim.update(SubsystemConstants.LOOP_PERIOD_SECONDS);
+    }
 
-  @Override
-  public void setPositionSetpointDegs(double positionDegs, double ffVolts) {
-    appliedVolts = ffVolts;
-    pid.setSetpoint(Math.toRadians(positionDegs));
-  }
+    @Override
+    public void setPositionSetpointDegs(double positionDegs, double ffVolts) {
+        appliedVolts = ffVolts;
+        pid.setSetpoint(Math.toRadians(positionDegs));
+    }
 
-  @Override
-  public void stop() {
-    appliedVolts = 0;
-    pid.setSetpoint(sim.getAngleRads());
-  }
+    @Override
+    public void stop() {
+        appliedVolts = 0;
+        pid.setSetpoint(sim.getAngleRads());
+    }
 
-  @Override
-  public void configurePID(double kP, double kI, double kD) {
-    pid.setPID(kP, kI, kD);
-  }
+    @Override
+    public void configurePID(double kP, double kI, double kD) {
+        pid.setPID(kP, kI, kD);
+    }
 }
