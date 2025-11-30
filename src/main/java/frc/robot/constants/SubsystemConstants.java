@@ -38,6 +38,10 @@ public final class SubsystemConstants {
     public static final double ELEVATOR_GEAR_RATIO = 1;
   }
 
+  public static class IndexerConstants {
+    public static final String INDEXER_STRING = "defaultIndexer";
+  }
+
   public static class FlywheelConstants {
     public static final double GEAR_RATIO = 1.5;
     public static final String FLYWHEEL_STRING = "defaultFlywheel";
