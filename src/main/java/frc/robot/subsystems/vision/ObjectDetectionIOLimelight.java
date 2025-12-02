@@ -72,6 +72,8 @@ public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
 
   public Pose2d getPose() { 
     return new Pose2d(distanceToObjectX.get(Double.valueOf(LimelightHelpers.getTX(null))),
-     distanceToObjectY.get(Double.valueOf(LimelightHelpers.getTY(null))), null);
+     distanceToObjectY.get(Double.valueOf(LimelightHelpers.getTY(null))), null
+     // 18/Math.tan(Width/constant)
+     );
     }
 }

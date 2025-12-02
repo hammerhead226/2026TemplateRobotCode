@@ -24,6 +24,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.LimelightResults;
+import frc.robot.LimelightHelpers.RawFiducial;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -68,6 +69,8 @@ public class VisionIOLimelight implements VisionIO {
     LimelightHelpers.PoseEstimate limelightMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
     // Update connection status based on whether an update has been seen in the last 250ms
     inputs.connected = (RobotController.getFPGATime() - latencySubscriber.getLastChange()) < 250;
+    RawFiducial[] rawFiducials = LimelightHelpers.getRawFiducials("");
+    double ambiguity = rawFiducials[6].ambiguity;
 
     // Update heartbeat
     inputs.heartBeat = hbSubscriber.get();
@@ -101,7 +104,7 @@ public class VisionIOLimelight implements VisionIO {
               LimelightHelpers.getBotPose3d_wpiBlue(null),
 
               // Ambiguity, using only the first tag because ambiguity isn't applicable for multitag
-              limelightMeasurement.tagCount >= 17 ? rawSample.value[16] : 0.0,
+              limelightMeasurement.tagCount >= 1 ? ambiguity : 0.0,
 
               // Tag count
               limelightMeasurement.tagCount,

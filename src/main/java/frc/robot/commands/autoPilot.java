@@ -6,9 +6,12 @@ package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
+import com.google.flatbuffers.Constants;
 import com.therekrab.autopilot.APConstraints;
 import com.therekrab.autopilot.APProfile;
 import com.therekrab.autopilot.APTarget;
@@ -18,9 +21,11 @@ import com.therekrab.autopilot.Autopilot.APResult;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
+import com.ctre.phoenix6.swerve.SwerveModule;
+
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.Vision;
 
@@ -33,10 +38,10 @@ public class autoPilot extends Command {
 
   private final APTarget target;
 
-  private final SwerveRequest.FieldCentricFacingAngle m_request = new SwerveRequest.FieldCentricFacingAngle()
-      .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
-      .withDriveRequestType(drive.getFFCharacterizationVelocity())
-      .withHeadingPID(4, 0, 0); /* tune this for your robot! */
+  private SwerveRequest.FieldCentricFacingAngle m_request = new SwerveRequest.FieldCentricFacingAngle()
+    .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
+    .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
+    .withHeadingPID(4, 0, 0); /* tune this for your robot! */
 
       private static final APConstraints kConstraints = new APConstraints()
     .withAcceleration(5.0)
@@ -47,13 +52,12 @@ private static final APProfile kProfile = new APProfile(kConstraints)
     .withErrorTheta(Degrees.of(0.5))
     .withBeelineRadius(Centimeters.of(8));
 
-public static final Autopilot kAutopilot = new Autopilot(kProfile);
+private static final Autopilot kAutopilot = new Autopilot(kProfile);
 
-  public autoPilot(Drive drive, Vision vision, APTarget target, Autopilot kAutopilot) {
+  public autoPilot(Drive drive, Vision vision, APTarget target) {
     this.drive = drive;
     this.vision = vision;
     this.target = target;
-    this.kAutopilot = kAutopilot;
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(drive, vision);
   }
@@ -67,15 +71,18 @@ public static final Autopilot kAutopilot = new Autopilot(kProfile);
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    ChassisSpeeds robotRelativeSpeeds = drive.getRobotRelativeSpeeds();
+    ChassisSpeeds robotRelativeSpeeds = drive.getChassisSpeeds();
     Pose2d pose = drive.getPose();
 
-    APResult out = Constants.kAutopilot.calculate(pose, robotRelativeSpeeds, target);
+    APResult out = autoPilot.kAutopilot.calculate(pose, robotRelativeSpeeds, target);
   
-    drive.setControl(m_request
-        .withVelcoityX(out.vx())
-        .withVelocityY(out.vy())
-        .withTargetDirection(out.targetAngle()));
+    final double P = 2;
+    drive.runVelocity(new ChassisSpeeds(out.vx(), out.vy(), AngularVelocity.ofBaseUnits(P*(out.targetAngle().getRadians() - drive.getRotation().getRadians()), RadiansPerSecond)));
+      
+    // m_request
+    //     .withVelocityX(out.vx())
+    //     .withVelocityY(out.vy())
+    //     .withTargetDirection(out.targetAngle()));
   }
 
   // Called once the command ends or is interrupted.
