@@ -19,7 +19,8 @@ public class TrigLocalizationUtil {
             cameraToTargetMeters = Double.MAX_VALUE;
         }
         
-        Rotation2d projectedGroundAngle = new Rotation2d(Math.tan(txRadians), Math.cos(groundToTargetRadians));
+        // tx is negated to convert to CWW+
+        Rotation2d projectedGroundAngle = new Rotation2d(Math.tan(-txRadians), Math.cos(groundToTargetRadians));
         Transform2d cameraToTarget =
                 new Transform2d(new Translation2d(cameraToTargetMeters, projectedGroundAngle), projectedGroundAngle);
 
