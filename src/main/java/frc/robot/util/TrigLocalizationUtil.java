@@ -18,7 +18,7 @@ public class TrigLocalizationUtil {
             // angle is 0, target distance can't be determined by this method
             cameraToTargetMeters = Double.MAX_VALUE;
         }
-        
+
         // tx is negated to convert to CWW+
         Rotation2d projectedGroundAngle = new Rotation2d(Math.tan(-txRadians), Math.cos(groundToTargetRadians));
         Transform2d cameraToTarget =

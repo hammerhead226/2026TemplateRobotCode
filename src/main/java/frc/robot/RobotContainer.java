@@ -16,15 +16,12 @@ package frc.robot;
 import static frc.robot.constants.VisionConstants.camera0Name;
 import static frc.robot.constants.VisionConstants.camera1Name;
 
-import java.util.function.DoubleSupplier;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,13 +29,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.drive.PathfindToPose;
+import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
 import frc.robot.commands.drive.holonomic.JoystickController;
-import frc.robot.commands.drive.SoftStagedAlign;
+import frc.robot.commands.drive.holonomic.PIDPoseController;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
-import frc.robot.constants.SubsystemConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -57,8 +53,7 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.util.ControlsUtil;
-import frc.robot.util.FieldMirroring;import java.util.Set;
+import java.util.Set;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -71,15 +66,16 @@ public class RobotContainer {
     // Subsystems
     public static Drive drive;
     private final Flywheel flywheel;
+
     @SuppressWarnings("unused")
     private final Vision vision;
+
     @SuppressWarnings("unused")
     private final ObjectDetection object;
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
 
-    Pose2d targetPoseTest = new Pose2d(
-            Units.inchesToMeters(31.526), Units.inchesToMeters(297.176), Rotation2d.fromDegrees(90 - 144.011));
+    Pose2d targetPoseTest = new Pose2d(2, 4, Rotation2d.fromDegrees(90));
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
@@ -207,25 +203,34 @@ public class RobotContainer {
                                 drive)
                         .ignoringDisable(true));
 
-        controller
-                .a()
-                .whileTrue(new PathfindToPose(
-                        drive,
-                        targetPoseTest,
-                        SubsystemConstants.PathConstants.DEFAULT_PATH_CONSTRAINTS,
-                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY()))
-                                * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
-                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX()))
-                                * (FieldMirroring.shouldApply() ? -1.0 : 1.0),
-                        (DoubleSupplier)() -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
+        // controller
+        //         .a()
+        //         .whileTrue(new PathfindToPose(
+        //                 drive,
+        //                 targetPoseTest,
+        //                 SubsystemConstants.PathConstants.DEFAULT_PATH_CONSTRAINTS,
+        //                 (DoubleSupplier)
+        //                         () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY()))
+        //                                 * (FieldMirroring.shouldApply() ? -1.0 : 1.0)
+        //                                 * drive.getMaxLinearSpeedMetersPerSec(),
+        //                 (DoubleSupplier)
+        //                         () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX()))
+        //                                 * (FieldMirroring.shouldApply() ? -1.0 : 1.0)
+        //                                 * drive.getMaxLinearSpeedMetersPerSec(),
+        //                 (DoubleSupplier)
+        //                         () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))
+        //                                 * drive.getMaxAngularSpeedRadPerSec()));
+
+        PIDPoseController pidPoseController = new PIDPoseController(drive, drive::getPose, () -> targetPoseTest);
+        controller.a().whileTrue(new HolonomicDrive(drive, pidPoseController::getSpeeds, pidPoseController::reset));
 
         controller
                 .y()
                 .whileTrue(new DeferredCommand(
                         () -> new SoftStagedAlign(
                                 drive,
-                                new Translation2d(2, 2),
-                                new Translation2d(2, 0),
+                                new Translation2d(2, 3),
+                                new Translation2d(2, 4),
                                 PathConstraints.unlimitedConstraints(12.0), // 12 volts from battery
                                 new PathConstraints(
                                         drive.getMaxLinearSpeedMetersPerSec() * 0.5,

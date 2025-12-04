@@ -64,7 +64,8 @@ public class TrigController {
 
     public void reset() {
         Transform2d robotToTarget = robotToTarget();
-        ChassisSpeeds tagRelativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(drive.getChassisSpeeds(),robotToTarget.getRotation());
+        ChassisSpeeds tagRelativeSpeeds =
+                ChassisSpeeds.fromFieldRelativeSpeeds(drive.getChassisSpeeds(), robotToTarget.getRotation());
         xController.reset(robotToTarget.getX(), tagRelativeSpeeds.vxMetersPerSecond);
         yController.reset(robotToTarget.getY(), tagRelativeSpeeds.vyMetersPerSecond);
         angleController.reset(robotToTarget.getRotation().getRadians(), tagRelativeSpeeds.omegaRadiansPerSecond);
@@ -78,12 +79,12 @@ public class TrigController {
         Transform2d robotToTarget = robotToTarget();
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(
-                xController.calculate(robotToTarget.getX()) * drive.getMaxLinearSpeedMetersPerSec(),
-                yController.calculate(robotToTarget.getY()) * drive.getMaxLinearSpeedMetersPerSec(),
-                angleController.calculate(robotToTarget.getRotation().getRadians())
-                        * drive.getMaxAngularSpeedRadPerSec()), 
-            robotToTarget.getRotation());
+                new ChassisSpeeds(
+                        xController.calculate(robotToTarget.getX()) * drive.getMaxLinearSpeedMetersPerSec(),
+                        yController.calculate(robotToTarget.getY()) * drive.getMaxLinearSpeedMetersPerSec(),
+                        angleController.calculate(robotToTarget.getRotation().getRadians())
+                                * drive.getMaxAngularSpeedRadPerSec()),
+                robotToTarget.getRotation());
     }
 
     private Transform2d robotToTarget() {
