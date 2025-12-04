@@ -8,6 +8,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
 import frc.robot.commands.drive.holonomic.JoystickController;
@@ -26,6 +27,8 @@ public class HeadingLock extends Command {
 
     private HolonomicDrive jStickDrive;
     private HolonomicDrive headingHoldDrive;
+
+    Timer timer = new Timer();
 
     private Rotation2d targetAngle;
 
@@ -46,7 +49,7 @@ public class HeadingLock extends Command {
                 drive, vxSupplier.getAsDouble(), vySupplier.getAsDouble(), omegaSupplier.getAsDouble()));
 
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(3.0, 0, 0.4, new TrapezoidProfile.Constraints(8.0, 20.0));
+                new ProfiledPIDController(1.0, 0, 0.4, new TrapezoidProfile.Constraints(8.0, 20.0));
         rotationController.reset(drive.getRotation().getRadians(), drive.getChassisSpeeds().omegaRadiansPerSecond);
         rotationController.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -65,14 +68,20 @@ public class HeadingLock extends Command {
 
     @Override
     public void execute() {
+        // Once executed timer starts, if rotation is detected timer is reset and kept at 0
+        // If no rotation is detected for 0.2s heading hold is activated
         double omega = omegaSupplier.getAsDouble();
-        if (omega < -0.1 || 0.1 < omega) {
+        timer.start();
+        if ((omega < -0.1 || 0.1 < omega)) {
             targetAngle = drive.getPose().getRotation();
+            timer.reset();
             jStickDrive.execute();
-        } else {
+
+        } else if (timer.get() > 1) {
             headingHoldDrive.execute();
-        }
+        } 
     }
+    
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {}
