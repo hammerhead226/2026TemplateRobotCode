@@ -24,9 +24,9 @@ public class FlywheelIOSim implements FlywheelIO {
     // CHANGE THESE VALUES TO MATCH YOUR MOTOR AND GEARBOX
     private int gearBoxMotorCount = 1;
     private double gearing = 1;
-    private double momentOfInertia = 1;
+    // private double momentOfInertia = 1;
     private DCMotor motor = DCMotor.getKrakenX60Foc(gearBoxMotorCount);
-    private double[] stds = {1, 2, 3};
+    // private double[] stds = {1, 2, 3};
 
     private DCMotorSim sim =
             new DCMotorSim(LinearSystemId.createDCMotorSystem(motor, gearBoxMotorCount, gearing), motor, 0.0, 0.0);

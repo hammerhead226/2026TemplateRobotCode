@@ -10,8 +10,12 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.led.LED;
 
 public class SuperStructure {
+    @SuppressWarnings("unused")
     private final Drive drive;
+
+    @SuppressWarnings("unused")
     private final Flywheel flywheel;
+
     private final Arm arm;
     private final LED led;
     private final Elevator elevator;
@@ -45,6 +49,14 @@ public class SuperStructure {
 
     public SuperstructureState getWantedState() {
         return wantedState;
+    }
+
+    public SuperstructureState getCurrenState() {
+        return currentState;
+    }
+
+    public SuperstructureState getLastState() {
+        return lastState;
     }
 
     public boolean atGoals() {

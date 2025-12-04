@@ -64,9 +64,11 @@ public class TrigController {
 
     public void reset() {
         Transform2d robotToTarget = robotToTarget();
-        xController.reset(robotToTarget.getX(), drive.getChassisSpeeds().vxMetersPerSecond);
-        yController.reset(robotToTarget.getY(), drive.getChassisSpeeds().vyMetersPerSecond);
-        angleController.reset(robotToTarget.getRotation().getRadians(), drive.getChassisSpeeds().omegaRadiansPerSecond);
+        ChassisSpeeds tagRelativeSpeeds =
+                ChassisSpeeds.fromFieldRelativeSpeeds(drive.getChassisSpeeds(), robotToTarget.getRotation());
+        xController.reset(robotToTarget.getX(), tagRelativeSpeeds.vxMetersPerSecond);
+        yController.reset(robotToTarget.getY(), tagRelativeSpeeds.vyMetersPerSecond);
+        angleController.reset(robotToTarget.getRotation().getRadians(), tagRelativeSpeeds.omegaRadiansPerSecond);
 
         xController.setGoal(robotToTargetIdeal.getX());
         yController.setGoal(robotToTargetIdeal.getY());
@@ -76,11 +78,13 @@ public class TrigController {
     public ChassisSpeeds getSpeeds() {
         Transform2d robotToTarget = robotToTarget();
 
-        return new ChassisSpeeds(
-                xController.calculate(robotToTarget.getX()) * drive.getMaxLinearSpeedMetersPerSec(),
-                yController.calculate(robotToTarget.getY()) * drive.getMaxLinearSpeedMetersPerSec(),
-                angleController.calculate(robotToTarget.getRotation().getRadians())
-                        * drive.getMaxAngularSpeedRadPerSec());
+        return ChassisSpeeds.fromFieldRelativeSpeeds(
+                new ChassisSpeeds(
+                        xController.calculate(robotToTarget.getX()) * drive.getMaxLinearSpeedMetersPerSec(),
+                        yController.calculate(robotToTarget.getY()) * drive.getMaxLinearSpeedMetersPerSec(),
+                        angleController.calculate(robotToTarget.getRotation().getRadians())
+                                * drive.getMaxAngularSpeedRadPerSec()),
+                robotToTarget.getRotation());
     }
 
     private Transform2d robotToTarget() {

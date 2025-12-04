@@ -61,10 +61,12 @@ public class PIDPoseController {
         angleController.setGoal(targetPose.getRotation().getRadians());
 
         Pose2d estimatedPose = estimatedPoseSupplier.get();
-        return new ChassisSpeeds(
-                xController.calculate(estimatedPose.getX()) * drive.getMaxLinearSpeedMetersPerSec(),
-                yController.calculate(estimatedPose.getY()) * drive.getMaxLinearSpeedMetersPerSec(),
-                angleController.calculate(estimatedPose.getRotation().getRadians())
-                        * drive.getMaxAngularSpeedRadPerSec());
+        return ChassisSpeeds.fromFieldRelativeSpeeds(
+                new ChassisSpeeds(
+                        xController.calculate(estimatedPose.getX()) * drive.getMaxLinearSpeedMetersPerSec(),
+                        yController.calculate(estimatedPose.getY()) * drive.getMaxLinearSpeedMetersPerSec(),
+                        angleController.calculate(estimatedPose.getRotation().getRadians())
+                                * drive.getMaxAngularSpeedRadPerSec()),
+                drive.getRotation());
     }
 }

@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Main",
+      "request": "launch",
+      "mainClass": "frc.robot.Main",
+      "projectName": "2026TemplateRobotCode"
+    },
+    {
+      "type": "java",
       "name": "RotationUtil",
       "request": "launch",
       "mainClass": "frc.robot.util.RotationUtil",
