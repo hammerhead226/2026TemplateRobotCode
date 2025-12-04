@@ -175,12 +175,8 @@ public class RobotContainer {
     private void configureButtonBindings() {
         // deadband and sqaure inputs for better control
 
-        drive.setDefaultCommand(new HeadingLock(
-                drive,
-                // Translation supplier (X/Y only)
-                () -> new Translation2d(controller.getLeftX(), controller.getLeftY()),
-                // Rotation input supplier
-                () -> controller.getRightX()));
+        drive.setDefaultCommand(
+                new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX));
 
         // example usage of joystick drive at angle
         // drive.setDefaultCommand(
