@@ -3,7 +3,7 @@ package frc.robot.util;
 import edu.wpi.first.math.geometry.Translation2d;
 
 public class ControlsUtil {
-    public static final double DEFAULT_DEADBAND = 0.01;
+    public static final double DEFAULT_DEADBAND = 0.05;
 
     public static Translation2d applyDeadband(Translation2d input) {
         return applyDeadband(input, DEFAULT_DEADBAND);

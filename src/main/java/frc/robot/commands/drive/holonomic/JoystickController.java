@@ -11,7 +11,7 @@ public class JoystickController {
         // deadband to ignore tiny inputs
         // square to make easier to control
         Translation2d velocity = ControlsUtil.squareNorm(ControlsUtil.applyDeadband(new Translation2d(-y, -x)));
-        double omega = ControlsUtil.squareNorm(ControlsUtil.applyDeadband(rotation));
+        double omega = ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-rotation));
 
         // rotate velocity based on driver station
         velocity = velocity.rotateBy(FieldMirroring.driverStationFacing());
