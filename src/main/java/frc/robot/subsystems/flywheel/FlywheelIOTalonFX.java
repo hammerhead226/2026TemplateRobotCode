@@ -31,16 +31,24 @@ import edu.wpi.first.units.measure.Voltage;
 public class FlywheelIOTalonFX implements FlywheelIO {
     private static final double GEAR_RATIO = 1.5;
 
-    private final TalonFX leader = new TalonFX(0);
-    private final TalonFX follower = new TalonFX(1);
+    private final TalonFX leader;
+    private final TalonFX follower;
 
-    private final StatusSignal<Angle> leaderPosition = leader.getPosition();
-    private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity();
-    private final StatusSignal<Voltage> leaderAppliedVolts = leader.getMotorVoltage();
-    private final StatusSignal<Current> leaderCurrent = leader.getSupplyCurrent();
-    private final StatusSignal<Current> followerCurrent = follower.getSupplyCurrent();
+    private final StatusSignal<Angle> leaderPosition;
+    private final StatusSignal<AngularVelocity> leaderVelocity;
+    private final StatusSignal<Voltage> leaderAppliedVolts;
+    private final StatusSignal<Current> leaderCurrent;
+    private final StatusSignal<Current> followerCurrent;
 
-    public FlywheelIOTalonFX() {
+    public FlywheelIOTalonFX(int leaderId, int followerId) {
+        leader = new TalonFX(leaderId);
+        follower = new TalonFX(followerId);
+        leaderPosition = leader.getPosition();
+        leaderVelocity = leader.getVelocity();
+        leaderAppliedVolts = leader.getMotorVoltage();
+        leaderCurrent = leader.getSupplyCurrent();
+        followerCurrent = follower.getSupplyCurrent();
+
         var config = new TalonFXConfiguration();
         config.CurrentLimits.SupplyCurrentLimit = 30.0;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;

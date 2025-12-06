@@ -79,9 +79,9 @@ public class HeadingLock extends Command {
 
         } else if (timer.get() > 1) {
             headingHoldDrive.execute();
-        } 
+        }
     }
-    
+
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {}
