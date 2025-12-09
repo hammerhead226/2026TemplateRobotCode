@@ -198,8 +198,6 @@ public class RobotContainer {
                 .b()
                 .onTrue(Commands.runOnce(() -> drive.setPose(Pose2d.kZero), drive)
                         .ignoringDisable(true));
-        
-        controller.y().whileTrue(new FollowPath());
     }
 
     
