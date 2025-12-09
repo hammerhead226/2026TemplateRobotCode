@@ -18,19 +18,16 @@ import static frc.robot.constants.VisionConstants.camera1Name;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.drive.SoftStagedAlign;
+import frc.robot.commands.drive.FollowPath;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
 import frc.robot.commands.drive.holonomic.JoystickController;
 import frc.robot.commands.drive.holonomic.PIDPoseController;
@@ -53,7 +50,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -75,7 +71,6 @@ public class RobotContainer {
     @SuppressWarnings("unused")
     private final ObjectDetection object;
 
-    private DoubleSupplier omegaSupp;
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -169,6 +164,9 @@ public class RobotContainer {
         configureButtonBindings();
     }
 
+    // Drive controllers 
+    PIDPoseController rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
+
     /**
      * Use this method to define your button->command mappings. Buttons can be created by
      * instantiating a {@link GenericHID} or one of its subclasses ({@link
@@ -176,75 +174,35 @@ public class RobotContainer {
      * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        // deadband and sqaure inputs for better control
+        // Default command, normal field-relative drive
+        drive.setDefaultCommand(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> (JoystickController.getSpeeds(
+                drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
 
-        drive.setDefaultCommand(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> JoystickController.getSpeeds(
-                drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX())));
+        // Lock to 0° when A button is held
+        
+        controller.a().whileTrue(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> {
+            ChassisSpeeds joystickControl = JoystickController.getSpeeds(
+                    drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX());
+            ChassisSpeeds rotationControl = rotationController.getSpeeds();
+            return new ChassisSpeeds(
+                    joystickControl.vxMetersPerSecond,
+                    joystickControl.vyMetersPerSecond,
+                    rotationControl.omegaRadiansPerSecond);
+        }));
 
-        // drive.setDefaultCommand(
-        //         new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX));
-
-        // example usage of joystick drive at angle
-        // drive.setDefaultCommand(
-        //     new JoystickDriveAtAngle(
-        //         drive,
-        //         () ->
-        //             ControlsUtil.squareNorm(
-        //                 ControlsUtil.applyDeadband(
-        //                     new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
-        //         () -> {
-        //           double deadband = 0.4;
-        //           if (Math.hypot(controller.getRightX(), controller.getRightY()) <= deadband) {
-        //             return Rotation2d.kZero;
-        //           }
-        //           return new Rotation2d(-controller.getRightY(), -controller.getRightX())
-        //               .plus(FieldMirroring.driverStationFacing());
-        //         }));
-
+        // Switch to X pattern when X button is pressed
         controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+
+        // Reset to Pose2d.kZero when start is pressed
         controller
                 .b()
-                .onTrue(Commands.runOnce(
-                                () -> drive.setPose(new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-                                drive)
+                .onTrue(Commands.runOnce(() -> drive.setPose(Pose2d.kZero), drive)
                         .ignoringDisable(true));
-
-        // controller
-        //         .a()
-        //         .whileTrue(new PathfindToPose(
-        //                 drive,
-        //                 targetPoseTest,
-        //                 SubsystemConstants.PathConstants.DEFAULT_PATH_CONSTRAINTS,
-        //                 (DoubleSupplier)
-        //                         () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftY()))
-        //                                 * (FieldMirroring.shouldApply() ? -1.0 : 1.0)
-        //                                 * drive.getMaxLinearSpeedMetersPerSec(),
-        //                 (DoubleSupplier)
-        //                         () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(-controller.getLeftX()))
-        //                                 * (FieldMirroring.shouldApply() ? -1.0 : 1.0)
-        //                                 * drive.getMaxLinearSpeedMetersPerSec(),
-        //                 (DoubleSupplier)
-        //                         () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))
-        //                                 * drive.getMaxAngularSpeedRadPerSec()));
-
-        PIDPoseController pidPoseController = new PIDPoseController(drive, drive::getPose, () -> targetPoseTest);
-        controller.a().whileTrue(new HolonomicDrive(drive, pidPoseController::getSpeeds, pidPoseController::reset));
-
-        controller
-                .y()
-                .whileTrue(new DeferredCommand(
-                        () -> new SoftStagedAlign(
-                                drive,
-                                new Translation2d(2, 3),
-                                new Translation2d(2, 4),
-                                PathConstraints.unlimitedConstraints(12.0), // 12 volts from battery
-                                new PathConstraints(
-                                        drive.getMaxLinearSpeedMetersPerSec() * 0.5,
-                                        1.5,
-                                        drive.getMaxAngularSpeedRadPerSec() * 0.5,
-                                        Math.toRadians(200))),
-                        Set.of(drive)));
+        
+        controller.y().whileTrue(new FollowPath());
     }
+
+    
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
