@@ -23,11 +23,9 @@ import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
-import java.util.HashMap;
 import frc.robot.LimelightHelpers;
-import frc.robot.LimelightHelpers.LimelightResults;
 import frc.robot.LimelightHelpers.RawFiducial;
-
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -67,16 +65,15 @@ public class VisionIOLimelight implements VisionIO {
                 table.getDoubleArrayTopic("camerapose_robotspace").subscribe(new double[] {});
         megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[] {});
         megatag2Subscriber = table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[] {});
-          
-  }
+    }
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
         LimelightHelpers.PoseEstimate limelightMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
-    // Update connection status based on whether an update has been seen in the last 250ms
+        // Update connection status based on whether an update has been seen in the last 250ms
         inputs.connected = ((RobotController.getFPGATime() - latencySubscriber.getLastChange()) / 1000) < 250;
-    RawFiducial[] rawFiducials = LimelightHelpers.getRawFiducials("");
-    double ambiguity = rawFiducials[6].ambiguity;
+        RawFiducial[] rawFiducials = LimelightHelpers.getRawFiducials("");
+        double ambiguity = rawFiducials[6].ambiguity;
 
         // Update heartbeat
         inputs.heartBeat = hbSubscriber.get();
@@ -92,10 +89,9 @@ public class VisionIOLimelight implements VisionIO {
                     new Rotation3d(robotToCameraRaw[3], robotToCameraRaw[4], robotToCameraRaw[5]));
         }
 
-    // Update target observation
-    inputs.latestTargetObservation =
-        new TargetObservation(
-            Rotation2d.fromDegrees(txSubscriber.get()), Rotation2d.fromDegrees(tySubscriber.get()));
+        // Update target observation
+        inputs.latestTargetObservation = new TargetObservation(
+                Rotation2d.fromDegrees(txSubscriber.get()), Rotation2d.fromDegrees(tySubscriber.get()));
 
         // Update orientation for MegaTag 2
         orientationPublisher.accept(new double[] {rotationSupplier.get().getDegrees(), 0.0, 0.0, 0.0, 0.0, 0.0});
@@ -123,17 +119,17 @@ public class VisionIOLimelight implements VisionIO {
                     // Timestamp, based on server timestamp of publish and latency
                     rawSample.timestamp * 1.0e-6 - rawSample.value[6] * 1.0e-3,
 
-              // 3D pose estimate
-              LimelightHelpers.getBotPose3d_wpiBlue(null),
+                    // 3D pose estimate
+                    LimelightHelpers.getBotPose3d_wpiBlue(null),
 
-              // Ambiguity, using only the first tag because ambiguity isn't applicable for multitag
-              limelightMeasurement.tagCount >= 1 ? ambiguity : 0.0,
+                    // Ambiguity, using only the first tag because ambiguity isn't applicable for multitag
+                    limelightMeasurement.tagCount >= 1 ? ambiguity : 0.0,
 
-              // Tag count
-              limelightMeasurement.tagCount,
+                    // Tag count
+                    limelightMeasurement.tagCount,
 
-              // Average tag distance
-              limelightMeasurement.avgTagDist,
+                    // Average tag distance
+                    limelightMeasurement.avgTagDist,
 
                     // Observation type
                     PoseObservationType.MEGATAG_1));
@@ -156,17 +152,17 @@ public class VisionIOLimelight implements VisionIO {
                     // Timestamp, based on server timestamp of publish and latency
                     rawSample.timestamp * 1.0e-6 - rawSample.value[6] * 1.0e-3,
 
-              // 3D pose estimate
-              LimelightHelpers.getBotPose3d_wpiBlue(null),
+                    // 3D pose estimate
+                    LimelightHelpers.getBotPose3d_wpiBlue(null),
 
                     // Ambiguity, zeroed because the pose is already disambiguated
                     0.0,
 
-              // Tag count
-              limelightMeasurement.tagCount,
+                    // Tag count
+                    limelightMeasurement.tagCount,
 
-              // Average tag distance
-              limelightMeasurement.avgTagDist,
+                    // Average tag distance
+                    limelightMeasurement.avgTagDist,
 
                     // Observation type
                     PoseObservationType.MEGATAG_2));

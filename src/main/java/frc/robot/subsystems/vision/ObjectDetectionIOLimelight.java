@@ -34,26 +34,26 @@ public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
     InterpolatingDoubleTreeMap distanceToObjectX = new InterpolatingDoubleTreeMap();
     InterpolatingDoubleTreeMap distanceToObjectY = new InterpolatingDoubleTreeMap();
 
-  public ObjectDetectionIOLimelight(String name) {
+    public ObjectDetectionIOLimelight(String name) {
         var table = NetworkTableInstance.getDefault().getTable(name);
         latencySubscriber = table.getDoubleTopic("tl").subscribe(0.0);
         txSubscriber = table.getDoubleTopic("tx").subscribe(0.0);
         tySubscriber = table.getDoubleTopic("ty").subscribe(0.0);
         hbSubscriber = table.getDoubleTopic("hb").subscribe(0.0);
-  
-    distanceToObjectX.put(1.0, 57.80 + 4.0);
-    distanceToObjectX.put(1.5, 49.00 + 2.5);
-    distanceToObjectX.put(2.0, 42.75);
-    distanceToObjectX.put(2.5, 36.70);
-    distanceToObjectX.put(3.0, 34.00);
-    distanceToObjectX.put(3.5, 31.20);
-    distanceToObjectY.put(4.0, 29.50);
-    distanceToObjectY.put(4.5, 27.50);
-    distanceToObjectY.put(5.0, 26.00);
-    distanceToObjectY.put(5.5, 24.85);
-    distanceToObjectY.put(6.0, 23.60);
-    distanceToObjectY.put(6.5, 22.80);
-  }
+
+        distanceToObjectX.put(1.0, 57.80 + 4.0);
+        distanceToObjectX.put(1.5, 49.00 + 2.5);
+        distanceToObjectX.put(2.0, 42.75);
+        distanceToObjectX.put(2.5, 36.70);
+        distanceToObjectX.put(3.0, 34.00);
+        distanceToObjectX.put(3.5, 31.20);
+        distanceToObjectY.put(4.0, 29.50);
+        distanceToObjectY.put(4.5, 27.50);
+        distanceToObjectY.put(5.0, 26.00);
+        distanceToObjectY.put(5.5, 24.85);
+        distanceToObjectY.put(6.0, 23.60);
+        distanceToObjectY.put(6.5, 22.80);
+    }
 
     @Override
     public void updateInputs(VisionDetectionIOInputs inputs) {
@@ -69,10 +69,12 @@ public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
         inputs.timestamp = txSubscriber.getAtomic().timestamp;
     }
 
-  public Pose2d getPose() { 
-    return new Pose2d(distanceToObjectX.get(Double.valueOf(LimelightHelpers.getTX(null))),
-     distanceToObjectY.get(Double.valueOf(LimelightHelpers.getTY(null))), null
-     // 18/Math.tan(Width/constant)
-     );
+    public Pose2d getPose() {
+        return new Pose2d(
+                distanceToObjectX.get(Double.valueOf(LimelightHelpers.getTX(null))),
+                distanceToObjectY.get(Double.valueOf(LimelightHelpers.getTY(null))),
+                null
+                // 18/Math.tan(Width/constant)
+                );
     }
 }

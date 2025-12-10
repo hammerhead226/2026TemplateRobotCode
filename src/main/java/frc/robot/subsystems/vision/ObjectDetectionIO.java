@@ -61,5 +61,7 @@ public interface ObjectDetectionIO {
 
     public default void updateInputs(VisionDetectionIOInputs inputs) {}
 
-  public default Pose2d getPose() {return new Pose2d();}
+    public default Pose2d getPose() {
+        return new Pose2d();
+    }
 }
