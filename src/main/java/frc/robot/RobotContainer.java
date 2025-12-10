@@ -85,7 +85,7 @@ public class RobotContainer {
     Translation2d preciseTranslation2d = new Translation2d(0.6096, 1.2192);
     PathConstraints roughConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
     PathConstraints preciseConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
-     PIDPoseController Pidsposecont = new PIDPoseController(drive, drive::getPose, (Supplier<Pose2d>) () -> new Pose2d(preciseTranslation2d, Rotation2d.fromDegrees(90)));
+     PIDPoseController PidsPoseCont = new PIDPoseController(drive, drive::getPose, (Supplier<Pose2d>) () -> new Pose2d(preciseTranslation2d, Rotation2d.fromDegrees(90)));
 
     //     double maxVelocityMPS,
     //     double maxAccelerationMPSSq,
@@ -226,16 +226,8 @@ public class RobotContainer {
         
         controller
                 .rightBumper()
-                .whileTrue(new HolonomicDrive(Pidsposecont,(Supplier<ChassisSpeeds>) () -> (JoystickController.getSpeeds(
-                    drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
-
-       
+                .whileTrue(new HolonomicDrive(drive, PidsPoseCont::getSpeeds));
         
-
-
-                
-                    
-
         // controller
         //         .b()
         //         .onTrue(new PIDPoseController(drive, drive.getPose(), targetPoseTest));
