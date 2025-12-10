@@ -19,6 +19,8 @@ import static frc.robot.constants.VisionConstants.camera1Name;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.PathConstraints;
+
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -30,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.drive.HardStagedAlign;
+import frc.robot.commands.drive.PathfindToPose;
 // import frc.robot.commands.drive.FollowPath;
 import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
@@ -82,6 +85,7 @@ public class RobotContainer {
     Translation2d preciseTranslation2d = new Translation2d(0.6096, 1.2192);
     PathConstraints roughConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
     PathConstraints preciseConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
+     PIDPoseController Pidsposecont = new PIDPoseController(drive, drive::getPose, (Supplier<Pose2d>) () -> new Pose2d(preciseTranslation2d, Rotation2d.fromDegrees(90)));
 
     //     double maxVelocityMPS,
     //     double maxAccelerationMPSSq,
@@ -150,6 +154,7 @@ public class RobotContainer {
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
                 object = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
+                
                 break;
         }
 
@@ -180,6 +185,7 @@ public class RobotContainer {
         configureButtonBindings();
 
         rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
+         
     }
 
     /**
@@ -213,6 +219,19 @@ public class RobotContainer {
                 .x()
                 .onTrue(new HardStagedAlign(
                         drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
+        controller
+                .b()
+                .onTrue(new PathfindToPose(drive, targetPoseTest, preciseConstraints));
+
+        
+        // controller
+        //         .rightBumper()
+        //         .whileTrue(new HolonomicDrive(Pidsposecont,(Supplier<ChassisSpeeds>) () -> (JoystickController.getSpeeds(
+        //             drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
+
+
+                
+                    
 
         // controller
         //         .b()

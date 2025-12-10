@@ -19,6 +19,7 @@ public class HolonomicDrive extends Command {
         this(drive);
         this.speedsSupplier = speedsSupplier;
     }
+    public
 
     public HolonomicDrive(Drive drive, Supplier<ChassisSpeeds> speedsSupplier, Runnable... resetRunnables) {
         this(drive, speedsSupplier);
