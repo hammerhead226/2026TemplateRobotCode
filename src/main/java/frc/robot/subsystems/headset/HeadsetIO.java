@@ -22,5 +22,5 @@ public interface HeadsetIO {
 
     public default void commandPeriodic() {}
 
-    public default void zeroCommand() {}
+    public default void setPose(Pose3d pose3d) {}
 }

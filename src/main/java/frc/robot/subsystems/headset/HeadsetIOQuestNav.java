@@ -48,7 +48,7 @@ public class HeadsetIOQuestNav implements HeadsetIO {
     }
 
     @Override
-    public void zeroCommand() {
-        headset.setPose(new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0)));
+    public void setPose(Pose3d pose3d) {
+        headset.setPose(pose3d);
     }
 }

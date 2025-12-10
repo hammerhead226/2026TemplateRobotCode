@@ -19,6 +19,7 @@ import static frc.robot.constants.VisionConstants.camera1Name;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -48,6 +49,7 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.headset.Headset;
+import frc.robot.subsystems.headset.HeadsetIO;
 import frc.robot.subsystems.headset.HeadsetIOQuestNav;
 import frc.robot.subsystems.vision.ObjectDetection;
 import frc.robot.subsystems.vision.ObjectDetectionIO;
@@ -131,7 +133,7 @@ public class RobotContainer {
                         new VisionIOPhotonVisionSim(camera1Name, VisionConstants.robotToCamera1, drive::getPose));
                 objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 flywheel = new Flywheel(new FlywheelIOSim());
-                headset = null;
+                headset = new Headset(new HeadsetIO() {});
                 break;
 
             default:
@@ -142,7 +144,7 @@ public class RobotContainer {
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
                 objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
-                headset = null;
+                headset = new Headset(new HeadsetIO() {});
                 break;
         }
 
@@ -198,7 +200,10 @@ public class RobotContainer {
         }));
 
         // Reset drive pose to estimate on start pressed
-        controller.start().onTrue(new InstantCommand(() -> drive.setPose(Pose2d.kZero)));
+        controller.start().onTrue(new InstantCommand(() -> {
+            drive.setPose(Pose2d.kZero);
+            headset.setPose(Pose3d.kZero);
+        }));
     }
 
     /**
