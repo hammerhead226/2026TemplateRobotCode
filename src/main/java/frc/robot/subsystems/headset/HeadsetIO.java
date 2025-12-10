@@ -1,12 +1,12 @@
-package frc.robot.subsystems.Questnav;
+package frc.robot.subsystems.headset;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import org.littletonrobotics.junction.AutoLog;
 
-public interface QuestnavIO {
+public interface HeadsetIO {
   @AutoLog
-  public static class QuestnavIOInputs {
+  public static class HeadsetIOInputs {
     public boolean isConnected =
         false; // give error if this is false and don't accept estimations to the averager
     public int batteryPercent; // give error if this is too low
@@ -19,7 +19,7 @@ public interface QuestnavIO {
     public Rotation3d estimatedRotation;
   }
 
-  public default void updateInputs(QuestnavIOInputs inputs) {}
+  public default void updateInputs(HeadsetIOInputs inputs) {}
 
   public default void commandPeriodic() {}
 

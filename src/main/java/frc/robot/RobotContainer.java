@@ -36,8 +36,8 @@ import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Questnav.Questnav;
-import frc.robot.subsystems.Questnav.QuestnavSystem;
+import frc.robot.subsystems.headset.Headset;
+import frc.robot.subsystems.headset.HeadsetIOQuestNav;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -71,7 +71,7 @@ public class RobotContainer {
   private final Flywheel flywheel;
   private final Vision vision;
   private final ObjectDetection object;
-  private final Questnav questnav;
+  private final Headset headset;
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -111,7 +111,7 @@ public class RobotContainer {
                 drive::addObjectMeasurement,
                 new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
 
-        questnav = new Questnav(new QuestnavSystem());
+        headset = new Headset(new HeadsetIOQuestNav());
 
         // drive = new Drive(
         // new GyroIOPigeon2(true),
@@ -134,8 +134,7 @@ public class RobotContainer {
         vision = new Vision(drive::addVisionMeasurement, new VisionIOPhotonVisionSim(camera0Name, VisionConstants.robotToCamera0, drive::getPose), new VisionIOPhotonVisionSim(camera1Name, VisionConstants.robotToCamera1, drive::getPose));
         object = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
         flywheel = new Flywheel(new FlywheelIOSim());
-
-        questnav = null;
+        headset = null;
         break;
 
       default:
@@ -150,7 +149,7 @@ public class RobotContainer {
         flywheel = new Flywheel(new FlywheelIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
         object = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
-        questnav = null;
+        headset = null;
         break;
     }
 

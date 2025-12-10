@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Questnav;
+package frc.robot.subsystems.headset;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -6,13 +6,13 @@ import edu.wpi.first.math.geometry.Transform3d;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 
-public class QuestnavSystem implements QuestnavIO {
+public class HeadsetIOQuestNav implements HeadsetIO {
   public QuestNav headset;
   Transform3d questRobotPose;
   Pose3d estimatedRobotPose;
   Rotation3d estimatedRobotRotation;
 
-  public QuestnavSystem() {
+  public HeadsetIOQuestNav() {
     headset = new QuestNav();
     questRobotPose = new Transform3d(); // add quest's x,y and rotational offset from robot
     estimatedRobotPose = new Pose3d();
@@ -20,7 +20,7 @@ public class QuestnavSystem implements QuestnavIO {
   }
 
   @Override
-  public void updateInputs(QuestnavIOInputs inputs) {
+  public void updateInputs(HeadsetIOInputs inputs) {
     inputs.isConnected = headset.isConnected();
     inputs.latency = headset.getLatency();
     inputs.batteryPercent = headset.getBatteryPercent().getAsInt();
