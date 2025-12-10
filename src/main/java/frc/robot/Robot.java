@@ -104,9 +104,15 @@ public class Robot extends LoggedRobot {
     @Override
     public void disabledInit() {}
 
-    /** This function is called periodically when disabled. */
-    @Override
-    public void disabledPeriodic() {}
+  /** This function is called periodically when disabled. */
+  @Override
+  public void disabledPeriodic() {
+
+    // This code prevents the robot from "twitching" when we turn it on after moving it while disabled.
+      robotContainer.getArm().setArmCurrent(robotContainer.getArm().getArmPositionDegs()); // Here for redundancy.
+      robotContainer.getArm().setArmGoal(robotContainer.getArm().getArmPositionDegs());
+
+  }
 
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override

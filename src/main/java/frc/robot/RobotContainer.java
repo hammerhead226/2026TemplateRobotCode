@@ -38,6 +38,10 @@ import frc.robot.commands.drive.holonomic.PIDPoseController;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.arms.Arm;
+import frc.robot.subsystems.arms.ArmIO;
+import frc.robot.subsystems.arms.ArmIOSim;
+import frc.robot.subsystems.arms.ArmIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -72,7 +76,8 @@ public class RobotContainer {
     private final Vision vision;
 
     @SuppressWarnings("unused")
-    private final ObjectDetection object;
+    private final Arm arm;
+  private final ObjectDetection object;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -89,23 +94,25 @@ public class RobotContainer {
     //     double maxAngularAccelerationRadPerSecSq,
     //     double nominalVoltageVolts,
 
-    // Dashboard inputs
-    private final LoggedDashboardChooser<Command> autoChooser;
+  // Dashboard inputs
+  private final LoggedDashboardChooser<Command> autoChooser;
 
     // Drive controllers
     PIDPoseController rotationController;
 
-    /** The container for the robot. Contains subsystems, OI devices, and commands. */
-    public RobotContainer() {
-        switch (SimConstants.currentMode) {
-            case REAL:
-                // Real robot, instantiate hardware IO implementations
-                drive = new Drive(
-                        new GyroIOPigeon2(),
-                        new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                        new ModuleIOTalonFX(TunerConstants.FrontRight),
-                        new ModuleIOTalonFX(TunerConstants.BackLeft),
-                        new ModuleIOTalonFX(TunerConstants.BackRight));
+  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  public RobotContainer() {
+    switch (SimConstants.currentMode) {
+      case REAL:
+        arm = new Arm(new ArmIOTalonFX(0, 0, 0));
+        // Real robot, instantiate hardware IO implementations
+        drive =
+            new Drive(
+                new GyroIOPigeon2(),
+                new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                new ModuleIOTalonFX(TunerConstants.FrontRight),
+                new ModuleIOTalonFX(TunerConstants.BackLeft),
+                new ModuleIOTalonFX(TunerConstants.BackRight));
 
                 // currently our chassis bot has no physical flywheel for us to test on
                 flywheel = new Flywheel(new FlywheelIOSim());
@@ -128,7 +135,8 @@ public class RobotContainer {
 
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
-                drive = new Drive(
+                arm = new Arm(new ArmIOSim());
+        drive = new Drive(
                         new GyroIO() {},
                         new ModuleIOSim(TunerConstants.FrontLeft),
                         new ModuleIOSim(TunerConstants.FrontRight),
@@ -145,7 +153,8 @@ public class RobotContainer {
 
             default:
                 // Replayed robot, disable IO implementations
-                drive = new Drive(
+                arm = new Arm(new ArmIO() {});
+        drive = new Drive(
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
@@ -181,6 +190,10 @@ public class RobotContainer {
 
         rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
     }
+
+  public Arm getArm() {
+    return arm;
+  }
 
     /**
      * Use this method to define your button->command mappings. Buttons can be created by
