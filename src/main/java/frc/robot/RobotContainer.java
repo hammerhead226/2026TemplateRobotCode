@@ -69,16 +69,12 @@ public class RobotContainer {
     // Subsystems
     public static Drive drive;
     private final Flywheel flywheel;
-
-    @SuppressWarnings("unused")
-    private final Vision vision;
-
-    @SuppressWarnings("unused")
     private final Arm arm;
-
-    private final ObjectDetection object;
-
+    private final Vision vision;
     private final Headset headset;
+    private final ObjectDetection objectDetection;
+    
+
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -106,7 +102,7 @@ public class RobotContainer {
                         drive::addVisionMeasurement,
                         new VisionIOLimelight(camera0Name, drive::getRotation),
                         new VisionIOLimelight(camera1Name, drive::getRotation));
-                object = new ObjectDetection(
+                objectDetection = new ObjectDetection(
                         drive::addObjectMeasurement,
                         new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
 
@@ -134,7 +130,7 @@ public class RobotContainer {
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVisionSim(camera0Name, VisionConstants.robotToCamera0, drive::getPose),
                         new VisionIOPhotonVisionSim(camera1Name, VisionConstants.robotToCamera1, drive::getPose));
-                object = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
+                objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 flywheel = new Flywheel(new FlywheelIOSim());
                 headset = null;
                 break;
@@ -146,7 +142,7 @@ public class RobotContainer {
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-                object = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
+                objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 headset = null;
                 break;
         }
@@ -215,7 +211,27 @@ public class RobotContainer {
         return autoChooser.get();
     }
 
+    public Drive getDrive() {
+        return drive;
+    }
+
+    public Flywheel getFlywheel() {
+        return flywheel;
+    }
+
     public Arm getArm() {
         return arm;
+    }
+
+    public Vision getVision() {
+        return vision;
+    }
+
+    public Headset getHeadset() {
+        return headset;
+    }
+
+    public ObjectDetection getObjectDetection() {
+        return objectDetection;
     }
 }

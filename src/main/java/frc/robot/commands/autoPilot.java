@@ -8,9 +8,6 @@ import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
-import com.ctre.phoenix6.swerve.SwerveModule;
-import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.therekrab.autopilot.APConstraints;
 import com.therekrab.autopilot.APProfile;
 import com.therekrab.autopilot.APTarget;
@@ -21,21 +18,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.vision.Vision;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class autoPilot extends Command {
     /** Creates a new autoPilot. */
     private final Drive drive;
 
-    private final Vision vision;
-
     private final APTarget target;
-
-    private SwerveRequest.FieldCentricFacingAngle m_request = new SwerveRequest.FieldCentricFacingAngle()
-            .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
-            .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
-            .withHeadingPID(4, 0, 0); /* tune this for your robot! */
 
     private static final APConstraints kConstraints =
             new APConstraints().withAcceleration(5.0).withJerk(2.0);
@@ -47,12 +36,11 @@ public class autoPilot extends Command {
 
     private static final Autopilot kAutopilot = new Autopilot(kProfile);
 
-    public autoPilot(Drive drive, Vision vision, APTarget target) {
+    public autoPilot(Drive drive, APTarget target) {
         this.drive = drive;
-        this.vision = vision;
         this.target = target;
         // Use addRequirements() here to declare subsystem dependencies.
-        addRequirements(drive, vision);
+        addRequirements(drive);
     }
 
     // Called when the command is initially scheduled.

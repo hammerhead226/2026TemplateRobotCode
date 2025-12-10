@@ -13,11 +13,9 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleSubscriber;
@@ -190,14 +188,14 @@ public class VisionIOLimelight implements VisionIO {
     }
 
     /** Parses the 3D pose from a Limelight botpose array. */
-    private static Pose3d parsePose(double[] rawLLArray) {
-        return new Pose3d(
-                rawLLArray[0],
-                rawLLArray[1],
-                rawLLArray[2],
-                new Rotation3d(
-                        Units.degreesToRadians(rawLLArray[3]),
-                        Units.degreesToRadians(rawLLArray[4]),
-                        Units.degreesToRadians(rawLLArray[5])));
-    }
+    // private static Pose3d parsePose(double[] rawLLArray) {
+    //     return new Pose3d(
+    //             rawLLArray[0],
+    //             rawLLArray[1],
+    //             rawLLArray[2],
+    //             new Rotation3d(
+    //                     Units.degreesToRadians(rawLLArray[3]),
+    //                     Units.degreesToRadians(rawLLArray[4]),
+    //                     Units.degreesToRadians(rawLLArray[5])));
+    // }
 }
