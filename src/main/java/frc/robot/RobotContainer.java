@@ -18,8 +18,10 @@ import static frc.robot.constants.VisionConstants.camera1Name;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -27,7 +29,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.drive.FollowPath;
+import frc.robot.commands.drive.HardStagedAlign;
+// import frc.robot.commands.drive.FollowPath;
+import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
 import frc.robot.commands.drive.holonomic.JoystickController;
 import frc.robot.commands.drive.holonomic.PIDPoseController;
@@ -50,7 +54,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -74,10 +77,23 @@ public class RobotContainer {
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
 
-    Pose2d targetPoseTest = new Pose2d(2, 4, Rotation2d.fromDegrees(90));
+    Pose2d targetPoseTest = new Pose2d(0.6096, 1.2192, Rotation2d.fromDegrees(90));
+    Translation2d roughTranslation2d = new Translation2d(0.5, 1.5);
+    Translation2d preciseTranslation2d = new Translation2d(0.6096, 1.2192);
+    PathConstraints roughConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
+    PathConstraints preciseConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
+
+    //     double maxVelocityMPS,
+    //     double maxAccelerationMPSSq,
+    //     double maxAngularVelocityRadPerSec,
+    //     double maxAngularAccelerationRadPerSecSq,
+    //     double nominalVoltageVolts,
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
+
+    // Drive controllers
+    PIDPoseController rotationController;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -162,10 +178,9 @@ public class RobotContainer {
 
         // Configure the button bindings
         configureButtonBindings();
-    }
 
-    // Drive controllers 
-    PIDPoseController rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
+        rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
+    }
 
     /**
      * Use this method to define your button->command mappings. Buttons can be created by
@@ -179,7 +194,7 @@ public class RobotContainer {
                 drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
 
         // Lock to 0° when A button is held
-        
+
         controller.a().whileTrue(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> {
             ChassisSpeeds joystickControl = JoystickController.getSpeeds(
                     drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX());
@@ -190,17 +205,28 @@ public class RobotContainer {
                     rotationControl.omegaRadiansPerSecond);
         }));
 
+        controller
+                .y()
+                .onTrue(new SoftStagedAlign(
+                        drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
+        controller
+                .x()
+                .onTrue(new HardStagedAlign(
+                        drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
+
+        // controller
+        //         .b()
+        //         .onTrue(new PIDPoseController(drive, drive.getPose(), targetPoseTest));
+
         // Switch to X pattern when X button is pressed
-        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
         // Reset to Pose2d.kZero when start is pressed
-        controller
-                .b()
-                .onTrue(Commands.runOnce(() -> drive.setPose(Pose2d.kZero), drive)
-                        .ignoringDisable(true));
+        // controller
+        //         .b()
+        //         .onTrue(Commands.runOnce(() -> drive.setPose(Pose2d.kZero), drive)
+        //                 .ignoringDisable(true));
     }
-
-    
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
