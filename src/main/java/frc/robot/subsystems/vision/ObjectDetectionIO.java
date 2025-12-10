@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.vision;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -59,4 +60,6 @@ public interface ObjectDetectionIO {
     public static record TargetObservation(Rotation2d tx, Rotation2d ty) {}
 
     public default void updateInputs(VisionDetectionIOInputs inputs) {}
+
+  public default Pose2d getPose() {return new Pose2d();}
 }

@@ -18,23 +18,21 @@ import static frc.robot.constants.VisionConstants.camera1Name;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.drive.HardStagedAlign;
-// import frc.robot.commands.drive.FollowPath;
-import frc.robot.commands.drive.SoftStagedAlign;
-import frc.robot.commands.drive.holonomic.HolonomicDrive;
-import frc.robot.commands.drive.holonomic.JoystickController;
-import frc.robot.commands.drive.holonomic.PIDPoseController;
+import frc.robot.commands.DriveCommands;
+import frc.robot.commands.drive.JoystickDrive;
+import frc.robot.commands.drive.JoystickDriveAtAngle;
+import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -42,6 +40,8 @@ import frc.robot.subsystems.arms.Arm;
 import frc.robot.subsystems.arms.ArmIO;
 import frc.robot.subsystems.arms.ArmIOSim;
 import frc.robot.subsystems.arms.ArmIOTalonFX;
+import frc.robot.subsystems.headset.Headset;
+import frc.robot.subsystems.headset.HeadsetIOQuestNav;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -51,6 +51,7 @@ import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
+import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.vision.ObjectDetection;
 import frc.robot.subsystems.vision.ObjectDetectionIO;
 import frc.robot.subsystems.vision.ObjectDetectionIOLimelight;
@@ -58,7 +59,8 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import java.util.function.Supplier;
+import frc.robot.util.ControlsUtil;
+
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -80,52 +82,49 @@ public class RobotContainer {
 
     private final ObjectDetection object;
 
-    // Controller
+    private final Headset headset;
+  // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
 
-    Pose2d targetPoseTest = new Pose2d(0.6096, 1.2192, Rotation2d.fromDegrees(90));
-    Translation2d roughTranslation2d = new Translation2d(0.5, 1.5);
-    Translation2d preciseTranslation2d = new Translation2d(0.6096, 1.2192);
-    PathConstraints roughConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
-    PathConstraints preciseConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
+  Pose2d targetPoseTest =
+    new Pose2d( 
+      Units.inchesToMeters(31.526),
+      Units.inchesToMeters(297.176),
+      Rotation2d.fromDegrees(90 - 144.011)
+      );
 
-    //     double maxVelocityMPS,
-    //     double maxAccelerationMPSSq,
-    //     double maxAngularVelocityRadPerSec,
-    //     double maxAngularAccelerationRadPerSecSq,
-    //     double nominalVoltageVolts,
+   
 
-    // Dashboard inputs
-    private final LoggedDashboardChooser<Command> autoChooser;
+  // Dashboard inputs
+  private final LoggedDashboardChooser<Command> autoChooser;
 
-    // Drive controllers
-    PIDPoseController rotationController;
+  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  public RobotContainer() {
+    switch (SimConstants.currentMode) {
+      case REAL:
+        // Real robot, instantiate hardware IO implementations
+        drive =
+            new Drive(
+                new GyroIOPigeon2(),
+                new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                new ModuleIOTalonFX(TunerConstants.FrontRight),
+                new ModuleIOTalonFX(TunerConstants.BackLeft),
+                new ModuleIOTalonFX(TunerConstants.BackRight));
 
-    /** The container for the robot. Contains subsystems, OI devices, and commands. */
-    public RobotContainer() {
-        switch (SimConstants.currentMode) {
-            case REAL:
-                // chassis bot has no physical arm to test on
-                arm = new Arm(new ArmIOSim());
-                // Real robot, instantiate hardware IO implementations
-                drive = new Drive(
-                        new GyroIOPigeon2(),
-                        new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                        new ModuleIOTalonFX(TunerConstants.FrontRight),
-                        new ModuleIOTalonFX(TunerConstants.BackLeft),
-                        new ModuleIOTalonFX(TunerConstants.BackRight));
+        flywheel = new Flywheel(new FlywheelIOTalonFX());
+        vision =
+            new Vision(
+                drive::addVisionMeasurement,
+                new VisionIOLimelight(camera0Name, drive::getRotation),
+                new VisionIOLimelight(camera1Name, drive::getRotation));
+        object =
+            new ObjectDetection(
+                drive::addObjectMeasurement,
+                new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
 
-                // chassis bot has no physical flywheel to test on
-                flywheel = new Flywheel(new FlywheelIOSim());
-                vision = new Vision(
-                        drive::addVisionMeasurement,
-                        new VisionIOLimelight(camera0Name, drive::getRotation),
-                        new VisionIOLimelight(camera1Name, drive::getRotation));
-                object = new ObjectDetection(
-                        drive::addObjectMeasurement,
-                        new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
+                headset = new Headset(new HeadsetIOQuestNav());
 
-                // drive = new Drive(
+        // drive = new Drive(
                 // new GyroIOPigeon2(true),
                 // new ModuleIOTalonFX(0),
                 // new ModuleIOTalonFX(1),
@@ -149,7 +148,7 @@ public class RobotContainer {
                         new VisionIOPhotonVisionSim(camera1Name, VisionConstants.robotToCamera1, drive::getPose));
                 object = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 flywheel = new Flywheel(new FlywheelIOSim());
-
+        headset = null;
                 break;
 
             default:
@@ -160,94 +159,102 @@ public class RobotContainer {
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
                 object = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
-                break;
+                headset = null;
+        break;
         }
 
-        // Set up auto routines
-        NamedCommands.registerCommand(
-                "Run Flywheel",
-                Commands.startEnd(() -> flywheel.runVelocity(500), flywheel::stop, flywheel)
-                        .withTimeout(5.0));
-        autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    // Set up auto routines
+    NamedCommands.registerCommand(
+        "Run Flywheel",
+        Commands.startEnd(() -> flywheel.runVelocity(500), flywheel::stop, flywheel)
+            .withTimeout(5.0));
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-        // Set up SysId routines
-        autoChooser.addOption(
-                "Drive SysId (Quasistatic Forward)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-                "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption(
-                "Flywheel SysId (Quasistatic Forward)", flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-                "Flywheel SysId (Quasistatic Reverse)", flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption(
-                "Flywheel SysId (Dynamic Forward)", flywheel.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-                "Flywheel SysId (Dynamic Reverse)", flywheel.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // Set up SysId routines
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Forward)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Reverse)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Flywheel SysId (Quasistatic Forward)",
+        flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Flywheel SysId (Quasistatic Reverse)",
+        flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Flywheel SysId (Dynamic Forward)", flywheel.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Flywheel SysId (Dynamic Reverse)", flywheel.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        // Configure the button bindings
-        configureButtonBindings();
+    // Configure the button bindings
+    configureButtonBindings();
+  }
 
-        rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
-    }
+  /**
+   * Use this method to define your button->command mappings. Buttons can be created by
+   * instantiating a {@link GenericHID} or one of its subclasses ({@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+   */
+  private void configureButtonBindings() {
+    // deadband and sqaure inputs for better control
+    drive.setDefaultCommand(
+        new JoystickDrive(
+            drive,
+            () ->
+                ControlsUtil.squareNorm(
+                    ControlsUtil.applyDeadband(
+                        new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
+            () -> ControlsUtil.squareNorm(ControlsUtil.applyDeadband(controller.getRightX()))));
 
-    public Arm getArm() {
-        return arm;
-    }
+    // example usage of joystick drive at angle
+    // drive.setDefaultCommand(
+    //     new JoystickDriveAtAngle(
+    //         drive,
+    //         () ->
+    //             ControlsUtil.squareNorm(
+    //                 ControlsUtil.applyDeadband(
+    //                     new Translation2d(-controller.getLeftY(), -controller.getLeftX()))),
+    //         () -> {
+    //           double deadband = 0.4;
+    //           if (Math.hypot(controller.getRightX(), controller.getRightY()) <= deadband) {
+    //             return Rotation2d.kZero;
+    //           }
+    //           return new Rotation2d(-controller.getRightY(), -controller.getRightX())
+    //               .plus(FieldMirroring.driverStationFacing());
+    //         }));
+    
+    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    controller
+        .b()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    drive)
+                .ignoringDisable(true));
 
-    /**
-     * Use this method to define your button->command mappings. Buttons can be created by
-     * instantiating a {@link GenericHID} or one of its subclasses ({@link
-     * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-     * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-     */
-    private void configureButtonBindings() {
-        // Default command, normal field-relative drive
-        drive.setDefaultCommand(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> (JoystickController.getSpeeds(
-                drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
+    controller
+        .a()
+        .whileTrue(
+           new PathfindToPose(drive, targetPoseTest, drive.getRotation()).untilTrajectoryTimeout()
+        );
+        
+  }
 
-        // Lock to 0° when A button is held
-
-        controller.a().whileTrue(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> {
-            ChassisSpeeds joystickControl = JoystickController.getSpeeds(
-                    drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX());
-            ChassisSpeeds rotationControl = rotationController.getSpeeds();
-            return new ChassisSpeeds(
-                    joystickControl.vxMetersPerSecond,
-                    joystickControl.vyMetersPerSecond,
-                    rotationControl.omegaRadiansPerSecond);
-        }));
-
-        controller
-                .y()
-                .onTrue(new SoftStagedAlign(
-                        drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
-        controller
-                .x()
-                .onTrue(new HardStagedAlign(
-                        drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
-
-        // controller
-        //         .b()
-        //         .onTrue(new PIDPoseController(drive, drive.getPose(), targetPoseTest));
-
-        // Switch to X pattern when X button is pressed
-        // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-        // Reset to Pose2d.kZero when start is pressed
-        // controller
-        //         .b()
-        //         .onTrue(Commands.runOnce(() -> drive.setPose(Pose2d.kZero), drive)
-        //                 .ignoringDisable(true));
-    }
-
-    /**
-     * Use this to pass the autonomous command to the main {@link Robot} class.
-     *
-     * @return the command to run in autonomous
-     */
-    public Command getAutonomousCommand() {
-        return autoChooser.get();
-    }
+  /**
+   * Use this to pass the autonomous command to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
+  public Command getAutonomousCommand() {
+    return autoChooser.get();
+  }
 }
