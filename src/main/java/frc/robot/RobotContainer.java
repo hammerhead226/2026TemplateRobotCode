@@ -73,7 +73,6 @@ public class RobotContainer {
     private final Vision vision;
     private final Headset headset;
     private final ObjectDetection objectDetection;
-    
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);

@@ -9,7 +9,6 @@ import com.therekrab.autopilot.APProfile;
 import com.therekrab.autopilot.APTarget;
 import com.therekrab.autopilot.Autopilot;
 import com.therekrab.autopilot.Autopilot.APResult;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -35,7 +34,7 @@ public class APController {
     public APController(APTarget target, Drive drive) {
         this.target = target;
         this.drive = drive;
-        this.rotationController = new PIDPoseController(drive, drive::getPose, () -> new Pose2d(0,0,targetAngle));
+        this.rotationController = new PIDPoseController(drive, drive::getPose, () -> new Pose2d(0, 0, targetAngle));
     }
 
     public void reset() {
@@ -47,6 +46,9 @@ public class APController {
     public ChassisSpeeds getSpeeds() {
         APResult out = kAutopilot.calculate(drive.getPose(), drive.getChassisSpeeds(), target);
         targetAngle = out.targetAngle();
-        return new ChassisSpeeds(out.vx(),out.vy(),AngularVelocity.ofBaseUnits(rotationController.getSpeeds().omegaRadiansPerSecond,RadiansPerSecond));
+        return new ChassisSpeeds(
+                out.vx(),
+                out.vy(),
+                AngularVelocity.ofBaseUnits(rotationController.getSpeeds().omegaRadiansPerSecond, RadiansPerSecond));
     }
 }
