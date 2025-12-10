@@ -224,10 +224,13 @@ public class RobotContainer {
                 .onTrue(new PathfindToPose(drive, targetPoseTest, preciseConstraints));
 
         
-        // controller
-        //         .rightBumper()
-        //         .whileTrue(new HolonomicDrive(Pidsposecont,(Supplier<ChassisSpeeds>) () -> (JoystickController.getSpeeds(
-        //             drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
+        controller
+                .rightBumper()
+                .whileTrue(new HolonomicDrive(Pidsposecont,(Supplier<ChassisSpeeds>) () -> (JoystickController.getSpeeds(
+                    drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
+
+       
+        
 
 
                 
