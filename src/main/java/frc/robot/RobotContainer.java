@@ -77,7 +77,8 @@ public class RobotContainer {
 
     @SuppressWarnings("unused")
     private final Arm arm;
-  private final ObjectDetection object;
+
+    private final ObjectDetection object;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -94,27 +95,27 @@ public class RobotContainer {
     //     double maxAngularAccelerationRadPerSecSq,
     //     double nominalVoltageVolts,
 
-  // Dashboard inputs
-  private final LoggedDashboardChooser<Command> autoChooser;
+    // Dashboard inputs
+    private final LoggedDashboardChooser<Command> autoChooser;
 
     // Drive controllers
     PIDPoseController rotationController;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
-  public RobotContainer() {
-    switch (SimConstants.currentMode) {
-      case REAL:
-        arm = new Arm(new ArmIOTalonFX(0, 0, 0));
-        // Real robot, instantiate hardware IO implementations
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
+    /** The container for the robot. Contains subsystems, OI devices, and commands. */
+    public RobotContainer() {
+        switch (SimConstants.currentMode) {
+            case REAL:
+                // chassis bot has no physical arm to test on
+                arm = new Arm(new ArmIOSim());
+                // Real robot, instantiate hardware IO implementations
+                drive = new Drive(
+                        new GyroIOPigeon2(),
+                        new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                        new ModuleIOTalonFX(TunerConstants.FrontRight),
+                        new ModuleIOTalonFX(TunerConstants.BackLeft),
+                        new ModuleIOTalonFX(TunerConstants.BackRight));
 
-                // currently our chassis bot has no physical flywheel for us to test on
+                // chassis bot has no physical flywheel to test on
                 flywheel = new Flywheel(new FlywheelIOSim());
                 vision = new Vision(
                         drive::addVisionMeasurement,
@@ -136,7 +137,7 @@ public class RobotContainer {
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
                 arm = new Arm(new ArmIOSim());
-        drive = new Drive(
+                drive = new Drive(
                         new GyroIO() {},
                         new ModuleIOSim(TunerConstants.FrontLeft),
                         new ModuleIOSim(TunerConstants.FrontRight),
@@ -154,7 +155,7 @@ public class RobotContainer {
             default:
                 // Replayed robot, disable IO implementations
                 arm = new Arm(new ArmIO() {});
-        drive = new Drive(
+                drive = new Drive(
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
@@ -191,9 +192,9 @@ public class RobotContainer {
         rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
     }
 
-  public Arm getArm() {
-    return arm;
-  }
+    public Arm getArm() {
+        return arm;
+    }
 
     /**
      * Use this method to define your button->command mappings. Buttons can be created by
