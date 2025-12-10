@@ -1,9 +1,8 @@
 package frc.robot.subsystems.distance;
 
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.Logger;
 
 public class ElevatorRange extends SubsystemBase { // Just an elevator.
 
@@ -13,19 +12,19 @@ public class ElevatorRange extends SubsystemBase { // Just an elevator.
 
     private final CANRange distance;
 
-  public ElevatorRange(ElevatorRangeIO elevator, CANRange distance) {
-    this.elevator = elevator;
-    this.distance = distance;
-
-  }
+    public ElevatorRange(ElevatorRangeIO elevator, CANRange distance) {
+        this.elevator = elevator;
+        this.distance = distance;
+    }
 
     public double getElevatorPosition() {
-        if(distance.getDistance() < 6){ // Distance needed for encoder to be reliable (may be due to slack in the chain or some mechanical obstacle)
+        if (distance.getDistance()
+                < 6) { // Distance needed for encoder to be reliable (may be due to slack in the chain or some
+            // mechanical obstacle)
             return distance.getDistance();
         }
 
         return eInputs.elevatorPositionInch;
-        
     }
 
     @Override
@@ -36,5 +35,4 @@ public class ElevatorRange extends SubsystemBase { // Just an elevator.
 
         Logger.processInputs(name, eInputs);
     }
-
 }

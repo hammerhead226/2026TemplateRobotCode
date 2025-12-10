@@ -13,7 +13,8 @@
 
 package frc.robot;
 
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import static frc.robot.constants.VisionConstants.camera0Name;
+import static frc.robot.constants.VisionConstants.camera1Name;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -36,8 +37,6 @@ import frc.robot.commands.drive.holonomic.JoystickController;
 import frc.robot.commands.drive.holonomic.PIDPoseController;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
-import static frc.robot.constants.VisionConstants.camera0Name;
-import static frc.robot.constants.VisionConstants.camera1Name;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;

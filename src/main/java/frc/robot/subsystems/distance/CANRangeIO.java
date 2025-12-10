@@ -19,6 +19,4 @@ public interface CANRangeIO {
     public default boolean isInRange() {
         return false;
     }
-
-    
 }

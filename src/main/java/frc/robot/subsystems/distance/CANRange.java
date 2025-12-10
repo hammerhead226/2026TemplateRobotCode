@@ -1,9 +1,9 @@
 package frc.robot.subsystems.distance;
-import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.Logger;
 
-public class CANRange extends SubsystemBase{
+public class CANRange extends SubsystemBase {
 
     public CANRangeIO range;
     private final CANRangeIOInputsAutoLogged inputs = new CANRangeIOInputsAutoLogged();
@@ -19,7 +19,7 @@ public class CANRange extends SubsystemBase{
     }
 
     public boolean isInRange(int min, int max) {
-        return (getDistance() > min) && (getDistance() < max); 
+        return (getDistance() > min) && (getDistance() < max);
     }
 
     @Override
