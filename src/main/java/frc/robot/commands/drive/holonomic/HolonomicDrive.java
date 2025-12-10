@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 public class HolonomicDrive extends Command {
     private Drive drive;
     private Supplier<ChassisSpeeds> speedsSupplier;
+    private Runnable[] resetRunnables;
 
     public HolonomicDrive(Drive drive) {
         addRequirements(drive);
@@ -22,6 +23,11 @@ public class HolonomicDrive extends Command {
 
     public HolonomicDrive(Drive drive, Supplier<ChassisSpeeds> speedsSupplier, Runnable... resetRunnables) {
         this(drive, speedsSupplier);
+        this.resetRunnables = resetRunnables;
+    }
+
+    @Override
+    public void initialize() {
         for (Runnable resetRunnable : resetRunnables) {
             resetRunnable.run();
         }
