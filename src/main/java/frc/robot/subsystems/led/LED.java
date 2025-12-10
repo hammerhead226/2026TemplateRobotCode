@@ -12,33 +12,33 @@ import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
 public class LED extends SubsystemBase {
-  private final LED_IO led;
-  private final LED_IOInputsAutoLogged lInputs = new LED_IOInputsAutoLogged();
+    private final LED_IO led;
+    private final LED_IOInputsAutoLogged lInputs = new LED_IOInputsAutoLogged();
 
-  public LED(LED_IO led) {
-    this.led = led;
-  }
+    public LED(LED_IO led) {
+        this.led = led;
+    }
 
-  @Override
-  public void periodic() {
-    led.updateInputs(lInputs);
+    @Override
+    public void periodic() {
+        led.updateInputs(lInputs);
 
-    setState(lInputs.ledState);
+        setState(lInputs.ledState);
 
-    Logger.processInputs("LED Inputs", lInputs);
-  }
+        Logger.processInputs("LED Inputs", lInputs);
+    }
 
-  public void noBumpersPressed() {
-    led.noBumpersPressed();
-  }
+    public void noBumpersPressed() {
+        led.noBumpersPressed();
+    }
 
-  public void setState(LED_STATE state) {
-    led.setLEDState(state);
-    Logger.recordOutput("Set State", state);
-  }
+    public void setState(LED_STATE state) {
+        led.setLEDState(state);
+        Logger.recordOutput("Set State", state);
+    }
 
-  public Command setStateCommand(LED_STATE state) {
+    public Command setStateCommand(LED_STATE state) {
 
-    return new InstantCommand(() -> setState(state), this);
-  }
+        return new InstantCommand(() -> setState(state), this);
+    }
 }

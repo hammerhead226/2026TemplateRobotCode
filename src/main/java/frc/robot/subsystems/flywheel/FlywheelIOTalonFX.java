@@ -29,65 +29,70 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
-  private static final double GEAR_RATIO = 1.5;
+    private static final double GEAR_RATIO = 1.5;
 
-  private final TalonFX leader = new TalonFX(0);
-  private final TalonFX follower = new TalonFX(1);
+    private final TalonFX leader;
+    private final TalonFX follower;
 
-  private final StatusSignal<Angle> leaderPosition = leader.getPosition();
-  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity();
-  private final StatusSignal<Voltage> leaderAppliedVolts = leader.getMotorVoltage();
-  private final StatusSignal<Current> leaderCurrent = leader.getSupplyCurrent();
-  private final StatusSignal<Current> followerCurrent = follower.getSupplyCurrent();
+    private final StatusSignal<Angle> leaderPosition;
+    private final StatusSignal<AngularVelocity> leaderVelocity;
+    private final StatusSignal<Voltage> leaderAppliedVolts;
+    private final StatusSignal<Current> leaderCurrent;
+    private final StatusSignal<Current> followerCurrent;
 
-  public FlywheelIOTalonFX() {
-    var config = new TalonFXConfiguration();
-    config.CurrentLimits.SupplyCurrentLimit = 30.0;
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    leader.getConfigurator().apply(config);
-    follower.getConfigurator().apply(config);
-    follower.setControl(new Follower(leader.getDeviceID(), false));
+    public FlywheelIOTalonFX(int leaderId, int followerId) {
+        leader = new TalonFX(leaderId);
+        follower = new TalonFX(followerId);
+        leaderPosition = leader.getPosition();
+        leaderVelocity = leader.getVelocity();
+        leaderAppliedVolts = leader.getMotorVoltage();
+        leaderCurrent = leader.getSupplyCurrent();
+        followerCurrent = follower.getSupplyCurrent();
 
-    BaseStatusSignal.setUpdateFrequencyForAll(
-        50.0, leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent);
-    leader.optimizeBusUtilization();
-    follower.optimizeBusUtilization();
-  }
+        var config = new TalonFXConfiguration();
+        config.CurrentLimits.SupplyCurrentLimit = 30.0;
+        config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        leader.getConfigurator().apply(config);
+        follower.getConfigurator().apply(config);
+        follower.setControl(new Follower(leader.getDeviceID(), false));
 
-  @Override
-  public void updateInputs(FlywheelIOInputs inputs) {
-    BaseStatusSignal.refreshAll(
-        leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent);
-    inputs.positionRad = Units.rotationsToRadians(leaderPosition.getValueAsDouble()) / GEAR_RATIO;
-    inputs.velocityRadPerSec =
-        Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) / GEAR_RATIO;
-    inputs.appliedVolts = leaderAppliedVolts.getValueAsDouble();
-    inputs.currentAmps =
-        new double[] {leaderCurrent.getValueAsDouble(), followerCurrent.getValueAsDouble()};
-  }
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                50.0, leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent);
+        leader.optimizeBusUtilization();
+        follower.optimizeBusUtilization();
+    }
 
-  @Override
-  public void setVoltage(double volts) {
-    leader.setControl(new VoltageOut(volts));
-  }
+    @Override
+    public void updateInputs(FlywheelIOInputs inputs) {
+        BaseStatusSignal.refreshAll(leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent);
+        inputs.positionRad = Units.rotationsToRadians(leaderPosition.getValueAsDouble()) / GEAR_RATIO;
+        inputs.velocityRadPerSec = Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) / GEAR_RATIO;
+        inputs.appliedVolts = leaderAppliedVolts.getValueAsDouble();
+        inputs.currentAmps = new double[] {leaderCurrent.getValueAsDouble(), followerCurrent.getValueAsDouble()};
+    }
 
-  @Override
-  public void setVelocity(double velocityRadPerSec, double ffVolts) {
-    leader.setControl(new VelocityVoltage(Units.radiansToRotations(velocityRadPerSec)));
-  }
+    @Override
+    public void setVoltage(double volts) {
+        leader.setControl(new VoltageOut(volts));
+    }
 
-  @Override
-  public void stop() {
-    leader.stopMotor();
-  }
+    @Override
+    public void setVelocity(double velocityRadPerSec, double ffVolts) {
+        leader.setControl(new VelocityVoltage(Units.radiansToRotations(velocityRadPerSec)));
+    }
 
-  @Override
-  public void configurePID(double kP, double kI, double kD) {
-    var config = new Slot0Configs();
-    config.kP = kP;
-    config.kI = kI;
-    config.kD = kD;
-    leader.getConfigurator().apply(config);
-  }
+    @Override
+    public void stop() {
+        leader.stopMotor();
+    }
+
+    @Override
+    public void configurePID(double kP, double kI, double kD) {
+        var config = new Slot0Configs();
+        config.kP = kP;
+        config.kI = kI;
+        config.kD = kD;
+        leader.getConfigurator().apply(config);
+    }
 }

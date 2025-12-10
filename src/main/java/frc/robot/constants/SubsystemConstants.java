@@ -19,65 +19,115 @@ import com.pathplanner.lib.path.PathConstraints;
 
 public final class SubsystemConstants {
 
-  public static final String CANBUS = "CAN Bus 2";
-  public static final double LOOP_PERIOD_SECONDS = 0.02;
+    public static final String CANBUS = "CAN Bus 2";
+    public static final double LOOP_PERIOD_SECONDS = 0.02;
 
-  public static class ElevatorConstants {
-    public static final double CURRENT_LIMIT = 40.0;
-    public static final boolean CURRENT_LIMIT_ENABLED = true;
+    public static class ElevatorConstants {
+        public static final double CURRENT_LIMIT = 40.0;
+        public static final boolean CURRENT_LIMIT_ENABLED = true;
 
-    // the circumerfence of the sprocket that actually touches and drives the elevator chain
-    // in 2025 22t 1/2* Hex Bore Hub 25 Chain Sprocket (217-2640) was 5.5
-    public static final double SPROCKET_CIRCUMFERENCE_INCH = 5.5; 
+        // the circumerfence of the sprocket that actually touches and drives the elevator chain
+        // in 2025 22t 1/2* Hex Bore Hub 25 Chain Sprocket (217-2640) was 5.5
+        public static final double SPROCKET_CIRCUMFERENCE_INCH = 5.5;
 
-    public static final double RETRACT_SETPOINT_INCH = 0;
-    public static final double EXTEND_SETPOINT_INCH = 0;
-    public static final double DEFAULT_THRESHOLD = 1;
+        public static final double RETRACT_SETPOINT_INCH = 0;
+        public static final double EXTEND_SETPOINT_INCH = 0;
+        public static final double DEFAULT_THRESHOLD = 1;
 
-    public static final double ELEVATOR_GEAR_RATIO = 1;
-  }
+        public static final double ELEVATOR_GEAR_RATIO = 1;
 
-  public static final class ArmConstants {
-    public static final double CURRENT_LIMIT = 35.0;
-    public static final boolean CURRENT_LIMIT_ENABLED = true;
+        // Place Holder Values
+        public static final double LOW_SETPOINT_INCH = 0;
+        public static final double MID_SETPOINT_INCH = 0;
+        public static final double HIGH_SETPOINT_INCH = 0;
+        public static final double INTAKE_SETPOINT_INCH = 0;
+        public static final double STOW_SETPOINT_INCH = 0;
+    }
 
-    public static final double DEFAULT_THRESHOLD = 1;
-    public static final double ARM_GEAR_RATIO = 1;
+    public static final class ArmConstants {
+        public static final double CURRENT_LIMIT = 35.0;
+        public static final boolean CURRENT_LIMIT_ENABLED = true;
 
-    public static final double ARM_ZERO_ANGLE = 0;
-    public static final double STOW_SETPOINT_DEG = 0;
-  }
-  public static final class PathConstants{
-    public static final PathConstraints DEFAULT_PATH_CONSTRAINTS = new PathConstraints(
-      5, // m/s
-      5, // m/s^2
-      Math.toRadians(180), // rad/s
-      Math.toRadians(200) // rad/s^2
-    );
-  }
+        public static final double DEFAULT_THRESHOLD = 1;
+        public static final double ARM_GEAR_RATIO = 1;
 
-  public static enum LED_STATE {
-    BLUE,
-    RED,
-    YELLOW,
-    VIOLET,
-    GREEN,
-    GREY,
-    PURPLE,
-    PAPAYA_ORANGE,
-    WILLIAMS_BLUE,
-    HALF_FLASH_RED_HALF_FLASH_WHITE,
-    FLASHING_WHITE,
-    FLASHING_GREEN,
-    FLASHING_RED,
-    FLASHING_BLUE,
-    FIRE,
-    OFF
-  }
+        public static final double ARM_ZERO_ANGLE = 0;
+        public static final double STOW_SETPOINT_DEG = 0;
 
-  public static enum Mode {
-    REAL,
-    SIM,
-    REPLAY
-  }
+        // Just fillers for state machine values
+        public static final double LOW_SETPOINT_DEG = 0;
+        public static final double MID_SETPOINT_DEG = 0;
+        public static final double HIGH_SETPOINT_DEG = 0;
+        public static final double INTAKE_ANGLE_DEGREES = 0;
+    }
+
+    public static final class PathConstants {
+        public static final PathConstraints DEFAULT_PATH_CONSTRAINTS = new PathConstraints(
+                5, // m/s
+                5, // m/s^2
+                Math.toRadians(180), // rad/s
+                Math.toRadians(200) // rad/s^2
+                );
+    }
+
+    public static enum LED_STATE {
+        BLUE,
+        RED,
+        YELLOW,
+        VIOLET,
+        GREEN,
+        GREY,
+        PURPLE,
+        PAPAYA_ORANGE,
+        WILLIAMS_BLUE,
+        HALF_FLASH_RED_HALF_FLASH_WHITE,
+        FLASHING_WHITE,
+        FLASHING_GREEN,
+        FLASHING_RED,
+        FLASHING_BLUE,
+        FIRE,
+        OFF
+    }
+
+    public static enum Mode {
+        REAL,
+        SIM,
+        REPLAY
+    }
+
+    public static enum ArmStates {
+        STOW,
+        INTAKE,
+        LOW,
+        MID,
+        HIGH
+    }
+
+    public static enum ElevatorStates {
+        STOW,
+        INTAKE,
+        LOW,
+        MID,
+        HIGH
+    }
+
+    public static enum FlywheelStates {
+        OFF,
+        LOWGOAL,
+        HIGHGOAL
+    }
+
+    public static enum DriveStates {
+        FULLSPEED,
+        SLOW
+    }
+
+    public static enum SuperstructureState {
+        IDLE,
+        INTAKE,
+        SCORELOW,
+        SCOREMID,
+        SCOREHIGH,
+        STOW
+    }
 }
