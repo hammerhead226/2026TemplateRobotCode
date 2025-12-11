@@ -19,7 +19,6 @@ import static frc.robot.constants.VisionConstants.camera1Name;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.PathConstraints;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -91,24 +90,6 @@ public class RobotContainer {
     private final CommandXboxController controller = new CommandXboxController(0);
     private final CommandXboxController operator = new CommandXboxController(1);
 
-    Pose2d targetPoseTest = new Pose2d(0.6096, 1.2192, Rotation2d.fromDegrees(90));
-    Translation2d roughTranslation2d = new Translation2d(0.5, 1.5);
-    Translation2d preciseTranslation2d = new Translation2d(0.6096, 1.2192);
-    PathConstraints roughConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
-    PathConstraints preciseConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
-    PIDPoseController pidsPoseCont;
-    ServoingController servoingController;
-    TrigController trigController;
-    Pose2d initiPose2d;
-    Transform2d transform2d;
-    HeadingLock headinglock;
-
-    //     double maxVelocityMPS,
-    //     double maxAccelerationMPSSq,
-    //     double maxAngularVelocityRadPerSec,
-    //     double maxAngularAccelerationRadPerSecSq,
-    //     double nominalVoltageVolts,
-
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -174,16 +155,6 @@ public class RobotContainer {
                 headset = new Headset(new HeadsetIO() {});
                 break;
         }
-        pidsPoseCont = new PIDPoseController(
-                drive, drive::getPose, () -> new Pose2d(preciseTranslation2d, Rotation2d.fromDegrees(90)));
-        servoingController = new ServoingController(drive, vision, 0, 1);
-
-        transform2d = new Transform2d(
-                new Translation2d(Units.feetToMeters(2), Units.feetToMeters(4)), Rotation2d.fromDegrees(90));
-
-        trigController = new TrigController(drive, vision, 0, 1, transform2d);
-
-        headinglock = new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX);
 
         // Set up auto routines
         NamedCommands.registerCommand(
@@ -210,6 +181,7 @@ public class RobotContainer {
 
         // Configure the button bindings
         configureButtonBindings();
+        testButtonBindings();
     }
 
     /**
@@ -241,34 +213,43 @@ public class RobotContainer {
             drive.setPose(Pose2d.kZero);
             headset.setPose(Pose3d.kZero);
         }));
+    }
+
+    private void testButtonBindings() {
+        Pose2d targetPose = new Pose2d(Units.feetToMeters(2), Units.feetToMeters(4), Rotation2d.kCCW_90deg);
+
+        // pathplanner.lib based commands
+        Translation2d roughTranslation2d = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(3));
+        PathConstraints roughConstraints = PathConstraints.unlimitedConstraints(12);
+        PathConstraints preciseConstraints = new PathConstraints(
+                drive.getMaxLinearSpeedMetersPerSec() * 0.5,
+                1.5,
+                drive.getMaxAngularSpeedRadPerSec() * 0.5,
+                Units.degreesToRadians(200),
+                12.0);
         controller
                 .y()
                 .onTrue(new SoftStagedAlign(
-                        drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
+                        drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints, preciseConstraints));
         controller
                 .x()
                 .onTrue(new HardStagedAlign(
-                        drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
-        controller.b().onTrue(new PathfindToPose(drive, targetPoseTest, preciseConstraints));
+                        drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints, preciseConstraints));
+        controller.b().onTrue(new PathfindToPose(drive, targetPose, preciseConstraints));
 
-        controller.rightBumper().whileTrue(new HolonomicDrive(drive, pidsPoseCont::getSpeeds));
-
-        operator.a().whileTrue(new HolonomicDrive(drive, servoingController::getSpeeds));
-        operator.x().whileTrue(new HolonomicDrive(drive, trigController::getSpeeds));
+        // pid based commands
+        PIDPoseController pidPoseController = new PIDPoseController(drive, drive::getPose, () -> targetPose);
+        HeadingLock headinglock =
+                new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX);
+        controller.rightBumper().whileTrue(new HolonomicDrive(drive, pidPoseController::getSpeeds));
         controller.leftBumper().whileTrue(headinglock);
 
-        // controller
-        //         .b()
-        //         .onTrue(new PIDPoseController(drive, drive.getPose(), targetPoseTest));
-
-        // Switch to X pattern when X button is pressed
-        // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-        // Reset to Pose2d.kZero when start is pressed
-        // controller
-        //         .b()
-        //         .onTrue(Commands.runOnce(() -> drive.setPose(Pose2d.kZero), drive)
-        //                 .ignoringDisable(true));
+        // vision based commands
+        ServoingController servoingController = new ServoingController(drive, vision, 0, 0);
+        TrigController trigController =
+                new TrigController(drive, vision, 0, 1, new Transform2d(Pose2d.kZero, targetPose));
+        operator.a().whileTrue(new HolonomicDrive(drive, servoingController::getSpeeds));
+        operator.x().whileTrue(new HolonomicDrive(drive, trigController::getSpeeds));
     }
 
     /**
