@@ -1,7 +1,5 @@
 package frc.robot.subsystems.headset;
 
-import java.util.OptionalDouble;
-
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
