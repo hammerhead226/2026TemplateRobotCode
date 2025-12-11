@@ -30,7 +30,8 @@ public class TrigController implements DriveController {
 
         // in this coordinate space consider the tag to be Pose2d.kZero
         Pose2d targetPose = Pose2d.kZero.transformBy(robotToTargetIdeal.inverse());
-        pidPoseController = new PIDPoseController(drive, () -> Pose2d.kZero.transformBy(robotToTarget().inverse()), () -> targetPose);
+        pidPoseController = new PIDPoseController(
+                drive, () -> Pose2d.kZero.transformBy(robotToTarget().inverse()), () -> targetPose);
     }
 
     @Override

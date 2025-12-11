@@ -22,6 +22,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -245,11 +246,12 @@ public class RobotContainer {
 
         // vision based commands
         ServoingController servoingController = new ServoingController(drive, vision, 0, 0);
-        TrigController trigEstimator = new TrigController(vision, 0, 1);
-        Pose2d idealRobotToTarget =
-                new Pose2d(Units.feetToMeters(1), Units.feetToMeters(2), Rotation2d.fromDegrees(30));
-        PIDPoseController trigController =
-                new PIDPoseController(drive, trigEstimator::robotToTarget, () -> idealRobotToTarget);
+        TrigController trigController = new TrigController(
+                drive,
+                vision,
+                0,
+                1,
+                new Transform2d(Units.feetToMeters(1), Units.feetToMeters(2), Rotation2d.fromDegrees(30)));
         operator.a().whileTrue(new HolonomicDrive(drive, servoingController));
         operator.x().whileTrue(new HolonomicDrive(drive, trigController));
     }
