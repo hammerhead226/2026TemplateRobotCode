@@ -16,24 +16,23 @@ public class HolonomicDrive extends Command {
         this.speedsSupplier = () -> new ChassisSpeeds();
     }
 
-    public HolonomicDrive(Drive drive, Supplier<ChassisSpeeds> speedsSupplier) {
-        this(drive);
-        this.speedsSupplier = speedsSupplier;
-    }
-
     public HolonomicDrive(Drive drive, Supplier<ChassisSpeeds> speedsSupplier, Runnable... resetRunnables) {
-        this(drive, speedsSupplier);
+        addRequirements(drive);
+        this.drive = drive;
+        this.speedsSupplier = speedsSupplier;
         this.resetRunnables = resetRunnables;
     }
 
     public HolonomicDrive(Drive drive, DriveController driveController) {
-        this(drive, (Supplier<ChassisSpeeds>) driveController::getSpeeds);
+        this(drive, (Supplier<ChassisSpeeds>) driveController::getSpeeds, driveController::reset);
     }
 
     @Override
     public void initialize() {
-        for (Runnable resetRunnable : resetRunnables) {
-            resetRunnable.run();
+        if (resetRunnables != null) {
+            for (Runnable resetRunnable : resetRunnables) {
+                resetRunnable.run();
+            }
         }
     }
 

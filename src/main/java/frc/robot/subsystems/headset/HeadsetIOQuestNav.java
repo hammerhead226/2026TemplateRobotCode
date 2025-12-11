@@ -28,7 +28,6 @@ public class HeadsetIOQuestNav implements HeadsetIO {
         inputs.tracking = questNav.isTracking();
         inputs.trackingLostCount = questNav.getTrackingLostCounter().orElse(0);
         inputs.appTimestamp = questNav.getAppTimestamp().orElse(0);
-        
 
         PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
 

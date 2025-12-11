@@ -15,13 +15,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import java.util.ArrayList;
 import java.util.List;
-import org.littletonrobotics.junction.Logger;
 
 public class SoftStagedAlign extends Command {
     private final double ROUGH_CONSTRAINTS_MAX_POSITION = 0.9;
 
     private final Drive drive;
-    private final Command pathCommand;
+    private final Translation2d roughTranslation;
+    private final Translation2d preciseTranslation;
+    private final PathConstraints roughConstraints;
+    private final PathConstraints preciseConstraints;
+
+    private Command pathCommand;
 
     private boolean withTrajectoryTimeoutCalled = false;
 
@@ -33,7 +37,13 @@ public class SoftStagedAlign extends Command {
             PathConstraints preciseConstraints) {
         addRequirements(drive);
         this.drive = drive;
+        this.roughTranslation = roughTranslation;
+        this.preciseTranslation = preciseTranslation;
+        this.roughConstraints = roughConstraints;
+        this.preciseConstraints = preciseConstraints;
+    }
 
+    public void initialize() {
         ChassisSpeeds fieldRelChassisSpeeds =
                 ChassisSpeeds.fromRobotRelativeSpeeds(drive.getChassisSpeeds(), drive.getRotation());
         double chassisSpeedsMagnitude =
@@ -65,14 +75,6 @@ public class SoftStagedAlign extends Command {
                 new Pose2d(roughTranslation, alignmentHeading),
                 new Pose2d(preciseTranslation, alignmentHeading));
 
-        Logger.recordOutput("AutoBuilder/shouldFlip()", AutoBuilder.shouldFlip());
-
-        if (AutoBuilder.shouldFlip()) {
-            for (int i = 0; i < waypoints.size(); i++) {
-                waypoints.set(i, waypoints.get(i).flip());
-            }
-        }
-
         List<ConstraintsZone> constraintsZones = new ArrayList<>();
         constraintsZones.add(new ConstraintsZone(0.0, ROUGH_CONSTRAINTS_MAX_POSITION, roughConstraints));
 
@@ -87,10 +89,12 @@ public class SoftStagedAlign extends Command {
                 new GoalEndState(0.0, alignmentHeading),
                 false);
 
-        pathCommand = AutoBuilder.followPath(path);
-    }
+        // force field relative coordinates
+        if (AutoBuilder.shouldFlip()) {
+            path = path.flipPath();
+        }
 
-    public void initialize() {
+        pathCommand = AutoBuilder.followPath(path);
         pathCommand.initialize();
     }
 

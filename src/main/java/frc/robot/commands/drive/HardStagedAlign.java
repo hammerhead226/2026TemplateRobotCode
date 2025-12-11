@@ -65,15 +65,6 @@ public class HardStagedAlign extends SequentialCommandGroup {
         List<Waypoint> preciseWaypoints = PathPlannerPath.waypointsFromPoses(
                 new Pose2d(roughTranslation, alignmentHeading), new Pose2d(preciseTranslation, alignmentHeading));
 
-        if (AutoBuilder.shouldFlip()) {
-            for (int i = 0; i < roughWaypoints.size(); i++) {
-                roughWaypoints.set(i, roughWaypoints.get(i).flip());
-            }
-            for (int i = 0; i < preciseWaypoints.size(); i++) {
-                preciseWaypoints.set(i, preciseWaypoints.get(i).flip());
-            }
-        }
-
         PathPlannerPath roughPath = new PathPlannerPath(
                 roughWaypoints,
                 roughConstraints,
@@ -85,6 +76,12 @@ public class HardStagedAlign extends SequentialCommandGroup {
                 preciseConstraints,
                 new IdealStartingState(preciseConstraints.maxVelocity(), alignmentHeading),
                 new GoalEndState(0.0, alignmentHeading));
+
+        // force field relative coordinates
+        if (AutoBuilder.shouldFlip()) {
+            roughPath = roughPath.flipPath();
+            precisePath = precisePath.flipPath();
+        }
 
         roughPathCommand = AutoBuilder.followPath(roughPath);
         precisePathCommand = AutoBuilder.followPath(precisePath);

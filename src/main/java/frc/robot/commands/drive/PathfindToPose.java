@@ -10,7 +10,10 @@ import java.util.function.DoubleSupplier;
 
 public class PathfindToPose extends Command {
     private final Drive drive;
-    private final Command pathCommand;
+    private final Pose2d targetPose;
+    private final PathConstraints constraints;
+
+    private Command pathCommand;
 
     private DoubleSupplier xSupplier;
     private DoubleSupplier ySupplier;
@@ -21,7 +24,8 @@ public class PathfindToPose extends Command {
     public PathfindToPose(Drive drive, Pose2d targetPose, PathConstraints constraints) {
         addRequirements(drive);
         this.drive = drive;
-        this.pathCommand = AutoBuilder.pathfindToPose(targetPose, constraints);
+        this.targetPose = targetPose;
+        this.constraints = constraints;
     }
 
     public PathfindToPose(
@@ -39,14 +43,15 @@ public class PathfindToPose extends Command {
 
     @Override
     public void initialize() {
+        pathCommand = AutoBuilder.pathfindToPose(targetPose, constraints);
         pathCommand.initialize();
     }
 
     @Override
     public void execute() {
-        if (xSupplier != null) PPHolonomicDriveController.overrideXFeedback(xSupplier);
-        if (ySupplier != null) PPHolonomicDriveController.overrideYFeedback(ySupplier);
-        if (omegaSupplier != null) PPHolonomicDriveController.overrideRotationFeedback(omegaSupplier);
+        PPHolonomicDriveController.overrideXFeedback(xSupplier);
+        PPHolonomicDriveController.overrideYFeedback(ySupplier);
+        PPHolonomicDriveController.overrideRotationFeedback(omegaSupplier);
         pathCommand.execute();
     }
 

@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -67,6 +68,7 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -210,11 +212,11 @@ public class RobotContainer {
         Pose2d targetPose = new Pose2d(Units.feetToMeters(2), Units.feetToMeters(4), Rotation2d.kCCW_90deg);
 
         // pathplanner.lib based commands
-        Translation2d roughTranslation2d = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(3));
+        Translation2d roughTranslation2d = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
         PathConstraints roughConstraints = PathConstraints.unlimitedConstraints(12);
         PathConstraints preciseConstraints = new PathConstraints(
                 drive.getMaxLinearSpeedMetersPerSec() * 0.5,
-                1.5,
+                3.0,
                 drive.getMaxAngularSpeedRadPerSec() * 0.5,
                 Units.degreesToRadians(200),
                 12.0);
@@ -224,9 +226,15 @@ public class RobotContainer {
                         drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints, preciseConstraints));
         controller
                 .x()
-                .whileTrue(new HardStagedAlign(
-                        drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints, preciseConstraints));
-        controller.b().whileTrue(new PathfindToPose(drive, targetPose, preciseConstraints));
+                .whileTrue(new DeferredCommand(
+                        () -> new HardStagedAlign(
+                                drive,
+                                roughTranslation2d,
+                                targetPose.getTranslation(),
+                                roughConstraints,
+                                preciseConstraints),
+                        Set.of(drive)));
+        controller.b().whileTrue(new PathfindToPose(drive, targetPose, roughConstraints));
 
         // pid based commands
         controller
