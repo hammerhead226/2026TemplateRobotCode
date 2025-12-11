@@ -20,6 +20,10 @@ public class HolonomicDrive extends Command {
         this(drive);
         this.speedsSupplier = speedsSupplier;
     }
+    // public HolonomicDrive(PIDPoseController pidPoseController, Supplier<ChassisSpeeds> speedsSupplier) {
+    //     this.pidPoseController = pidPoseController;
+    //     this.speedsSupplier = speedsSupplier;
+    // }
 
     public HolonomicDrive(Drive drive, Supplier<ChassisSpeeds> speedsSupplier, Runnable... resetRunnables) {
         this(drive, speedsSupplier);

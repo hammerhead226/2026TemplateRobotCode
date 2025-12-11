@@ -21,6 +21,8 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -30,9 +32,16 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.drive.HardStagedAlign;
+import frc.robot.commands.drive.HeadingLock;
+import frc.robot.commands.drive.PathfindToPose;
+// import frc.robot.commands.drive.FollowPath;
+import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
 import frc.robot.commands.drive.holonomic.JoystickController;
 import frc.robot.commands.drive.holonomic.PIDPoseController;
+import frc.robot.commands.drive.holonomic.ServoingController;
+import frc.robot.commands.drive.holonomic.TrigController;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -78,9 +87,25 @@ public class RobotContainer {
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
+    private final CommandXboxController operator = new CommandXboxController(1);
 
-    Pose2d targetPoseTest = new Pose2d(
-            Units.inchesToMeters(31.526), Units.inchesToMeters(297.176), Rotation2d.fromDegrees(90 - 144.011));
+    Pose2d targetPoseTest = new Pose2d(0.6096, 1.2192, Rotation2d.fromDegrees(90));
+    Translation2d roughTranslation2d = new Translation2d(0.5, 1.5);
+    Translation2d preciseTranslation2d = new Translation2d(0.6096, 1.2192);
+    PathConstraints roughConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
+    PathConstraints preciseConstraints = new PathConstraints(1.0, 1.0, 1.0, 2.0, 8.0);
+    PIDPoseController pidsPoseCont;
+    ServoingController servoingController;
+    TrigController trigController;
+    Pose2d initiPose2d;
+    Transform2d transform2d;
+    HeadingLock headinglock;
+
+    //     double maxVelocityMPS,
+    //     double maxAccelerationMPSSq,
+    //     double maxAngularVelocityRadPerSec,
+    //     double maxAngularAccelerationRadPerSecSq,
+    //     double nominalVoltageVolts,
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
@@ -147,6 +172,16 @@ public class RobotContainer {
                 headset = new Headset(new HeadsetIO() {});
                 break;
         }
+        pidsPoseCont = new PIDPoseController(
+                drive, drive::getPose, () -> new Pose2d(preciseTranslation2d, Rotation2d.fromDegrees(90)));
+        servoingController = new ServoingController(drive, vision, 0, 1);
+
+        transform2d = new Transform2d(
+                new Translation2d(Units.feetToMeters(2), Units.feetToMeters(4)), Rotation2d.fromDegrees(90));
+
+        trigController = new TrigController(drive, vision, 0, 1, transform2d);
+
+        headinglock = new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX);
 
         // Set up auto routines
         NamedCommands.registerCommand(
@@ -204,6 +239,34 @@ public class RobotContainer {
             drive.setPose(Pose2d.kZero);
             headset.setPose(Pose3d.kZero);
         }));
+        controller
+                .y()
+                .onTrue(new SoftStagedAlign(
+                        drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
+        controller
+                .x()
+                .onTrue(new HardStagedAlign(
+                        drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
+        controller.b().onTrue(new PathfindToPose(drive, targetPoseTest, preciseConstraints));
+
+        controller.rightBumper().whileTrue(new HolonomicDrive(drive, pidsPoseCont::getSpeeds));
+
+        operator.a().whileTrue(new HolonomicDrive(drive, servoingController::getSpeeds));
+        operator.x().whileTrue(new HolonomicDrive(drive, trigController::getSpeeds));
+        controller.leftBumper().whileTrue(headinglock);
+
+        // controller
+        //         .b()
+        //         .onTrue(new PIDPoseController(drive, drive.getPose(), targetPoseTest));
+
+        // Switch to X pattern when X button is pressed
+        // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+
+        // Reset to Pose2d.kZero when start is pressed
+        // controller
+        //         .b()
+        //         .onTrue(Commands.runOnce(() -> drive.setPose(Pose2d.kZero), drive)
+        //                 .ignoringDisable(true));
     }
 
     /**
