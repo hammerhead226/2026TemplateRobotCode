@@ -238,22 +238,27 @@ public class RobotContainer {
         controller.b().onTrue(new PathfindToPose(drive, targetPose, preciseConstraints));
 
         // pid based commands
-        PIDPoseController pidPoseController = new PIDPoseController(drive, drive::getPose, () -> targetPose);
-        HeadingLock headinglock =
-                new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX);
-        controller.rightBumper().whileTrue(new HolonomicDrive(drive, pidPoseController));
-        controller.leftBumper().whileTrue(headinglock);
+        controller
+                .rightBumper()
+                .whileTrue(new HolonomicDrive(drive, new PIDPoseController(drive, drive::getPose, () -> targetPose)));
+        controller
+                .leftBumper()
+                .whileTrue(new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX));
 
         // vision based commands
-        ServoingController servoingController = new ServoingController(drive, vision, 0, 0);
-        TrigController trigController = new TrigController(
-                drive,
-                vision,
-                0,
-                1,
-                new Transform2d(Units.feetToMeters(1), Units.feetToMeters(2), Rotation2d.fromDegrees(30)));
-        operator.a().whileTrue(new HolonomicDrive(drive, servoingController));
-        operator.x().whileTrue(new HolonomicDrive(drive, trigController));
+        int cameraIndex = 0;
+        int tagId = 1;
+        operator.a().whileTrue(new HolonomicDrive(drive, new ServoingController(drive, vision, cameraIndex, tagId)));
+        operator.x()
+                .whileTrue(new HolonomicDrive(
+                        drive,
+                        new TrigController(
+                                drive,
+                                vision,
+                                cameraIndex,
+                                tagId,
+                                new Transform2d(
+                                        Units.feetToMeters(1), Units.feetToMeters(2), Rotation2d.fromDegrees(30)))));
     }
 
     /**

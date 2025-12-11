@@ -14,7 +14,7 @@ import java.util.Optional;
 public class TrigController implements DriveController {
     private final Vision vision;
     private final int cameraIndex;
-    private final int tagIndex;
+    private final int tagId;
 
     private Pose3d tagPose3d;
     private double lastOkTx;
@@ -22,11 +22,11 @@ public class TrigController implements DriveController {
 
     private PIDPoseController pidPoseController;
 
-    public TrigController(Drive drive, Vision vision, int cameraIndex, int tagIndex, Transform2d robotToTargetIdeal) {
+    public TrigController(Drive drive, Vision vision, int cameraIndex, int tagId, Transform2d robotToTargetIdeal) {
         this.vision = vision;
         this.cameraIndex = cameraIndex;
-        this.tagIndex = tagIndex;
-        tagPose3d = VisionConstants.aprilTagLayout.getTagPose(tagIndex).get();
+        this.tagId = tagId;
+        tagPose3d = VisionConstants.aprilTagLayout.getTagPose(tagId).get();
 
         // in this coordinate space consider the tag to be Pose2d.kZero
         Pose2d targetPose = Pose2d.kZero.transformBy(robotToTargetIdeal.inverse());
@@ -46,7 +46,7 @@ public class TrigController implements DriveController {
 
     public Transform2d robotToTarget() {
         // get tx and ty from camera
-        Optional<Fiducial> fiducal = vision.getFiducial(cameraIndex, tagIndex);
+        Optional<Fiducial> fiducal = vision.getFiducial(cameraIndex, tagId);
         if (fiducal.isPresent()) {
             lastOkTx = fiducal.get().tx();
             lastOkTy = fiducal.get().ty();

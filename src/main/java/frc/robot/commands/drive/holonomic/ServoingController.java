@@ -13,7 +13,7 @@ public class ServoingController implements DriveController {
     private final Drive drive;
     private final Vision vision;
     private final int cameraIndex;
-    private final int tagIndex;
+    private final int tagId;
 
     private static final double ANGLE_KP = 5.0;
     private static final double ANGLE_KD = 0.4;
@@ -23,11 +23,11 @@ public class ServoingController implements DriveController {
     private ProfiledPIDController angleController;
     private double lastOkTx;
 
-    public ServoingController(Drive drive, Vision vision, int cameraIndex, int tagIndex) {
+    public ServoingController(Drive drive, Vision vision, int cameraIndex, int tagId) {
         this.drive = drive;
         this.vision = vision;
         this.cameraIndex = cameraIndex;
-        this.tagIndex = tagIndex;
+        this.tagId = tagId;
 
         angleController = new ProfiledPIDController(
                 ANGLE_KP, 0.0, ANGLE_KD, new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
@@ -49,7 +49,7 @@ public class ServoingController implements DriveController {
     }
 
     private double robotToTargetRadians() {
-        Optional<Fiducial> fiducal = vision.getFiducial(cameraIndex, tagIndex);
+        Optional<Fiducial> fiducal = vision.getFiducial(cameraIndex, tagId);
         if (fiducal.isPresent()) lastOkTx = fiducal.get().tx();
         return Math.toRadians(lastOkTx);
     }
