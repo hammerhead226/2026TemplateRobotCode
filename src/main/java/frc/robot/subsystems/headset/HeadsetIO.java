@@ -13,7 +13,7 @@ public interface HeadsetIO {
         public int frameCount; // error if it gets too low and don't accept estimations to the averager
         public int trackingLostCount; // log this
         public double latency; // error if it gets too high and don't accept estimations to the averager
-        public double[] appTimestamps = new double[] {}; // log this
+        public double appTimestamp; // log this
         public Pose3d estimatedRobotPose;
         public Rotation3d estimatedRotation;
     }

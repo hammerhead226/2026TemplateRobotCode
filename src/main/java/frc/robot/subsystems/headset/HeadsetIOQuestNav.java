@@ -1,5 +1,7 @@
 package frc.robot.subsystems.headset;
 
+import java.util.OptionalDouble;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -7,13 +9,13 @@ import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 
 public class HeadsetIOQuestNav implements HeadsetIO {
-    public QuestNav headset;
+    public QuestNav questNav;
     Transform3d questRobotPose;
     Pose3d estimatedRobotPose;
     Rotation3d estimatedRobotRotation;
 
     public HeadsetIOQuestNav() {
-        headset = new QuestNav();
+        questNav = new QuestNav();
         questRobotPose = new Transform3d(); // add quest's x,y and rotational offset from robot
         estimatedRobotPose = new Pose3d();
         estimatedRobotRotation = new Rotation3d();
@@ -21,14 +23,16 @@ public class HeadsetIOQuestNav implements HeadsetIO {
 
     @Override
     public void updateInputs(HeadsetIOInputs inputs) {
-        inputs.isConnected = headset.isConnected();
-        inputs.latency = headset.getLatency();
-        inputs.batteryPercent = headset.getBatteryPercent().getAsInt();
-        inputs.frameCount = headset.getFrameCount().getAsInt();
-        inputs.tracking = headset.isTracking();
-        inputs.trackingLostCount = headset.getTrackingLostCounter().getAsInt();
+        inputs.isConnected = questNav.isConnected();
+        inputs.latency = questNav.getLatency();
+        inputs.batteryPercent = questNav.getBatteryPercent().orElse(0);
+        inputs.frameCount = questNav.getFrameCount().orElse(0);
+        inputs.tracking = questNav.isTracking();
+        inputs.trackingLostCount = questNav.getTrackingLostCounter().orElse(0);
+        inputs.appTimestamp = questNav.getAppTimestamp().orElse(0);
+        
 
-        PoseFrame[] poseFrames = headset.getAllUnreadPoseFrames();
+        PoseFrame[] poseFrames = questNav.getAllUnreadPoseFrames();
 
         if (poseFrames.length > 0) {
             // Get the most recent Quest pose
@@ -44,11 +48,11 @@ public class HeadsetIOQuestNav implements HeadsetIO {
 
     @Override
     public void commandPeriodic() {
-        headset.commandPeriodic();
+        questNav.commandPeriodic();
     }
 
     @Override
     public void setPose(Pose3d pose3d) {
-        headset.setPose(pose3d);
+        questNav.setPose(pose3d);
     }
 }
