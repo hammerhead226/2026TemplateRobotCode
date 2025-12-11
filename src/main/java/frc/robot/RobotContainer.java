@@ -228,13 +228,13 @@ public class RobotContainer {
                 12.0);
         controller
                 .y()
-                .onTrue(new SoftStagedAlign(
+                .whileTrue(new SoftStagedAlign(
                         drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints, preciseConstraints));
         controller
                 .x()
-                .onTrue(new HardStagedAlign(
+                .whileTrue(new HardStagedAlign(
                         drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints, preciseConstraints));
-        controller.b().onTrue(new PathfindToPose(drive, targetPose, preciseConstraints));
+        controller.b().whileTrue(new PathfindToPose(drive, targetPose, preciseConstraints));
 
         // pid based commands
         controller
