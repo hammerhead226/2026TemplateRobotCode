@@ -95,7 +95,7 @@ public class RobotContainer {
     Pose2d initiPose2d;
     Transform2d transform2d;
     HeadingLock headinglock;
-    
+
     //     double maxVelocityMPS,
     //     double maxAccelerationMPSSq,
     //     double maxAngularVelocityRadPerSec,
@@ -166,15 +166,16 @@ public class RobotContainer {
 
                 break;
         }
-        pidsPoseCont = new PIDPoseController(drive, drive::getPose, () -> new Pose2d(preciseTranslation2d, Rotation2d.fromDegrees(90)));
+        pidsPoseCont = new PIDPoseController(
+                drive, drive::getPose, () -> new Pose2d(preciseTranslation2d, Rotation2d.fromDegrees(90)));
         servoingController = new ServoingController(drive, vision, 0, 1);
-        
-        transform2d = new Transform2d(new Translation2d(Units.feetToMeters(2), Units.feetToMeters(4)), Rotation2d.fromDegrees(90));
-        
+
+        transform2d = new Transform2d(
+                new Translation2d(Units.feetToMeters(2), Units.feetToMeters(4)), Rotation2d.fromDegrees(90));
+
         trigController = new TrigController(drive, vision, 0, 1, transform2d);
 
-        headinglock =  new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX);
-        
+        headinglock = new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX);
 
         // Set up auto routines
         NamedCommands.registerCommand(
@@ -204,8 +205,6 @@ public class RobotContainer {
 
         rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
     }
-
-    
 
     /**
      * Use this method to define your button->command mappings. Buttons can be created by
@@ -238,25 +237,13 @@ public class RobotContainer {
                 .x()
                 .onTrue(new HardStagedAlign(
                         drive, roughTranslation2d, preciseTranslation2d, roughConstraints, preciseConstraints));
-        controller
-                .b()
-                .onTrue(new PathfindToPose(drive, targetPoseTest, preciseConstraints));
+        controller.b().onTrue(new PathfindToPose(drive, targetPoseTest, preciseConstraints));
 
-        controller.
-                rightBumper()
-                .whileTrue(new HolonomicDrive(drive, pidsPoseCont::getSpeeds));
+        controller.rightBumper().whileTrue(new HolonomicDrive(drive, pidsPoseCont::getSpeeds));
 
-        operator
-                .a()
-                .whileTrue(new HolonomicDrive(drive, servoingController::getSpeeds));
-        operator   
-                .x()
-                .whileTrue(new HolonomicDrive(drive, trigController::getSpeeds));
-        controller.
-                leftBumper()
-                .whileTrue(headinglock);
-
-
+        operator.a().whileTrue(new HolonomicDrive(drive, servoingController::getSpeeds));
+        operator.x().whileTrue(new HolonomicDrive(drive, trigController::getSpeeds));
+        controller.leftBumper().whileTrue(headinglock);
 
         // controller
         //         .b()
