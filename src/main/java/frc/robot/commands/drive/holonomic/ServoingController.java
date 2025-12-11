@@ -9,7 +9,7 @@ import frc.robot.subsystems.vision.VisionIO.Fiducial;
 import java.util.Optional;
 
 // TODO: test
-public class ServoingController {
+public class ServoingController implements DriveController {
     private final Drive drive;
     private final Vision vision;
     private final int cameraIndex;
@@ -34,11 +34,13 @@ public class ServoingController {
         angleController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
+    @Override
     public void reset() {
         double robotToTargetRadians = robotToTargetRadians();
         angleController.reset(robotToTargetRadians, drive.getChassisSpeeds().omegaRadiansPerSecond);
     }
 
+    @Override
     public ChassisSpeeds getSpeeds() {
         double robotToTargetRadians = robotToTargetRadians();
         double omega = angleController.calculate(robotToTargetRadians);

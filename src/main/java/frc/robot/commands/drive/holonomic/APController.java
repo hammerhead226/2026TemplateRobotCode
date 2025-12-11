@@ -15,7 +15,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.subsystems.drive.Drive;
 
-public class APController {
+public class APController implements DriveController {
     private static final APConstraints kConstraints =
             new APConstraints().withAcceleration(5.0).withJerk(2.0);
 
@@ -37,12 +37,14 @@ public class APController {
         this.rotationController = new PIDPoseController(drive, drive::getPose, () -> new Pose2d(0, 0, targetAngle));
     }
 
+    @Override
     public void reset() {
         APResult out = kAutopilot.calculate(drive.getPose(), drive.getChassisSpeeds(), target);
         targetAngle = out.targetAngle();
         rotationController.reset();
     }
 
+    @Override
     public ChassisSpeeds getSpeeds() {
         APResult out = kAutopilot.calculate(drive.getPose(), drive.getChassisSpeeds(), target);
         targetAngle = out.targetAngle();

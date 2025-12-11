@@ -8,7 +8,7 @@ import frc.robot.subsystems.drive.Drive;
 import java.util.function.Supplier;
 
 // TODO: test
-public class PIDPoseController {
+public class PIDPoseController implements DriveController {
     private final Drive drive;
     private final Supplier<Pose2d> estimatedPoseSupplier;
     private final Supplier<Pose2d> targetPoseSupplier;
@@ -47,13 +47,18 @@ public class PIDPoseController {
         angleController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
+    @Override
     public void reset() {
         Pose2d estimatedPose = estimatedPoseSupplier.get();
-        xController.reset(estimatedPose.getX(), drive.getChassisSpeeds().vxMetersPerSecond);
-        yController.reset(estimatedPose.getY(), drive.getChassisSpeeds().vyMetersPerSecond);
-        angleController.reset(estimatedPose.getRotation().getRadians(), drive.getChassisSpeeds().omegaRadiansPerSecond);
+        ChassisSpeeds fieldRelativeSpeeds =
+                ChassisSpeeds.fromRobotRelativeSpeeds(drive.getChassisSpeeds(), estimatedPose.getRotation());
+
+        xController.reset(estimatedPose.getX(), fieldRelativeSpeeds.vxMetersPerSecond);
+        yController.reset(estimatedPose.getY(), fieldRelativeSpeeds.vyMetersPerSecond);
+        angleController.reset(estimatedPose.getRotation().getRadians(), fieldRelativeSpeeds.omegaRadiansPerSecond);
     }
 
+    @Override
     public ChassisSpeeds getSpeeds() {
         Pose2d targetPose = targetPoseSupplier.get();
         xController.setGoal(targetPose.getX());
