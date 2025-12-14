@@ -200,6 +200,9 @@ public class Drive extends SubsystemBase {
             poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
         }
 
+        // Log last updated rawGyroRotation
+        Logger.recordOutput("Drive/rawGyroRotation", rawGyroRotation);
+
         // Update gyro alert
         gyroDisconnectedAlert.set(!gyroInputs.connected && SimConstants.currentMode != Mode.SIM);
     }
@@ -355,5 +358,10 @@ public class Drive extends SubsystemBase {
             new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
             new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
         };
+    }
+
+    /** Returns the current odometry rotation excluding vision updates */
+    public Rotation2d getRawGyroRotation() {
+        return rawGyroRotation;
     }
 }

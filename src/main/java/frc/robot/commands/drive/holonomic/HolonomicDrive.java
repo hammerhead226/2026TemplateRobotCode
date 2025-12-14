@@ -38,7 +38,6 @@ public class HolonomicDrive extends Command {
 
     @Override
     public void execute() {
-        // Convert to field relative speeds & send command
         drive.runVelocity(speedsSupplier.get());
     }
 }
