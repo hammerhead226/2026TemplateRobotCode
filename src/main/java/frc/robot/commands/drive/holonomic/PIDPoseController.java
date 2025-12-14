@@ -2,10 +2,13 @@ package frc.robot.commands.drive.holonomic;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import frc.robot.constants.VisionConstants;
 import frc.robot.subsystems.drive.Drive;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 // TODO: test
 public class PIDPoseController implements DriveController {
@@ -66,12 +69,18 @@ public class PIDPoseController implements DriveController {
         angleController.setGoal(targetPose.getRotation().getRadians());
 
         Pose2d estimatedPose = estimatedPoseSupplier.get();
+
+        Pose2d tagPose = VisionConstants.aprilTagLayout.getTagPose(13).get().toPose2d();
+        Logger.recordOutput(
+                "PIDPoseController/targetPose", tagPose.transformBy(new Transform2d(Pose2d.kZero, targetPose)));
+        Logger.recordOutput(
+                "PIDPoseController/estimatedPose", tagPose.transformBy(new Transform2d(Pose2d.kZero, estimatedPose)));
+
         return ChassisSpeeds.fromFieldRelativeSpeeds(
                 new ChassisSpeeds(
-                        xController.calculate(estimatedPose.getX()) * drive.getMaxLinearSpeedMetersPerSec(),
-                        yController.calculate(estimatedPose.getY()) * drive.getMaxLinearSpeedMetersPerSec(),
-                        angleController.calculate(estimatedPose.getRotation().getRadians())
-                                * drive.getMaxAngularSpeedRadPerSec()),
-                drive.getRotation());
+                        xController.calculate(estimatedPose.getX()),
+                        yController.calculate(estimatedPose.getY()),
+                        angleController.calculate(estimatedPose.getRotation().getRadians())),
+                estimatedPose.getRotation());
     }
 }

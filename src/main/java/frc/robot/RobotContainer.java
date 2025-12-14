@@ -191,15 +191,15 @@ public class RobotContainer {
         PIDPoseController rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
 
         // Lock to 0° when A button is held
-        controller.a().whileTrue(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> {
-            ChassisSpeeds joystickControl = JoystickController.getSpeeds(
-                    drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX());
-            ChassisSpeeds rotationControl = rotationController.getSpeeds();
-            return new ChassisSpeeds(
-                    joystickControl.vxMetersPerSecond,
-                    joystickControl.vyMetersPerSecond,
-                    rotationControl.omegaRadiansPerSecond);
-        }));
+        // controller.a().whileTrue(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> {
+        //     ChassisSpeeds joystickControl = JoystickController.getSpeeds(
+        //             drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX());
+        //     ChassisSpeeds rotationControl = rotationController.getSpeeds();
+        //     return new ChassisSpeeds(
+        //             joystickControl.vxMetersPerSecond,
+        //             joystickControl.vyMetersPerSecond,
+        //             rotationControl.omegaRadiansPerSecond);
+        // }));
 
         // Reset drive pose to estimate on start pressed
         controller.start().onTrue(new InstantCommand(() -> {
@@ -246,9 +246,10 @@ public class RobotContainer {
 
         // vision based commands
         int cameraIndex = 0;
-        int tagId = 1;
+        int tagId = 13;
         operator.a().whileTrue(new HolonomicDrive(drive, new ServoingController(drive, vision, cameraIndex, tagId)));
-        operator.x()
+        controller
+                .a()
                 .whileTrue(new HolonomicDrive(
                         drive,
                         new TrigController(
@@ -256,8 +257,7 @@ public class RobotContainer {
                                 vision,
                                 cameraIndex,
                                 tagId,
-                                new Transform2d(
-                                        Units.feetToMeters(1), Units.feetToMeters(2), Rotation2d.fromDegrees(30)))));
+                                new Transform2d(2, 1, Rotation2d.fromDegrees(210)))));
     }
 
     /**
