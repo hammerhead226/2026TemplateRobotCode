@@ -362,6 +362,13 @@ public class Drive extends SubsystemBase {
 
     /** Returns the current odometry rotation excluding vision updates */
     public Rotation2d getRawGyroRotation() {
-        return rawGyroRotation;
+        switch (SimConstants.currentMode) {
+            case REAL:
+                return rawGyroRotation;
+            case SIM:
+                return getRotation();
+            default:
+                return rawGyroRotation;
+        }
     }
 }

@@ -2,7 +2,7 @@ package frc.robot.commands.drive.holonomic;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -13,6 +13,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO.Fiducial;
 import java.util.Optional;
+import org.littletonrobotics.junction.Logger;
 
 public class TrigController implements DriveController {
     private final Drive drive;
@@ -92,21 +93,25 @@ public class TrigController implements DriveController {
          * ~ <tan(tx),tan(ty),1>            divide out the unknown zi
          *
          * pixel image coordinates to physical camera space
-         * <right, down, forwards> = <+x,+y,+z>
-         * <forwards, left, up> = <+z,-x,-y>
+         * <right, up, forwards> = <+x,+y,+z>
+         * <forwards, left, up> = <+z,-x,+y>
          *
-         * <1,-tan(tx),-tan(ty)>
-         *
-         * scale by Δz/-tan(ty) to find camera to target
-         * <-Δz/tan(ty),Δz*tan(tx)/tan(ty),Δz>
+         * <1,-tan(tx),tan(ty)>
          */
-        double deltaZ = targetZ - robotToCamera.getZ();
-        Translation3d cameraToTarget = new Translation3d(
-                -deltaZ / Math.tan(tyRadians), deltaZ * Math.tan(txRadians) / Math.tan(tyRadians), deltaZ);
-        return Pose3d.kZero
-                .plus(robotToCamera)
-                .plus(new Transform3d(cameraToTarget, Rotation3d.kZero))
-                .toPose2d()
+        Translation3d cameraToTarget = new Translation3d(1, -Math.tan(txRadians), Math.tan(tyRadians));
+        Logger.recordOutput("TrigController/cameraToTargetInit", cameraToTarget);
+        cameraToTarget = cameraToTarget.rotateBy(robotToCamera.getRotation()); // rotate to camera coordinates
+        Logger.recordOutput("TrigController/cameraToTargetCameraSpace", cameraToTarget);
+        cameraToTarget = cameraToTarget
+                .div(cameraToTarget.getZ())
+                .times(targetZ - robotToCamera.getZ()); // scale to fit known height difference
+        Logger.recordOutput("TrigController/cameraToTargetScaled", cameraToTarget);
+
+        return Pose2d.kZero
+                .transformBy(new Transform2d(
+                        robotToCamera.getTranslation().toTranslation2d(),
+                        robotToCamera.getRotation().toRotation2d()))
+                .transformBy(new Transform2d(cameraToTarget.toTranslation2d(), Rotation2d.kZero))
                 .getTranslation();
     }
 }
