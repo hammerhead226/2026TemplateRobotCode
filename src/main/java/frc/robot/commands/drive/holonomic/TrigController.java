@@ -6,8 +6,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import frc.robot.constants.VisionConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.Vision;
@@ -86,32 +86,32 @@ public class TrigController implements DriveController {
     // y is left from the direction the robot faces
     public static Translation2d targetRobotSpace(
             double txRadians, double tyRadians, double targetZ, Transform3d robotToCamera) {
-        Logger.recordOutput(
-                "TrigController/robotToCamera.getRotation().getY()",
-                robotToCamera.getRotation().getY());
-        Logger.recordOutput("TrigController/txRadians", txRadians);
-        Logger.recordOutput("TrigController/tyRadians", tyRadians);
+        /*
+         * projection center to projected point
+         * <xi,yi,zi>                       in pixel image coordinates
+         * = <zi*tan(tx),zi*tan(ty),zi>     tan(tx) = xi/zi, tan(ty) = yi/zi
+         * ~ <tan(tx),tan(ty),1>            divide out the unknown zi
+         *
+         * pixel image coordinates to physical camera space
+         * <right, up, forwards> = <+x,+y,+z>
+         * <forwards, left, up> = <+z,-x,+y>
+         *
+         * <1,-tan(tx),tan(ty)>
+         */
+        Translation3d cameraToTarget = new Translation3d(1, -Math.tan(txRadians), Math.tan(tyRadians));
+        Logger.recordOutput("TrigController/cameraToTargetInit", cameraToTarget);
+        cameraToTarget = cameraToTarget.rotateBy(robotToCamera.getRotation()); // rotate to camera coordinates
+        Logger.recordOutput("TrigController/cameraToTargetCameraSpace", cameraToTarget);
+        cameraToTarget = cameraToTarget
+                .div(cameraToTarget.getZ())
+                .times(targetZ - robotToCamera.getZ()); // scale to fit known height difference
+        Logger.recordOutput("TrigController/cameraToTargetScaled", cameraToTarget);
 
-        // trig solve for the distance and yaw from camera to target when projected onto the xy plane (the ground)
-        double groundToTargetRadians = -robotToCamera.getRotation().getY() + tyRadians;
-
-        // only accurate with large difference between camera z and target z
-        double cameraToTargetMeters = (targetZ - robotToCamera.getZ()) / Math.tan(groundToTargetRadians);
-        Logger.recordOutput("TrigController/cameraToTargetMeters", cameraToTargetMeters);
-
-        // tx is negated to convert to CWW+
-        Rotation2d txGroundPlane = new Rotation2d(Math.cos(groundToTargetRadians), Math.tan(-txRadians));
-        Translation2d cameraToTargetRobotSpace = new Translation2d(
-                cameraToTargetMeters, robotToCamera.getRotation().toRotation2d().plus(txGroundPlane));
-
-        Logger.recordOutput("TrigController/txGroundPlane", txGroundPlane);
-
-        Logger.recordOutput("TrigController/txDegrees", Units.radiansToDegrees(txRadians));
-        Logger.recordOutput("TrigController/txGroundPlaneDegrees", txGroundPlane.getDegrees());
-        Logger.recordOutput("TrigController/cameraToTargetRobotSpace", cameraToTargetRobotSpace);
-
-        // obtain robot to target by calculating robot to camera to target, also projected onto the xy plane
-        Translation2d cameraRobotSpace = robotToCamera.getTranslation().toTranslation2d();
-        return cameraRobotSpace.plus(cameraToTargetRobotSpace);
+        return Pose2d.kZero
+                .transformBy(new Transform2d(
+                        robotToCamera.getTranslation().toTranslation2d(),
+                        robotToCamera.getRotation().toRotation2d()))
+                .transformBy(new Transform2d(cameraToTarget.toTranslation2d(), Rotation2d.kZero))
+                .getTranslation();
     }
 }
