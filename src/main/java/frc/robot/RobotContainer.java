@@ -55,6 +55,9 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.distance.CANRange;
+import frc.robot.subsystems.distance.CANRangeIO;
+import frc.robot.subsystems.distance.CANRangeHardwareIO;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
@@ -81,6 +84,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
     // Subsystems
     public static Drive drive;
+    private static CANRange CANRange;
     private final Flywheel flywheel;
     private final Arm arm;
     private final Vision vision;
@@ -99,19 +103,25 @@ public class RobotContainer {
         switch (SimConstants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
+
                 drive = new Drive(
                         new GyroIOPigeon2(),
                         new ModuleIOTalonFX(TunerConstants.FrontLeft),
                         new ModuleIOTalonFX(TunerConstants.FrontRight),
                         new ModuleIOTalonFX(TunerConstants.BackLeft),
                         new ModuleIOTalonFX(TunerConstants.BackRight));
+                
+                CANRange = new CANRange(
+                        new CANRangeHardwareIO(0,"test"),"TestCANRange"
+
+                );
 
                 arm = new Arm(new ArmIOSim());
                 flywheel = new Flywheel(new FlywheelIOSim());
                 vision = new Vision(
                         drive::addVisionMeasurement,
-                        new VisionIOLimelight(camera0Name, drive::getRotation),
-                        new VisionIOLimelight(camera1Name, drive::getRotation));
+                        new VisionIOPhotonVisionSim(camera0Name, VisionConstants.robotToCamera0, drive::getPose),
+                        new VisionIOPhotonVisionSim(camera1Name, VisionConstants.robotToCamera1, drive::getPose));
                 objectDetection = new ObjectDetection(
                         drive::addObjectMeasurement,
                         new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
@@ -122,6 +132,10 @@ public class RobotContainer {
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
                 arm = new Arm(new ArmIOSim());
+                CANRange = new CANRange(
+                        (CANRangeIO) new CANRangeIO() {},
+                        "TestCANRange"
+                );
                 drive = new Drive(
                         new GyroIO() {},
                         new ModuleIOSim(TunerConstants.FrontLeft),
@@ -140,6 +154,10 @@ public class RobotContainer {
             default:
                 // Replayed robot, disable IO implementations
                 arm = new Arm(new ArmIO() {});
+                CANRange = new CANRange(
+                        (CANRangeIO) new CANRangeIO() {},
+                        "TestCANRange"
+                );
                 drive = new Drive(
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 flywheel = new Flywheel(new FlywheelIO() {});
@@ -248,8 +266,7 @@ public class RobotContainer {
         int cameraIndex = 0;
         int tagId = 13;
         operator.a().whileTrue(new HolonomicDrive(drive, new ServoingController(drive, vision, cameraIndex, tagId)));
-        operator
-                .b()
+        operator.b()
                 .whileTrue(new HolonomicDrive(
                         drive,
                         new TrigController(
