@@ -108,8 +108,8 @@ public class TrigController implements DriveController {
         Logger.recordOutput("TrigController/cameraToTargetScaled", cameraToTarget);
 
         return new Pose2d(
-                    robotToCamera.getTranslation().toTranslation2d(),
-                    robotToCamera.getRotation().toRotation2d())
+                        robotToCamera.getTranslation().toTranslation2d(),
+                        robotToCamera.getRotation().toRotation2d())
                 .transformBy(new Transform2d(cameraToTarget.toTranslation2d(), Rotation2d.kZero))
                 .getTranslation();
     }

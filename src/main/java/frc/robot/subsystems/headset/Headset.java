@@ -27,7 +27,10 @@ public class Headset extends SubsystemBase {
         headsetIO.updateInputs(inputs);
         for (PoseFrame poseFrame : inputs.poseFrames) {
             consumer.accept(
-                    poseFrame.questPose3d().toPose2d(),
+                    poseFrame
+                            .questPose3d()
+                            .transformBy(inputs.robotToHeadset.inverse())
+                            .toPose2d(),
                     poseFrame.dataTimestamp(),
                     VecBuilder.fill(
                             VisionConstants.linearStdDevBaseline,

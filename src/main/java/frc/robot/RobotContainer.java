@@ -248,8 +248,7 @@ public class RobotContainer {
         int cameraIndex = 0;
         int tagId = 13;
         operator.a().whileTrue(new HolonomicDrive(drive, new ServoingController(drive, vision, cameraIndex, tagId)));
-        operator
-                .b()
+        operator.b()
                 .whileTrue(new HolonomicDrive(
                         drive,
                         new TrigController(
