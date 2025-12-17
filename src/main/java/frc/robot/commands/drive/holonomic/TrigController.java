@@ -107,10 +107,9 @@ public class TrigController implements DriveController {
                 .times(targetZ - robotToCamera.getZ()); // scale to fit known height difference
         Logger.recordOutput("TrigController/cameraToTargetScaled", cameraToTarget);
 
-        return Pose2d.kZero
-                .transformBy(new Transform2d(
-                        robotToCamera.getTranslation().toTranslation2d(),
-                        robotToCamera.getRotation().toRotation2d()))
+        return new Pose2d(
+                    robotToCamera.getTranslation().toTranslation2d(),
+                    robotToCamera.getRotation().toRotation2d())
                 .transformBy(new Transform2d(cameraToTarget.toTranslation2d(), Rotation2d.kZero))
                 .getTranslation();
     }
