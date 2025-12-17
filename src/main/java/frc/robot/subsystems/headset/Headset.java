@@ -41,8 +41,11 @@ public class Headset extends SubsystemBase {
         // TODO: add alerts
     }
 
-    public void setPose(Pose3d pose3d) {
-        headsetIO.setPose(pose3d);
+    /**
+     * Resets the quest's pose given the robot's pose. Accounts for difference between quest origin and robot origin.
+     */
+    public void resetPose(Pose3d robotPose) {
+        headsetIO.setPose(robotPose.transformBy(inputs.robotToHeadset));
     }
 
     @FunctionalInterface

@@ -204,7 +204,7 @@ public class RobotContainer {
         // Reset drive pose to estimate on start pressed
         controller.start().onTrue(new InstantCommand(() -> {
             drive.setPose(Pose2d.kZero);
-            headset.setPose(Pose3d.kZero);
+            headset.resetPose(Pose3d.kZero);
         }));
     }
 
