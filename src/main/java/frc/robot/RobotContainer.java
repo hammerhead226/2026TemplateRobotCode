@@ -116,7 +116,7 @@ public class RobotContainer {
                         drive::addObjectMeasurement,
                         new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
 
-                headset = new Headset(new HeadsetIOQuestNav());
+                headset = new Headset(drive::addVisionMeasurement, new HeadsetIOQuestNav());
                 break;
 
             case SIM:
@@ -134,7 +134,7 @@ public class RobotContainer {
                         new VisionIOPhotonVisionSim(camera1Name, VisionConstants.robotToCamera1, drive::getPose));
                 objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 flywheel = new Flywheel(new FlywheelIOSim());
-                headset = new Headset(new HeadsetIO() {});
+                headset = new Headset(drive::addVisionMeasurement, new HeadsetIO() {});
                 break;
 
             default:
@@ -145,7 +145,7 @@ public class RobotContainer {
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
                 objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
-                headset = new Headset(new HeadsetIO() {});
+                headset = new Headset(drive::addVisionMeasurement, new HeadsetIO() {});
                 break;
         }
 

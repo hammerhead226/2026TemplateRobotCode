@@ -1,7 +1,8 @@
 package frc.robot.subsystems.headset;
 
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import gg.questnav.questnav.PoseFrame;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface HeadsetIO {
@@ -13,9 +14,8 @@ public interface HeadsetIO {
         public int frameCount; // error if it gets too low and don't accept estimations to the averager
         public int trackingLostCount; // log this
         public double latency; // error if it gets too high and don't accept estimations to the averager
-        public double appTimestamp; // log this
-        public Pose3d estimatedRobotPose;
-        public Rotation3d estimatedRotation;
+        public PoseFrame[] poseFrames = new PoseFrame[0];
+        public Transform3d robotToHeadset = new Transform3d();
     }
 
     public default void updateInputs(HeadsetIOInputs inputs) {}
