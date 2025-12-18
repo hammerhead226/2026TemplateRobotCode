@@ -16,6 +16,7 @@ public class JoystickController {
         // rotate velocity based on driver station
         velocity = velocity.rotateBy(FieldMirroring.driverStationFacing());
 
+        //TODO Ideally we should add a scalar to adjust the driver's max speed (which may be different than the max speed we run in auto)
         // scale to drive's max speed
         ChassisSpeeds speeds = new ChassisSpeeds(
                 velocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),

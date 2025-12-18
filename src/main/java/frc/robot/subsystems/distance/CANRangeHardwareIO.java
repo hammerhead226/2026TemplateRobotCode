@@ -6,7 +6,7 @@ import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.hardware.CANrange;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
-
+//TODO signal strength is also really important to be able to set
 public class CANRangeHardwareIO implements CANRangeIO {
     private final CANrange range;
     private StatusSignal<Distance> distanceMeters;

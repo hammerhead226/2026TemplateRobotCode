@@ -7,6 +7,8 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.arms.Arm;
 
+//TODO this simple of a command should be handled via a commandfactory like setArmTarget in Arm.java. 
+//Additionally be very careful about the usage of "setpoint" vs "goal" as setpoint in a trapezoidmotion profile is the next position, not the target or end position
 public class SetArmAngleTemplate extends Command {
     /** Creates a new setArmAngle. */
     private final Arm arm;

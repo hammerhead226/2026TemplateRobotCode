@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.constants.SubsystemConstants;
 import frc.robot.constants.SubsystemConstants.LED_STATE;
 
+//TODO stretch goal add smarter logic for dealing with strip segments/offsets
 public class LED_IOCANdle implements LED_IO {
     LED_STATE ledState;
 

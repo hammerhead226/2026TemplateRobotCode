@@ -2,6 +2,8 @@ package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 
+// TODO look at angles class from 2910
+// https://github.com/FRCTeam2910/2024CompetitionRobot-Public/blob/5ddd175c4fbab9441025789ee2ed669b7933fd37/src/main/java/frc/robot/util/Angles.java
 public class RotationUtil {
     /** returns the smallest angle needed to go from start to end result will be in (-180,180] */
     public static double deltaAngleDegrees(double start, double end) {

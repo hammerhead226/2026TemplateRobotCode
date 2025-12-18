@@ -27,7 +27,7 @@ public class PathfindToPose extends Command {
         this.targetPose = targetPose;
         this.constraints = constraints;
     }
-
+    //TODO would these additional arguments be passed in at the RobotContainer level? Make sure we apply the same math and constraints as we apply in JoystickController
     public PathfindToPose(
             Drive drive,
             Pose2d targetPose,

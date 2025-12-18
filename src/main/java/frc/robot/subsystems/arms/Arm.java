@@ -14,6 +14,9 @@ import frc.robot.constants.SimConstants;
 import frc.robot.constants.SubsystemConstants;
 import org.littletonrobotics.junction.Logger;
 
+//TODO Add alerts for disconnects and motor temp, add subsystem vis
+//TODO It looks like this class was based on the 2025 template code. I highly highly recommend basing it on the 2025 actual code as there were a tremendous number of improvements
+
 public class Arm extends SubsystemBase {
     private final ArmIO arm;
     private final ArmIOInputsAutoLogged pInputs = new ArmIOInputsAutoLogged();

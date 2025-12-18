@@ -19,6 +19,7 @@ import static frc.robot.constants.VisionConstants.camera1Name;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.path.PathConstraints;
+import com.therekrab.autopilot.APTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -36,8 +37,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.drive.HardStagedAlign;
 import frc.robot.commands.drive.HeadingLock;
-import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.commands.drive.SoftStagedAlign;
+import frc.robot.commands.drive.holonomic.APController;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
 import frc.robot.commands.drive.holonomic.JoystickController;
 import frc.robot.commands.drive.holonomic.PIDPoseController;
@@ -86,7 +87,7 @@ public class RobotContainer {
     private final Vision vision;
     private final Headset headset;
     private final ObjectDetection objectDetection;
-
+    // TODO suggestion to rename this to driver instead of controller
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
     private final CommandXboxController operator = new CommandXboxController(1);
@@ -155,7 +156,7 @@ public class RobotContainer {
                 Commands.startEnd(() -> flywheel.runVelocity(500), flywheel::stop, flywheel)
                         .withTimeout(5.0));
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
+        // TODO add wheel radius calibration routine
         // Set up SysId routines
         autoChooser.addOption(
                 "Drive SysId (Quasistatic Forward)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
@@ -184,10 +185,15 @@ public class RobotContainer {
      * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
+        // TODO if this is how we're setting up the default command we should remove drivecommands.java
         // Default command, normal field-relative drive
         drive.setDefaultCommand(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> (JoystickController.getSpeeds(
                 drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
-
+        // TODO to achieve the intended functionality of lock to heading this should probably exist in the joystick
+        // controller class?
+        // TODO remember we want to monitor the drivers turn joystick to "break" the hold from rotation lock
+        // we also want to watch the gyro angle and look for large jumps representing a collision. We don't want to try
+        // and snap to an angle if we collide with something.
         PIDPoseController rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
 
         // Lock to 0° when A button is held
@@ -201,6 +207,8 @@ public class RobotContainer {
         //             rotationControl.omegaRadiansPerSecond);
         // }));
 
+        // TODO this resets the pose to 0,0. For reseting the gyro we want to use something like what is in the
+        // talonFXSwerveTemplate project
         // Reset drive pose to estimate on start pressed
         controller.start().onTrue(new InstantCommand(() -> {
             drive.setPose(Pose2d.kZero);
@@ -209,11 +217,17 @@ public class RobotContainer {
     }
 
     private void testButtonBindings() {
+        // TODO what is our permanent abstraction idea for this? Will we have action specific commands? If so we should
+        // template them
         Pose2d targetPose = new Pose2d(Units.feetToMeters(2), Units.feetToMeters(4), Rotation2d.kCCW_90deg);
 
         // pathplanner.lib based commands
         Translation2d roughTranslation2d = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
+        // TODO the rough constraints should ideally be limited in some way
         PathConstraints roughConstraints = PathConstraints.unlimitedConstraints(12);
+        // TODO improve consistency between getMaxAngularSpeedRadPerSec and degreesToRadians(200). using degrees is a
+        // more human readable number,
+        // but centeralization of key properties is good
         PathConstraints preciseConstraints = new PathConstraints(
                 drive.getMaxLinearSpeedMetersPerSec() * 0.5,
                 3.0,
@@ -234,12 +248,13 @@ public class RobotContainer {
                                 roughConstraints,
                                 preciseConstraints),
                         Set.of(drive)));
-        controller.b().whileTrue(new PathfindToPose(drive, targetPose, roughConstraints));
+        // controller.b().whileTrue(new PathfindToPose(drive, targetPose, roughConstraints));
 
         // pid based commands
         controller
                 .rightBumper()
                 .whileTrue(new HolonomicDrive(drive, new PIDPoseController(drive, drive::getPose, () -> targetPose)));
+        // TODO can this be abstracted into the joystick class?
         controller
                 .leftBumper()
                 .whileTrue(new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX));
@@ -247,8 +262,10 @@ public class RobotContainer {
         // vision based commands
         int cameraIndex = 0;
         int tagId = 13;
+        // TODO Ideally these commands have some decorator that stops them when they're within some range of the target,
+        // ie if we wanted to trigger an align then shoot or place
         operator.a().whileTrue(new HolonomicDrive(drive, new ServoingController(drive, vision, cameraIndex, tagId)));
-        operator.b()
+        controller.b()
                 .whileTrue(new HolonomicDrive(
                         drive,
                         new TrigController(
@@ -256,7 +273,8 @@ public class RobotContainer {
                                 vision,
                                 cameraIndex,
                                 tagId,
-                                new Transform2d(2, 1, Rotation2d.fromDegrees(210)))));
+                                new Transform2d(2, 0, Rotation2d.fromDegrees(210)))));
+        
     }
 
     /**

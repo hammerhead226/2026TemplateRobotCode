@@ -15,6 +15,10 @@ import frc.robot.subsystems.vision.VisionIO.Fiducial;
 import java.util.Optional;
 import org.littletonrobotics.junction.Logger;
 
+// TODO: The robot shouldn't do anything when we can't see the tag we care about.
+// Ideally this is done in a way where losing 1 frame doesn't stop the robot via some sort of count of how many cycles
+// we haven't seen a tx + ty for.
+
 public class TrigController implements DriveController {
     private final Drive drive;
     private final Vision vision;
@@ -29,13 +33,18 @@ public class TrigController implements DriveController {
 
     /**
      *
-     * @param drive the drive subsystem.
-     * @param vision the vision subsystem.
-     * @param cameraIndex the index of the camera's VisionIO inside the vision subsystem's VisionIO[] io array. See the constructor for vision.
-     * @param tagId the AprilTag id to base alignment off of.
-     * @param tagToRobotIdeal the Transform2d that moves the tag's pose to the pose the robot will align to.
-     *                          Ex: if the tag is facing east, x=2, y=1, rot=235° would cause the robot to align
-     *                          2 meters east, 1 meter north of the tag, facing southwest.
+     * @param drive           the drive subsystem.
+     * @param vision          the vision subsystem.
+     * @param cameraIndex     the index of the camera's VisionIO inside the vision
+     *                        subsystem's VisionIO[] io array. See the constructor
+     *                        for vision.
+     * @param tagId           the AprilTag id to base alignment off of.
+     * @param tagToRobotIdeal the Transform2d that moves the tag's pose to the pose
+     *                        the robot will align to.
+     *                        Ex: if the tag is facing east, x=2, y=1, rot=235°
+     *                        would cause the robot to align
+     *                        2 meters east, 1 meter north of the tag, facing
+     *                        southwest.
      */
     public TrigController(Drive drive, Vision vision, int cameraIndex, int tagId, Transform2d tagToRobotIdeal) {
         this.drive = drive;
@@ -70,9 +79,14 @@ public class TrigController implements DriveController {
         Translation2d targetRobotSpace = targetRobotSpace(
                 Math.toRadians(lastOkTx), Math.toRadians(lastOkTy), tagPose3d.getZ(), vision, cameraIndex);
 
-        // raw gyro position used to continue to avoid potentially noisy vision measurements
+        // raw gyro position used to continue to avoid potentially noisy vision
+        // measurements
         Transform2d robotToTagFieldSpace = new Transform2d(
                 targetRobotSpace, tagPose3d.getRotation().toRotation2d().minus(drive.getRawGyroRotation()));
+        // Debugging
+        // Pose2d tagPoseRobSpace = drive.getPose().transformBy(new
+        // Transform2d(targetRobotSpace, Rotation2d.kZero));
+        // Logger.recordOutput("tagPose", tagPoseRobSpace);
         // return to tag space by using the tag is the origin
         return Pose2d.kZero.transformBy(robotToTagFieldSpace.inverse());
     }
@@ -98,6 +112,9 @@ public class TrigController implements DriveController {
          *
          * <1,-tan(tx),tan(ty)>
          */
+        // TODO although mathematically equivalent, suggestion to replace
+        // -Math.tan(txRadians) with Math.tan(-txRadians) to match conceptual
+        // representation of why txRadians is inverted
         Translation3d cameraToTarget = new Translation3d(1, -Math.tan(txRadians), Math.tan(tyRadians));
         Logger.recordOutput("TrigController/cameraToTargetInit", cameraToTarget);
         cameraToTarget = cameraToTarget.rotateBy(robotToCamera.getRotation()); // rotate to camera coordinates
@@ -106,7 +123,8 @@ public class TrigController implements DriveController {
                 .div(cameraToTarget.getZ())
                 .times(targetZ - robotToCamera.getZ()); // scale to fit known height difference
         Logger.recordOutput("TrigController/cameraToTargetScaled", cameraToTarget);
-
+        // TODO consider a slight simplification with something like:
+        // return robotToCamera.getTranslation().plus(cameraToTarget).toTranslation2d();
         return new Pose2d(
                         robotToCamera.getTranslation().toTranslation2d(),
                         robotToCamera.getRotation().toRotation2d())

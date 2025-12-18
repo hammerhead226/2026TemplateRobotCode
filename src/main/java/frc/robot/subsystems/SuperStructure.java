@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import frc.robot.constants.SubsystemConstants;
+import frc.robot.constants.SubsystemConstants.*;
 import frc.robot.constants.SubsystemConstants.LED_STATE;
 import frc.robot.constants.SubsystemConstants.SuperstructureState;
 import frc.robot.subsystems.arms.Arm;
@@ -51,7 +51,7 @@ public class SuperStructure {
         return wantedState;
     }
 
-    public SuperstructureState getCurrenState() {
+    public SuperstructureState getCurrentState() {
         return currentState;
     }
 
@@ -62,30 +62,30 @@ public class SuperStructure {
     public boolean atGoals() {
         switch (currentState) {
             case INTAKE:
-                return (arm.hasReachedGoal(SubsystemConstants.ArmConstants.INTAKE_ANGLE_DEGREES)
-                        && elevator.hasReachedGoal(SubsystemConstants.ElevatorConstants.INTAKE_SETPOINT_INCH));
+                return (arm.hasReachedGoal(ArmConstants.INTAKE_ANGLE_DEGREES)
+                        && elevator.hasReachedGoal(ElevatorConstants.INTAKE_SETPOINT_INCH));
 
             case SCORELOW:
-                return (arm.hasReachedGoal(SubsystemConstants.ArmConstants.LOW_SETPOINT_DEG)
-                        && elevator.hasReachedGoal(SubsystemConstants.ElevatorConstants.LOW_SETPOINT_INCH));
+                return (arm.hasReachedGoal(ArmConstants.LOW_SETPOINT_DEG)
+                        && elevator.hasReachedGoal(ElevatorConstants.LOW_SETPOINT_INCH));
 
             case SCOREMID:
-                return (arm.hasReachedGoal(SubsystemConstants.ArmConstants.MID_SETPOINT_DEG)
-                        && elevator.hasReachedGoal(SubsystemConstants.ElevatorConstants.MID_SETPOINT_INCH));
+                return (arm.hasReachedGoal(ArmConstants.MID_SETPOINT_DEG)
+                        && elevator.hasReachedGoal(ElevatorConstants.MID_SETPOINT_INCH));
 
             case SCOREHIGH:
-                return (arm.hasReachedGoal(SubsystemConstants.ArmConstants.HIGH_SETPOINT_DEG)
-                        && elevator.hasReachedGoal(SubsystemConstants.ElevatorConstants.HIGH_SETPOINT_INCH));
+                return (arm.hasReachedGoal(ArmConstants.HIGH_SETPOINT_DEG)
+                        && elevator.hasReachedGoal(ElevatorConstants.HIGH_SETPOINT_INCH));
 
             case STOW:
-                return (arm.hasReachedGoal(SubsystemConstants.ArmConstants.STOW_SETPOINT_DEG)
-                        && elevator.hasReachedGoal(SubsystemConstants.ElevatorConstants.STOW_SETPOINT_INCH));
+                return (arm.hasReachedGoal(ArmConstants.STOW_SETPOINT_DEG)
+                        && elevator.hasReachedGoal(ElevatorConstants.STOW_SETPOINT_INCH));
 
             default:
                 return false;
         }
     }
-
+    //TODO add a verb like "set" or "goto" if that's the intent
     public void nextState() {
         switch (currentState) {
             case IDLE:

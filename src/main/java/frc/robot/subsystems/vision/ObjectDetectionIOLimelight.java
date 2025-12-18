@@ -33,7 +33,6 @@ public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
 
     InterpolatingDoubleTreeMap distanceToObjectX = new InterpolatingDoubleTreeMap();
     InterpolatingDoubleTreeMap distanceToObjectY = new InterpolatingDoubleTreeMap();
-
     public ObjectDetectionIOLimelight(String name) {
         var table = NetworkTableInstance.getDefault().getTable(name);
         latencySubscriber = table.getDoubleTopic("tl").subscribe(0.0);
@@ -68,7 +67,8 @@ public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
         inputs.iTY = tySubscriber.get();
         inputs.timestamp = txSubscriber.getAtomic().timestamp;
     }
-
+    //TODO tx and ty don't both represent the objects distance from the camera necessarily, if the camera is mounted pointing out from the robot tx will represent the angle from the camera and ty will represent the distance
+    //TODO this should potentially be done at the objectdetection.java layer to follow the data flow logic of io layers, and LimelightHelpers.getTX this is doing the same thing as the txSubscriber is
     public Pose2d getPose() {
         return new Pose2d(
                 distanceToObjectX.get(Double.valueOf(LimelightHelpers.getTX(null))),

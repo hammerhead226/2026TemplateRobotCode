@@ -11,6 +11,9 @@ import frc.robot.constants.SubsystemConstants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
+//TODO Add alerts for disconnects and motor temp, add subsystem vis
+//TODO It looks like this class was based on the 2025 template code. I highly highly recommend basing it on the 2025 actual code as there were a tremendous number of improvements
+
 public class Elevator extends SubsystemBase {
 
     private final ElevatorIO elevator;

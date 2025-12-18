@@ -16,6 +16,9 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.constants.SubsystemConstants;
 import frc.robot.util.Conversions;
 
+
+//TODO is this an elevator class or a CANRangeClass? A perhaps simplier approach would be to use a CANRange.java object in conjunction with the existing elevator class to achieve the desired behavior
+
 public class ElevatorRangeIOTalonFX implements ElevatorRangeIO {
     private final TalonFX leader;
     private final TalonFX follower;

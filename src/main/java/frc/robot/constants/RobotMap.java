@@ -8,8 +8,6 @@ public class RobotMap {
 
     public static class indexerIDs {}
 
-    public static class indexderIDs {}
-
     public static class ledIDs {}
 
     // Add examples of vars

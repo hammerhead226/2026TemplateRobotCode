@@ -82,6 +82,12 @@ public class Robot extends LoggedRobot {
         // and put our autonomous chooser on the dashboard.
         robotContainer = new RobotContainer();
     }
+    // TODO suggestion to add this commented out, in case we want a USB camera again
+    // @Override
+    // public void robotInit() {
+    //     UsbCamera cam = CameraServer.startAutomaticCapture();
+    //     cam.setResolution(640, 480);
+    // }
 
     /** This function is called periodically during all modes. */
     @Override
@@ -111,6 +117,9 @@ public class Robot extends LoggedRobot {
         // This code prevents the robot from "twitching" when we turn it on after moving it while disabled.
         robotContainer.getArm().setArmCurrent(robotContainer.getArm().getArmPositionDegs()); // Here for redundancy.
         robotContainer.getArm().setArmGoal(robotContainer.getArm().getArmPositionDegs());
+        // TODO add this to prevent the LL from overheating by setting how many frames it skips
+        // LimelightHelpers.setLimelightNTDouble("limelight-front", "throttle_set", 50);
+        // LimelightHelpers.SetIMUMode("limelight-front", 1);
     }
 
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
@@ -122,6 +131,9 @@ public class Robot extends LoggedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.schedule();
         }
+        // TODO add the following to resume limelight full FPS:
+        // LimelightHelpers.setLimelightNTDouble("limelight-front", "throttle_set", 1);
+        // LimelightHelpers.SetIMUMode("limelight-front", 1);
     }
 
     /** This function is called periodically during autonomous. */
@@ -138,6 +150,10 @@ public class Robot extends LoggedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.cancel();
         }
+        // TODO add the following to resume limelight full FPS:
+        // LimelightHelpers.setLimelightNTDouble("limelight-front", "throttle_set", 1);
+        // LimelightHelpers.SetIMUMode("limelight-front", 1);
+
     }
 
     /** This function is called periodically during operator control. */

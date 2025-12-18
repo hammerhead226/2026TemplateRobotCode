@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.subsystems.drive.Drive;
+import org.littletonrobotics.junction.Logger;
 
 public class APController implements DriveController {
     private static final APConstraints kConstraints =
@@ -30,7 +31,8 @@ public class APController implements DriveController {
     private final Drive drive;
     private final PIDPoseController rotationController;
     private Rotation2d targetAngle = Rotation2d.kZero;
-
+ 
+    //TODO We should add entry angle as an input, that's the main appeal of AutoPilot https://therekrab.github.io/autopilot/technical.html#a-quick-note-about-entry-angle
     public APController(APTarget target, Drive drive) {
         this.target = target;
         this.drive = drive;
@@ -48,6 +50,9 @@ public class APController implements DriveController {
     public ChassisSpeeds getSpeeds() {
         APResult out = kAutopilot.calculate(drive.getPose(), drive.getChassisSpeeds(), target);
         targetAngle = out.targetAngle();
+        Logger.recordOutput("APvx", out.vx());
+        Logger.recordOutput("APvy", out.vy());
+        //TODO the speeds from out.vx are field relative, not robot relative https://therekrab.github.io/autopilot/examples.html
         return new ChassisSpeeds(
                 out.vx(),
                 out.vy(),
