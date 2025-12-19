@@ -35,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.CharacterizationCommands;
 import frc.robot.commands.drive.HardStagedAlign;
 import frc.robot.commands.drive.HeadingLock;
 import frc.robot.commands.drive.PathfindToPose;
@@ -88,9 +89,9 @@ public class RobotContainer {
     private final Vision vision;
     private final Headset headset;
     private final ObjectDetection objectDetection;
-    // TODO suggestion to rename this to driver instead of controller
-    // Controller
-    private final CommandXboxController controller = new CommandXboxController(0);
+
+    // Controllers
+    private final CommandXboxController driver = new CommandXboxController(0);
     private final CommandXboxController operator = new CommandXboxController(1);
 
     // Dashboard inputs
@@ -157,14 +158,22 @@ public class RobotContainer {
                 Commands.startEnd(() -> flywheel.runVelocity(500), flywheel::stop, flywheel)
                         .withTimeout(5.0));
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-        // TODO add wheel radius calibration routine
+        
         // Set up SysId routines
         autoChooser.addOption(
-                "Drive SysId (Quasistatic Forward)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        "Drive Wheel Radius Characterization", CharacterizationCommands.wheelRadiusCharacterization(drive));
         autoChooser.addOption(
-                "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+            "Drive Simple FF Characterization", CharacterizationCommands.feedforwardCharacterization(drive));
+        autoChooser.addOption(
+            "Drive SysId (Quasistatic Forward)",
+            drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        autoChooser.addOption(
+            "Drive SysId (Quasistatic Reverse)",
+            drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        autoChooser.addOption(
+            "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        autoChooser.addOption(
+            "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
         autoChooser.addOption(
                 "Flywheel SysId (Quasistatic Forward)", flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption(
@@ -186,13 +195,12 @@ public class RobotContainer {
      * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        // TODO if this is how we're setting up the default command we should remove drivecommands.java
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> (JoystickController.getSpeeds(
-                drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
+        drive.setDefaultCommand(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>)
+                () -> (JoystickController.getSpeeds(drive, driver.getLeftX(), driver.getLeftY(), driver.getRightX()))));
 
         // Reset drive pose estimate on start pressed
-        controller.start().onTrue(new InstantCommand(() -> {
+        driver.start().onTrue(new InstantCommand(() -> {
             drive.setPose(Pose2d.kZero);
             headset.resetPose(Pose3d.kZero);
         }));
@@ -204,16 +212,15 @@ public class RobotContainer {
         Pose2d targetPose = new Pose2d(Units.feetToMeters(2), Units.feetToMeters(4), Rotation2d.kCCW_90deg);
 
         // autopliot
-        controller
-                .a()
+        driver.a()
                 .whileTrue(new HolonomicDrive(
                         drive,
                         new APController(new APTarget(targetPose).withEntryAngle(targetPose.getRotation()), drive)));
 
         // pathplanner.lib based commands
         Translation2d roughTranslation2d = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
-        // TODO the rough constraints should ideally be limited in some way
-        PathConstraints roughConstraints = PathConstraints.unlimitedConstraints(12);
+        PathConstraints roughConstraints = new PathConstraints(
+                drive.getMaxLinearSpeedMetersPerSec(), 3.0, drive.getMaxAngularSpeedRadPerSec(), Math.toRadians(250));
         // TODO improve consistency between getMaxAngularSpeedRadPerSec and degreesToRadians(200). using degrees is a
         // more human readable number,
         // but centeralization of key properties is good
@@ -221,14 +228,11 @@ public class RobotContainer {
                 drive.getMaxLinearSpeedMetersPerSec() * 0.5,
                 3.0,
                 drive.getMaxAngularSpeedRadPerSec() * 0.5,
-                Units.degreesToRadians(200),
-                12.0);
-        controller
-                .y()
+                Math.toRadians(250));
+        driver.y()
                 .whileTrue(new SoftStagedAlign(
                         drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints, preciseConstraints));
-        controller
-                .x()
+        driver.x()
                 .whileTrue(new DeferredCommand(
                         () -> new HardStagedAlign(
                                 drive,
@@ -237,27 +241,22 @@ public class RobotContainer {
                                 roughConstraints,
                                 preciseConstraints),
                         Set.of(drive)));
-        controller.b().whileTrue(new PathfindToPose(drive, targetPose, roughConstraints));
+        driver.b().whileTrue(new PathfindToPose(drive, targetPose, roughConstraints));
 
         // pid based commands
-        controller
-                .rightBumper()
+        driver.rightBumper()
                 .whileTrue(new HolonomicDrive(drive, new PIDPoseController(drive, drive::getPose, () -> targetPose)));
         // TODO can this be abstracted into the joystick class?
-        controller
-                .leftBumper()
-                .whileTrue(new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX));
+        driver.leftBumper().whileTrue(new HeadingLock(drive, driver::getLeftX, driver::getLeftY, driver::getRightX));
 
         // vision based commands
         int cameraIndex = 0;
         int tagId = 13;
         // TODO Ideally these commands have some decorator that stops them when they're within some range of the target,
         // ie if we wanted to trigger an align then shoot or place
-        controller
-                .leftTrigger()
+        driver.leftTrigger()
                 .whileTrue(new HolonomicDrive(drive, new ServoingController(drive, vision, cameraIndex, tagId)));
-        controller
-                .rightTrigger()
+        driver.rightTrigger()
                 .whileTrue(new HolonomicDrive(
                         drive,
                         new TrigController(
