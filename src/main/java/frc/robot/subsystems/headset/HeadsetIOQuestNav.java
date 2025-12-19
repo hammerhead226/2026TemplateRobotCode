@@ -13,7 +13,8 @@ public class HeadsetIOQuestNav implements HeadsetIO {
 
     public HeadsetIOQuestNav() {
         questNav = new QuestNav();
-        robotToHeadset = new Transform3d(); //TODO add quest's x,y and rotational offset from robot (consider to use VisionConstants.jav)
+        robotToHeadset = new Transform3d(); // TODO add quest's x,y and rotational offset from robot (consider to use
+        // VisionConstants.jav)
         estimatedRobotPose = new Pose3d();
         estimatedRobotRotation = new Rotation3d();
     }

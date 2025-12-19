@@ -19,7 +19,9 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.constants.SubsystemConstants;
 import frc.robot.util.Conversions;
 import org.littletonrobotics.junction.Logger;
-//TODO It looks like this class was based on the 2025 template code. I highly highly recommend basing it on the 2025 actual code as there were a tremendous number of improvements
+// TODO It looks like this class was based on the 2025 template code. I highly highly recommend basing it on the 2025
+// actual code as there were a tremendous number of improvements
+
 public class ArmIOTalonFX implements ArmIO {
     private final TalonFX leader;
     private final TalonFX follower;
@@ -56,12 +58,16 @@ public class ArmIOTalonFX implements ArmIO {
 
         startAngleDegs = pitch.getValueAsDouble();
 
-        leader.setPosition(Conversions.degreesToFalcon(startAngleDegs, SubsystemConstants.ArmConstants.ARM_GEAR_RATIO)); //setPosition uses rotations not degrees or falcon
+        leader.setPosition(Conversions.degreesToFalcon(
+                startAngleDegs,
+                SubsystemConstants.ArmConstants.ARM_GEAR_RATIO)); // setPosition uses rotations not degrees or falcon
 
         follower.setPosition(
                 Conversions.degreesToFalcon(startAngleDegs, SubsystemConstants.ArmConstants.ARM_GEAR_RATIO));
 
-        leaderPositionDegs = leader.getPosition();//TODO this signal and others are in rotations not degrees Hover over the function call to see
+        leaderPositionDegs =
+                leader.getPosition(); // TODO this signal and others are in rotations not degrees Hover over the
+        // function call to see
         velocityDegsPerSec = leader.getVelocity();
         appliedVolts = leader.getMotorVoltage();
         currentAmps = leader.getStatorCurrent();

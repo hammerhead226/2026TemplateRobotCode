@@ -16,7 +16,7 @@ import frc.robot.subsystems.drive.Drive;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
-//TODO stretch goal give driver partial control during align sequence
+// TODO stretch goal give driver partial control during align sequence
 public class HardStagedAlign extends SequentialCommandGroup {
     private final Command roughPathCommand;
     private final Command precisePathCommand;

@@ -14,16 +14,19 @@ public class ServoingController implements DriveController {
     private final Vision vision;
     private final int cameraIndex;
     private final int tagId;
-    // TODO: add units to these constant names. Consider creating something like the PathConstraints object so it can be passed in at the robotcontainer/command level and be flexible for the user to choose depending on what is being accomplished
-    // Maybe we could have preset pathconstraint objects in a constants file like "FastAimConstraints", "SlowAimConstraints" etc
+    // TODO: add units to these constant names. Consider creating something like the PathConstraints object so it can be
+    // passed in at the robotcontainer/command level and be flexible for the user to choose depending on what is being
+    // accomplished
+    // Maybe we could have preset pathconstraint objects in a constants file like "FastAimConstraints",
+    // "SlowAimConstraints" etc
     private static final double ANGLE_KP = 5.0;
     private static final double ANGLE_KD = 0.4;
     private static final double ANGLE_MAX_VELOCITY = 8.0;
     private static final double ANGLE_MAX_ACCELERATION = 20.0;
 
     private ProfiledPIDController angleController;
-    //TODO edge case that if the robot starts aiming and loses the tag in it's FOV it will continue rotating.
-    //if we can't see the tag we can't use this method of aiming
+    // TODO edge case that if the robot starts aiming and loses the tag in it's FOV it will continue rotating.
+    // if we can't see the tag we can't use this method of aiming
     private double lastOkTx;
 
     public ServoingController(Drive drive, Vision vision, int cameraIndex, int tagId) {
@@ -42,7 +45,7 @@ public class ServoingController implements DriveController {
         double robotToTargetRadians = robotToTargetRadians();
         angleController.reset(robotToTargetRadians, drive.getChassisSpeeds().omegaRadiansPerSecond);
     }
-    //TODO Does this prevent the driver from driving while aiming?
+    // TODO Does this prevent the driver from driving while aiming?
     @Override
     public ChassisSpeeds getSpeeds() {
         double robotToTargetRadians = robotToTargetRadians();

@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.drive.HardStagedAlign;
 import frc.robot.commands.drive.HeadingLock;
+import frc.robot.commands.drive.PathfindToPose;
 import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.commands.drive.holonomic.APController;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
@@ -189,27 +190,8 @@ public class RobotContainer {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> (JoystickController.getSpeeds(
                 drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX()))));
-        // TODO to achieve the intended functionality of lock to heading this should probably exist in the joystick
-        // controller class?
-        // TODO remember we want to monitor the drivers turn joystick to "break" the hold from rotation lock
-        // we also want to watch the gyro angle and look for large jumps representing a collision. We don't want to try
-        // and snap to an angle if we collide with something.
-        PIDPoseController rotationController = new PIDPoseController(drive, drive::getPose, () -> Pose2d.kZero);
 
-        // Lock to 0° when A button is held
-        // controller.a().whileTrue(new HolonomicDrive(drive, (Supplier<ChassisSpeeds>) () -> {
-        //     ChassisSpeeds joystickControl = JoystickController.getSpeeds(
-        //             drive, controller.getLeftX(), controller.getLeftY(), controller.getRightX());
-        //     ChassisSpeeds rotationControl = rotationController.getSpeeds();
-        //     return new ChassisSpeeds(
-        //             joystickControl.vxMetersPerSecond,
-        //             joystickControl.vyMetersPerSecond,
-        //             rotationControl.omegaRadiansPerSecond);
-        // }));
-
-        // TODO this resets the pose to 0,0. For reseting the gyro we want to use something like what is in the
-        // talonFXSwerveTemplate project
-        // Reset drive pose to estimate on start pressed
+        // Reset drive pose estimate on start pressed
         controller.start().onTrue(new InstantCommand(() -> {
             drive.setPose(Pose2d.kZero);
             headset.resetPose(Pose3d.kZero);
@@ -220,6 +202,13 @@ public class RobotContainer {
         // TODO what is our permanent abstraction idea for this? Will we have action specific commands? If so we should
         // template them
         Pose2d targetPose = new Pose2d(Units.feetToMeters(2), Units.feetToMeters(4), Rotation2d.kCCW_90deg);
+
+        // autopliot
+        controller
+                .a()
+                .whileTrue(new HolonomicDrive(
+                        drive,
+                        new APController(new APTarget(targetPose).withEntryAngle(targetPose.getRotation()), drive)));
 
         // pathplanner.lib based commands
         Translation2d roughTranslation2d = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
@@ -248,7 +237,7 @@ public class RobotContainer {
                                 roughConstraints,
                                 preciseConstraints),
                         Set.of(drive)));
-        // controller.b().whileTrue(new PathfindToPose(drive, targetPose, roughConstraints));
+        controller.b().whileTrue(new PathfindToPose(drive, targetPose, roughConstraints));
 
         // pid based commands
         controller
@@ -264,8 +253,11 @@ public class RobotContainer {
         int tagId = 13;
         // TODO Ideally these commands have some decorator that stops them when they're within some range of the target,
         // ie if we wanted to trigger an align then shoot or place
-        operator.a().whileTrue(new HolonomicDrive(drive, new ServoingController(drive, vision, cameraIndex, tagId)));
-        controller.b()
+        controller
+                .leftTrigger()
+                .whileTrue(new HolonomicDrive(drive, new ServoingController(drive, vision, cameraIndex, tagId)));
+        controller
+                .rightTrigger()
                 .whileTrue(new HolonomicDrive(
                         drive,
                         new TrigController(
@@ -274,7 +266,6 @@ public class RobotContainer {
                                 cameraIndex,
                                 tagId,
                                 new Transform2d(2, 0, Rotation2d.fromDegrees(210)))));
-        
     }
 
     /**

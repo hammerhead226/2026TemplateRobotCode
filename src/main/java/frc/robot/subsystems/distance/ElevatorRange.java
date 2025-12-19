@@ -1,9 +1,9 @@
 package frc.robot.subsystems.distance;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
-//TODO is this an elevator class or a CANRangeClass? A perhaps simplier approach would be to use a CANRange.java object in conjunction with the existing elevator class to achieve the desired behavior
+// TODO is this an elevator class or a CANRangeClass? A perhaps simplier approach would be to use a CANRange.java object
+// in conjunction with the existing elevator class to achieve the desired behavior
 
 public class ElevatorRange extends SubsystemBase { // Just an elevator.
 

@@ -35,7 +35,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-//TODO is this depricated? We should extract the feedforward and wheel radius routines
+// TODO is this depricated? We should extract the feedforward and wheel radius routines
+
 public class DriveCommands {
     private static final double DEADBAND = 0.1;
     private static final double ANGLE_KP = 5.0;

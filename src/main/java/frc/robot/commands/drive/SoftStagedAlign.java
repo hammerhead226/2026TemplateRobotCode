@@ -15,7 +15,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import java.util.ArrayList;
 import java.util.List;
-//TODO add short description to class to differntiate from HardStagedAlign
+// TODO add short description to class to differntiate from HardStagedAlign
+
 public class SoftStagedAlign extends Command {
     private final double ROUGH_CONSTRAINTS_MAX_POSITION = 0.9;
 

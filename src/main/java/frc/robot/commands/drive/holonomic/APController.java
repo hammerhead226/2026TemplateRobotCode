@@ -31,8 +31,7 @@ public class APController implements DriveController {
     private final Drive drive;
     private final PIDPoseController rotationController;
     private Rotation2d targetAngle = Rotation2d.kZero;
- 
-    //TODO We should add entry angle as an input, that's the main appeal of AutoPilot https://therekrab.github.io/autopilot/technical.html#a-quick-note-about-entry-angle
+
     public APController(APTarget target, Drive drive) {
         this.target = target;
         this.drive = drive;
@@ -52,10 +51,12 @@ public class APController implements DriveController {
         targetAngle = out.targetAngle();
         Logger.recordOutput("APvx", out.vx());
         Logger.recordOutput("APvy", out.vy());
-        //TODO the speeds from out.vx are field relative, not robot relative https://therekrab.github.io/autopilot/examples.html
-        return new ChassisSpeeds(
-                out.vx(),
-                out.vy(),
-                AngularVelocity.ofBaseUnits(rotationController.getSpeeds().omegaRadiansPerSecond, RadiansPerSecond));
+        return ChassisSpeeds.fromFieldRelativeSpeeds(
+                new ChassisSpeeds(
+                        out.vx(),
+                        out.vy(),
+                        AngularVelocity.ofBaseUnits(
+                                rotationController.getSpeeds().omegaRadiansPerSecond, RadiansPerSecond)),
+                drive.getRotation());
     }
 }

@@ -15,8 +15,9 @@ import frc.robot.commands.drive.holonomic.JoystickController;
 import frc.robot.subsystems.drive.Drive;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-//TODO can this be part of the JoystickController class? With servoing,JoystickDriveAtAngle, and HeadingLock we're
-//Fundamentally doing the same thing of controlling the angle while translating.
+// TODO can this be part of the JoystickController class? With servoing,JoystickDriveAtAngle, and HeadingLock we're
+// Fundamentally doing the same thing of controlling the angle while translating.
+
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class HeadingLock extends Command {
     /** Creates a new HeadingLock. */

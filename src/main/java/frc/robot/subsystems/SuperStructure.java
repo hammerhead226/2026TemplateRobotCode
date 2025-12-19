@@ -85,7 +85,7 @@ public class SuperStructure {
                 return false;
         }
     }
-    //TODO add a verb like "set" or "goto" if that's the intent
+    // TODO add a verb like "set" or "goto" if that's the intent
     public void nextState() {
         switch (currentState) {
             case IDLE:

@@ -17,9 +17,10 @@ public class ObjectDetection extends SubsystemBase {
         this.io = io;
         this.consumer = consumer;
     }
-    //TODO this needs to be updated to not be season specific, and to use the changes made to the io object
-    //TODO stretch feature, we want to track the object in field coordinates for things like dynamic autos, but for actually driving to the object we want to use robot relative only
-    
+    // TODO this needs to be updated to not be season specific, and to use the changes made to the io object
+    // TODO stretch feature, we want to track the object in field coordinates for things like dynamic autos, but for
+    // actually driving to the object we want to use robot relative only
+
     public Translation2d getNotePositionRobotRelative() {
 
         double staticOffset = 0; // camera degrees

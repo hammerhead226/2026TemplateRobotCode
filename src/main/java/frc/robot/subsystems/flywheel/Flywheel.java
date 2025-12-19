@@ -24,7 +24,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.SimConstants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-//TODO Add alerts for disconnects and motor temp
+// TODO Add alerts for disconnects and motor temp
 
 public class Flywheel extends SubsystemBase {
     private final FlywheelIO io;
@@ -59,6 +59,7 @@ public class Flywheel extends SubsystemBase {
                         null, null, null, (state) -> Logger.recordOutput("Flywheel/SysIdState", state.toString())),
                 new SysIdRoutine.Mechanism((voltage) -> runVolts(voltage.in(Volts)), null, this));
     }
+
     @Override
     public void periodic() {
         io.updateInputs(inputs);

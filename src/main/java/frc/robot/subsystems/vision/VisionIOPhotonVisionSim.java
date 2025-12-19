@@ -44,7 +44,7 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
             visionSim = new VisionSystemSim("main");
             visionSim.addAprilTags(aprilTagLayout);
         }
-        //TODO add FOV, fps etc to simulate our actual camera
+        // TODO add FOV, fps etc to simulate our actual camera
         // Add sim camera
         var cameraProperties = new SimCameraProperties();
         cameraSim = new PhotonCameraSim(camera, cameraProperties);

@@ -9,8 +9,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.FieldMirroring;
 import java.util.function.Supplier;
-//TODO if deprecated, remove from project.
+// TODO if deprecated, remove from project.
 // TODO: extract angle logic into its own drive controller class
+
 @Deprecated
 public class JoystickDriveAtAngle extends Command {
     private Drive drive;

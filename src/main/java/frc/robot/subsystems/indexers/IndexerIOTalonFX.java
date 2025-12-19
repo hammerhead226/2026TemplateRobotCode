@@ -13,8 +13,10 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-//TODO It looks like this class was based on the 2025 template code. I highly highly recommend basing it on the 2025 actual code as there were a tremendous number of improvements
-//You may have to start with something like the elevator class and rework it
+// TODO It looks like this class was based on the 2025 template code. I highly highly recommend basing it on the 2025
+// actual code as there were a tremendous number of improvements
+// You may have to start with something like the elevator class and rework it
+
 public class IndexerIOTalonFX implements IndexerIO {
     private final TalonFX talon;
 

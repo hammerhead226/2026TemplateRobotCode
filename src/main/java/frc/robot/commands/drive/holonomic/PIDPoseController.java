@@ -16,8 +16,11 @@ public class PIDPoseController implements DriveController {
     private final Supplier<Pose2d> estimatedPoseSupplier;
     private final Supplier<Pose2d> targetPoseSupplier;
 
-    // TODO: add units to these constant names. Consider creating something like the PathConstraints object so it can be passed in at the robotcontainer/command level and be flexible for the user to choose depending on what is being accomplished
-    // Maybe we could have preset pathconstraint objects in a constants file like "FastApproachConstraints", "SlowApproachConstraints" etc
+    // TODO: add units to these constant names. Consider creating something like the PathConstraints object so it can be
+    // passed in at the robotcontainer/command level and be flexible for the user to choose depending on what is being
+    // accomplished
+    // Maybe we could have preset pathconstraint objects in a constants file like "FastApproachConstraints",
+    // "SlowApproachConstraints" etc
     private static final double X_KP = 5.0;
     private static final double X_KD = 0.4;
     private static final double X_MAX_VELOCITY = 8.0;
@@ -70,7 +73,7 @@ public class PIDPoseController implements DriveController {
         angleController.setGoal(targetPose.getRotation().getRadians());
 
         Pose2d estimatedPose = estimatedPoseSupplier.get();
-        //TODO this is a hardcoded tagID, pass in to constructor
+        // TODO this is a hardcoded tagID, pass in to constructor
         // We may also want to be able to PID to a pose without an apriltag, ie if we're using global positioning
         Pose2d tagPose = VisionConstants.aprilTagLayout.getTagPose(13).get().toPose2d();
         Logger.recordOutput(
