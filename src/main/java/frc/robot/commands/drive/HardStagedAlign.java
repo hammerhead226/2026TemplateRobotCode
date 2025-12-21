@@ -1,6 +1,5 @@
 package frc.robot.commands.drive;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.IdealStartingState;
 import com.pathplanner.lib.path.PathConstraints;
@@ -12,11 +11,13 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.commands.drive.holonomic.DriveController;
 import frc.robot.subsystems.drive.Drive;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
-// TODO stretch goal give driver partial control during align sequence
+// Unlike FollowPathDrive + StagedAlignSupplier, completely seperate the rough and precise path into seperate commands
+// Does not seem to provide meaningfully different or better alignment than StagedAlignSupplier...
 public class HardStagedAlign extends SequentialCommandGroup {
     private final Command roughPathCommand;
     private final Command precisePathCommand;
@@ -26,7 +27,10 @@ public class HardStagedAlign extends SequentialCommandGroup {
             Translation2d roughTranslation,
             Translation2d preciseTranslation,
             PathConstraints roughConstraints,
-            PathConstraints preciseConstraints) {
+            PathConstraints preciseConstraints,
+            DriveController overrideController,
+            double linearThreshold,
+            double angularThreshold) {
         addRequirements(drive);
 
         ChassisSpeeds fieldRelChassisSpeeds =
@@ -78,15 +82,21 @@ public class HardStagedAlign extends SequentialCommandGroup {
                 new IdealStartingState(preciseConstraints.maxVelocity(), alignmentHeading),
                 new GoalEndState(0.0, alignmentHeading));
 
-        // force field relative coordinates
-        if (AutoBuilder.shouldFlip()) {
-            roughPath = roughPath.flipPath();
-            precisePath = precisePath.flipPath();
-        }
-
-        roughPathCommand = AutoBuilder.followPath(roughPath);
-        precisePathCommand = AutoBuilder.followPath(precisePath);
+        roughPathCommand = new FollowPathDrive(drive, () -> roughPath)
+                .withOverrides(overrideController, linearThreshold, angularThreshold)
+                .withPathTimeout();
+        precisePathCommand = new FollowPathDrive(drive, () -> precisePath)
+                .withOverrides(overrideController, linearThreshold, angularThreshold);
 
         addCommands(roughPathCommand, precisePathCommand);
+    }
+
+    public HardStagedAlign(
+            Drive drive,
+            Translation2d roughTranslation,
+            Translation2d preciseTranslation,
+            PathConstraints roughConstraints,
+            PathConstraints preciseConstraints) {
+        this(drive, roughTranslation, preciseTranslation, roughConstraints, preciseConstraints, null, 0, 0);
     }
 }

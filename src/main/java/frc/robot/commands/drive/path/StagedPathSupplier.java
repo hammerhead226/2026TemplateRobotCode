@@ -1,6 +1,5 @@
-package frc.robot.commands.drive;
+package frc.robot.commands.drive.path;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.ConstraintsZone;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.IdealStartingState;
@@ -11,13 +10,14 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
 import java.util.ArrayList;
 import java.util.List;
-// TODO add short description to class to differntiate from HardStagedAlign
+import java.util.function.Supplier;
 
-public class SoftStagedAlign extends Command {
+// TODO add short description to class to differntiate from HardStagedAlign
+public class StagedPathSupplier implements Supplier<PathPlannerPath> {
+    private final double INITAL_VELOCITY_THRESHOLD = 0.2;
     private final double ROUGH_CONSTRAINTS_MAX_POSITION = 0.9;
 
     private final Drive drive;
@@ -26,17 +26,12 @@ public class SoftStagedAlign extends Command {
     private final PathConstraints roughConstraints;
     private final PathConstraints preciseConstraints;
 
-    private Command pathCommand;
-
-    private boolean withTrajectoryTimeoutCalled = false;
-
-    public SoftStagedAlign(
+    public StagedPathSupplier(
             Drive drive,
             Translation2d roughTranslation,
             Translation2d preciseTranslation,
             PathConstraints roughConstraints,
             PathConstraints preciseConstraints) {
-        addRequirements(drive);
         this.drive = drive;
         this.roughTranslation = roughTranslation;
         this.preciseTranslation = preciseTranslation;
@@ -44,14 +39,15 @@ public class SoftStagedAlign extends Command {
         this.preciseConstraints = preciseConstraints;
     }
 
-    public void initialize() {
+    @Override
+    public PathPlannerPath get() {
         ChassisSpeeds fieldRelChassisSpeeds =
                 ChassisSpeeds.fromRobotRelativeSpeeds(drive.getChassisSpeeds(), drive.getRotation());
         double chassisSpeedsMagnitude =
                 Math.hypot(fieldRelChassisSpeeds.vxMetersPerSecond, fieldRelChassisSpeeds.vyMetersPerSecond);
 
         Rotation2d startingHeading;
-        if (chassisSpeedsMagnitude >= 0.2) {
+        if (chassisSpeedsMagnitude >= INITAL_VELOCITY_THRESHOLD) {
             // the robot's speed is substantial, consider it in the path's starting conditions
             startingHeading =
                     new Rotation2d(fieldRelChassisSpeeds.vxMetersPerSecond, fieldRelChassisSpeeds.vyMetersPerSecond);
@@ -79,7 +75,7 @@ public class SoftStagedAlign extends Command {
         List<ConstraintsZone> constraintsZones = new ArrayList<>();
         constraintsZones.add(new ConstraintsZone(0.0, ROUGH_CONSTRAINTS_MAX_POSITION, roughConstraints));
 
-        PathPlannerPath path = new PathPlannerPath(
+        return new PathPlannerPath(
                 waypoints,
                 new ArrayList<>(), // holonomicRotations
                 new ArrayList<>(), // pointTowardsZones
@@ -89,36 +85,5 @@ public class SoftStagedAlign extends Command {
                 new IdealStartingState(chassisSpeedsMagnitude, drive.getRotation()),
                 new GoalEndState(0.0, alignmentHeading),
                 false);
-
-        // force field relative coordinates
-        if (AutoBuilder.shouldFlip()) {
-            path = path.flipPath();
-        }
-
-        pathCommand = AutoBuilder.followPath(path);
-        pathCommand.initialize();
-    }
-
-    public void execute() {
-        pathCommand.execute();
-    }
-
-    public void end(boolean interrupted) {
-        drive.stop();
-    }
-
-    @Override
-    public boolean isFinished() {
-        if (withTrajectoryTimeoutCalled) if (pathCommand.isFinished()) return true;
-
-        return false;
-    }
-
-    // custom decorator
-    // due to type safety, must be used before WPIlib's Command decorators
-    // as Commands cannot be readily coverted back to StagedAlign commands
-    public SoftStagedAlign withTrajectoryTimeout() {
-        withTrajectoryTimeoutCalled = true;
-        return this;
     }
 }

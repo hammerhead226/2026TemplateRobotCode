@@ -36,16 +36,18 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.CharacterizationCommands;
+import frc.robot.commands.drive.FollowPathDrive;
 import frc.robot.commands.drive.HardStagedAlign;
-import frc.robot.commands.drive.HeadingLock;
-import frc.robot.commands.drive.PathfindToPose;
-import frc.robot.commands.drive.SoftStagedAlign;
+import frc.robot.commands.drive.HolonomicDrive;
+import frc.robot.commands.drive.PathfindToPoseDrive;
 import frc.robot.commands.drive.holonomic.APController;
-import frc.robot.commands.drive.holonomic.HolonomicDrive;
+import frc.robot.commands.drive.holonomic.DriveController;
+import frc.robot.commands.drive.holonomic.HeadingLock;
 import frc.robot.commands.drive.holonomic.JoystickController;
 import frc.robot.commands.drive.holonomic.PIDPoseController;
 import frc.robot.commands.drive.holonomic.ServoingController;
 import frc.robot.commands.drive.holonomic.TrigController;
+import frc.robot.commands.drive.path.StagedPathSupplier;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -158,22 +160,18 @@ public class RobotContainer {
                 Commands.startEnd(() -> flywheel.runVelocity(500), flywheel::stop, flywheel)
                         .withTimeout(5.0));
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-        
+
         // Set up SysId routines
         autoChooser.addOption(
-        "Drive Wheel Radius Characterization", CharacterizationCommands.wheelRadiusCharacterization(drive));
+                "Drive Wheel Radius Characterization", CharacterizationCommands.wheelRadiusCharacterization(drive));
         autoChooser.addOption(
-            "Drive Simple FF Characterization", CharacterizationCommands.feedforwardCharacterization(drive));
+                "Drive Simple FF Characterization", CharacterizationCommands.feedforwardCharacterization(drive));
         autoChooser.addOption(
-            "Drive SysId (Quasistatic Forward)",
-            drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+                "Drive SysId (Quasistatic Forward)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption(
-            "Drive SysId (Quasistatic Reverse)",
-            drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption(
-            "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-            "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+                "Drive SysId (Quasistatic Reverse)", drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        autoChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        autoChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
         autoChooser.addOption(
                 "Flywheel SysId (Quasistatic Forward)", flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
         autoChooser.addOption(
@@ -220,18 +218,27 @@ public class RobotContainer {
         // pathplanner.lib based commands
         Translation2d roughTranslation2d = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
         PathConstraints roughConstraints = new PathConstraints(
-                drive.getMaxLinearSpeedMetersPerSec(), 3.0, drive.getMaxAngularSpeedRadPerSec(), Math.toRadians(250));
+                drive.getMaxLinearSpeedMetersPerSec(), 6.0, drive.getMaxAngularSpeedRadPerSec(), Math.toRadians(600));
         // TODO improve consistency between getMaxAngularSpeedRadPerSec and degreesToRadians(200). using degrees is a
         // more human readable number,
         // but centeralization of key properties is good
         PathConstraints preciseConstraints = new PathConstraints(
-                drive.getMaxLinearSpeedMetersPerSec() * 0.5,
+                drive.getMaxLinearSpeedMetersPerSec() * 0.25,
                 3.0,
-                drive.getMaxAngularSpeedRadPerSec() * 0.5,
-                Math.toRadians(250));
+                drive.getMaxAngularSpeedRadPerSec() * 0.25,
+                Math.toRadians(300));
+        DriveController joystickController =
+                new JoystickController(drive, driver::getLeftX, driver::getLeftY, driver::getRightX);
         driver.y()
-                .whileTrue(new SoftStagedAlign(
-                        drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints, preciseConstraints));
+                .whileTrue(new FollowPathDrive(
+                                drive,
+                                new StagedPathSupplier(
+                                        drive,
+                                        roughTranslation2d,
+                                        targetPose.getTranslation(),
+                                        roughConstraints,
+                                        preciseConstraints))
+                        .withOverrides(joystickController, 1.0, 0.6));
         driver.x()
                 .whileTrue(new DeferredCommand(
                         () -> new HardStagedAlign(
@@ -239,9 +246,14 @@ public class RobotContainer {
                                 roughTranslation2d,
                                 targetPose.getTranslation(),
                                 roughConstraints,
-                                preciseConstraints),
+                                preciseConstraints,
+                                joystickController,
+                            1.0,
+                                0.6),
                         Set.of(drive)));
-        driver.b().whileTrue(new PathfindToPose(drive, targetPose, roughConstraints));
+        driver.b()
+                .whileTrue(new PathfindToPoseDrive(drive, targetPose, roughConstraints)
+                        .withOverrides(joystickController, 1.0, 0.6));
 
         // pid based commands
         driver.rightBumper()

@@ -5,8 +5,28 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.ControlsUtil;
 import frc.robot.util.FieldMirroring;
+import java.util.function.DoubleSupplier;
 
-public class JoystickController {
+public class JoystickController implements DriveController {
+    Drive drive;
+    DoubleSupplier xSupplier;
+    DoubleSupplier ySupplier;
+    DoubleSupplier rotationSupplier;
+
+    public JoystickController(
+            Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier rotationSupplier) {
+        this.drive = drive;
+        this.xSupplier = xSupplier;
+        this.ySupplier = ySupplier;
+        this.rotationSupplier = rotationSupplier;
+    }
+
+    @Override
+    public ChassisSpeeds getSpeeds() {
+        return JoystickController.getSpeeds(
+                drive, xSupplier.getAsDouble(), ySupplier.getAsDouble(), rotationSupplier.getAsDouble());
+    }
+
     public static ChassisSpeeds getSpeeds(Drive drive, double x, double y, double rotation) {
         // deadband to ignore tiny inputs
         // square to make easier to control
@@ -24,7 +44,7 @@ public class JoystickController {
                 velocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                 omega * drive.getMaxAngularSpeedRadPerSec());
 
-        // make field relative
+        // make robot relative
         return ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation());
     }
 }
