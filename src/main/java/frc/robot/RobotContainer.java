@@ -75,6 +75,7 @@ import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -207,7 +208,8 @@ public class RobotContainer {
     private void testButtonBindings() {
         // TODO what is our permanent abstraction idea for this? Will we have action specific commands? If so we should
         // template them
-        Pose2d targetPose = new Pose2d(Units.feetToMeters(2), Units.feetToMeters(4), Rotation2d.kCCW_90deg);
+        Pose2d targetPose = new Pose2d(4, 4, Rotation2d.kCCW_90deg);
+        Logger.recordOutput(getClass().getSimpleName() + "/targetPose", targetPose);
 
         // autopliot
         driver.a()

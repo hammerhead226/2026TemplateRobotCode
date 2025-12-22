@@ -2,6 +2,7 @@ package frc.robot.commands.drive.holonomic;
 
 import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.therekrab.autopilot.APConstraints;
@@ -15,12 +16,20 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
+import frc.robot.constants.FieldConstants;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import org.littletonrobotics.junction.Logger;
 
 public class APController implements DriveController {
-    private static final APConstraints kConstraints =
-            new APConstraints().withAcceleration(5.0).withJerk(2.0);
+    private final double dt = 0.020;
+    private static final double MAX_VELOCITY = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    private static final double MAX_ACCELERATION = 5.0;
+    private static final double MAX_JERK = 2.0;
+    private static final APConstraints kConstraints = new APConstraints()
+            .withVelocity(MAX_VELOCITY)
+            .withAcceleration(MAX_ACCELERATION)
+            .withJerk(MAX_JERK);
 
     private static final APProfile kProfile = new APProfile(kConstraints)
             .withErrorXY(Centimeters.of(2))
@@ -33,7 +42,7 @@ public class APController implements DriveController {
 
     private final Drive drive;
     private final APTarget target;
-    private final double transistionRadius = 3;
+    private double transistionRadius = 3;
     private final PIDPoseController rotationController;
     private Rotation2d targetAngle = Rotation2d.kZero;
 
@@ -48,46 +57,73 @@ public class APController implements DriveController {
         APResult out = kAutopilot.calculate(drive.getPose(), drive.getChassisSpeeds(), target);
         targetAngle = out.targetAngle();
         rotationController.reset();
+        transistionRadius = Math.min(
+                3.0,
+                drive.getPose()
+                                .getTranslation()
+                                .getDistance(target.getReference().getTranslation())
+                        / 2.0);
     }
 
     @Override
     public ChassisSpeeds getSpeeds() {
-        if (drive.getPose().getTranslation().getDistance(target.getReference().getTranslation())
-                > transistionRadius + EPSILON) {
+        // if (drive.getPose().getTranslation().getDistance(target.getReference().getTranslation())
+        //         > transistionRadius + EPSILON) {
             Translation2d transitionPoint =
                     getTransitionPoint(drive.getPose().getTranslation(), target, transistionRadius);
-            Translation2d speedsVector = new Translation2d(
-                    drive.getMaxLinearSpeedMetersPerSec(),
+            Translation2d halfField = new Translation2d(FieldConstants.fieldLength/2.0,FieldConstants.fieldWidth/2.0);
+            transitionPoint = halfField;
+            Logger.recordOutput(
+                    getClass().getSimpleName() + "/transitionPoint", new Pose2d(transitionPoint, Rotation2d.kZero));
+            Translation2d goalSpeedsVector = new Translation2d(
+                    MAX_VELOCITY,
                     transitionPoint.minus(drive.getPose().getTranslation()).getAngle());
-            ChassisSpeeds speeds = new ChassisSpeeds(speedsVector.getX(), speedsVector.getY(), 0);
-            return ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation());
-        }
+            ChassisSpeeds currentSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(drive.getChassisSpeeds(),drive.getRotation());
+            Translation2d currentSpeedsVector = new Translation2d(
+                currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
 
-        APResult out = kAutopilot.calculate(drive.getPose(), drive.getChassisSpeeds(), target);
-        targetAngle = out.targetAngle();
-        Logger.recordOutput("APvx", out.vx());
-        Logger.recordOutput("APvy", out.vy());
+            
+            Logger.recordOutput("APController/goalSpeedsVector", new Pose2d(goalSpeedsVector.plus(halfField),Rotation2d.kZero));
+            Logger.recordOutput("APController/currentSpeedsVector", new Pose2d(currentSpeedsVector.plus(halfField),Rotation2d.kZero));
+            Translation2d outSpeedsVector = goalSpeedsVector;
+            if (goalSpeedsVector.getDistance(currentSpeedsVector) > MAX_ACCELERATION * dt) {
+                Translation2d deltaVector = new Translation2d(MAX_ACCELERATION * dt, goalSpeedsVector.minus(currentSpeedsVector).getAngle());
+                Logger.recordOutput("APController/deltaVector", new Pose2d(deltaVector.plus(halfField),Rotation2d.kZero));
+                outSpeedsVector = currentSpeedsVector.plus(deltaVector);
+            }
+            Logger.recordOutput("APController/outSpeedsVector", new Pose2d(outSpeedsVector.plus(halfField),Rotation2d.kZero));
 
-        return ChassisSpeeds.fromFieldRelativeSpeeds(
-                new ChassisSpeeds(
-                        out.vx(),
-                        out.vy(),
-                        AngularVelocity.ofBaseUnits(
-                                rotationController.getSpeeds().omegaRadiansPerSecond, RadiansPerSecond)),
-                drive.getRotation());
+            return ChassisSpeeds.fromFieldRelativeSpeeds(
+                    new ChassisSpeeds(outSpeedsVector.getX(), outSpeedsVector.getY(), 0), drive.getRotation());
+        // }
+
+        // APResult out = kAutopilot.calculate(drive.getPose(), drive.getChassisSpeeds(), target);
+        // targetAngle = out.targetAngle();
+        // Logger.recordOutput("APvx", out.vx());
+        // Logger.recordOutput("APvy", out.vy());
+
+        // return ChassisSpeeds.fromFieldRelativeSpeeds(
+        //         new ChassisSpeeds(
+        //                 out.vx(),
+        //                 out.vy(),
+        //                 AngularVelocity.ofBaseUnits(
+        //                         rotationController.getSpeeds().omegaRadiansPerSecond, RadiansPerSecond)),
+        //         drive.getRotation());
     }
 
-    private Translation2d getTransitionPoint(Translation2d robotPosition, APTarget target, double transistionRadius) {
+    private static Translation2d getTransitionPoint(
+            Translation2d robotPosition, APTarget target, double transistionRadius) {
         // inputs within the autopilot radius are invalid
         if (robotPosition.getDistance(target.getReference().getTranslation()) < transistionRadius - EPSILON) {
             return Translation2d.kZero;
         }
 
-        Transform2d targetToField = new Transform2d(
-                target.getReference().getTranslation(), target.getEntryAngle().orElse(Rotation2d.kZero));
-        Translation2d robotTargetSpace = new Pose2d(robotPosition, Rotation2d.kZero)
-                .transformBy(targetToField.inverse())
-                .getTranslation();
+        Transform2d targetToField = new Transform2d(Pose2d.kZero, target.getReference());
+        Translation2d robotTargetSpace = robotPosition
+                .minus(target.getReference().getTranslation())
+                .rotateBy(target.getEntryAngle().orElse(Rotation2d.kZero));
+        Logger.recordOutput("APController/testPose", target.getReference().transformBy(targetToField.inverse()));
+        Logger.recordOutput("APController/robotTargetSpace", new Pose2d(robotTargetSpace, Rotation2d.kZero));
         Translation2d translationPointTargetSpace;
         if (robotTargetSpace.getY() < 0) {
             robotTargetSpace = new Translation2d(robotTargetSpace.getX(), -robotTargetSpace.getY());
@@ -95,17 +131,18 @@ public class APController implements DriveController {
             translationPointTargetSpace =
                     new Translation2d(translationPointTargetSpace.getX(), -translationPointTargetSpace.getY());
         } else {
-            robotTargetSpace = new Translation2d(robotTargetSpace.getX(), robotTargetSpace.getY());
             translationPointTargetSpace = getTransitionPointTargetSpace(robotTargetSpace, transistionRadius);
         }
-        return translationPointTargetSpace.plus(targetToField.getTranslation());
+        return translationPointTargetSpace
+                .rotateBy(target.getEntryAngle().orElse(Rotation2d.kZero).unaryMinus())
+                .plus(target.getReference().getTranslation());
     }
 
     // theta at which the cos(theta) = theta * sin(theta) and the path to the transition point is vertical
     // calculuted via wolfram alpha
     private static final double THETA_VERTICAL = 0.860333589019380;
 
-    private Translation2d getTransitionPointTargetSpace(Translation2d outerPoint, double radius) {
+    private static Translation2d getTransitionPointTargetSpace(Translation2d outerPoint, double radius) {
         // inputs with negative y are invalid
         if (outerPoint.getY() <= 0) {
             return Translation2d.kZero;
@@ -122,7 +159,7 @@ public class APController implements DriveController {
             // f(outerPoint radians) >= 0 until it flips at outerPoint raidans = thetaVertical
             double transitionTheta = binarySearchTransitionTheta(
                     outerPoint, radius, 0, Math.min(outerPoint.getAngle().getRadians(), THETA_VERTICAL - EPSILON));
-            return new Translation2d(radius, transitionTheta);
+            return new Translation2d(radius, new Rotation2d(transitionTheta));
         } else if (outerPoint.getX() > verticalSlopePoint.getX() - EPSILON) {
             return verticalSlopePoint;
         }
@@ -131,10 +168,10 @@ public class APController implements DriveController {
         // f(outerPoint radians) <= 0 until it flips at outerPoint raidans ~ 3.4
         double transitionTheta = binarySearchTransitionTheta(
                 outerPoint, radius, outerPoint.getAngle().getRadians(), THETA_VERTICAL + EPSILON);
-        return new Translation2d(radius, transitionTheta);
+        return new Translation2d(radius, new Rotation2d(transitionTheta));
     }
 
-    private double binarySearchTransitionTheta(
+    private static double binarySearchTransitionTheta(
             Translation2d outerPoint, double radius, double lowerTheta, double upperTheta) {
         if (signDistance(outerPoint, radius, upperTheta) <= 0) return upperTheta;
         if (signDistance(outerPoint, radius, lowerTheta) >= 0) return lowerTheta;
@@ -150,14 +187,14 @@ public class APController implements DriveController {
         return estimatedTheta;
     }
 
-    private double signDistance(Translation2d outerPoint, double radius, double theta) {
+    private static double signDistance(Translation2d outerPoint, double radius, double theta) {
         Translation2d transitionPoint = new Translation2d(radius, new Rotation2d(theta));
         return getSlopeOfREqualsTheta(theta) * (outerPoint.getX() - transitionPoint.getX())
                 - outerPoint.getY()
                 + transitionPoint.getY();
     }
 
-    private double getSlopeOfREqualsTheta(double theta) {
-        return (Math.cos(theta) - theta * Math.sin(theta)) / (theta * Math.cos(theta) + Math.sin(theta));
+    private static double getSlopeOfREqualsTheta(double theta) {
+        return (theta * Math.cos(theta) + Math.sin(theta)) / (Math.cos(theta) - theta * Math.sin(theta));
     }
 }
