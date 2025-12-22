@@ -213,7 +213,7 @@ public class RobotContainer {
         driver.a()
                 .whileTrue(new HolonomicDrive(
                         drive,
-                        new APController(new APTarget(targetPose).withEntryAngle(targetPose.getRotation()), drive)));
+                        new APController(drive, new APTarget(targetPose).withEntryAngle(targetPose.getRotation()))));
 
         // pathplanner.lib based commands
         Translation2d roughTranslation2d = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
@@ -248,7 +248,7 @@ public class RobotContainer {
                                 roughConstraints,
                                 preciseConstraints,
                                 joystickController,
-                            1.0,
+                                1.0,
                                 0.6),
                         Set.of(drive)));
         driver.b()
