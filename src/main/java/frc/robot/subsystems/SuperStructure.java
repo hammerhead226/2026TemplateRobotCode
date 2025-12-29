@@ -1,5 +1,9 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.commands.drive.PathfindToPose;
+import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.constants.SubsystemConstants;
 import frc.robot.constants.SubsystemConstants.LED_STATE;
 import frc.robot.constants.SubsystemConstants.SuperstructureState;
@@ -85,6 +89,33 @@ public class SuperStructure {
                 return false;
         }
     }
+    public SequentialCommandGroup getSuperStructureCommand(){
+        switch(wantedState){
+            case INTAKE:
+                currentState = SuperstructureState.INTAKE;
+                PathfindToPose command;
+                command = new PathfindToPose(drive, SubsystemConstants.PathConstants.TARG_POSE2D, SubsystemConstants.PathConstants.ROUG_CONSTRAINTS);
+
+                return new SequentialCommandGroup(
+                    command
+                ).andThen(new InstantCommand(() -> nextState()));
+            case STOW:
+                currentState = SuperstructureState.STOW;
+                SoftStagedAlign softCommand;
+                softCommand = new SoftStagedAlign(
+                    drive, 
+                    SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D, 
+                    SubsystemConstants.PathConstants.TARG_POSE2D.getTranslation(), 
+                    SubsystemConstants.PathConstants.ROUG_CONSTRAINTS, 
+                    SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS);
+                return new SequentialCommandGroup(
+                    softCommand
+                ).andThen(new InstantCommand(() -> nextState()));
+                
+        default:
+            return null;
+        }
+    }        
 
     public void nextState() {
         switch (currentState) {
