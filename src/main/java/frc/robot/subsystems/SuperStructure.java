@@ -14,7 +14,6 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.led.LED;
 
 public class SuperStructure {
-    @SuppressWarnings("unused")
     private final Drive drive;
 
     @SuppressWarnings("unused")
@@ -37,6 +36,7 @@ public class SuperStructure {
     }
 
     public void setWantedState(SuperstructureState wantedState) {
+        lastState = currentState;
         if (wantedState == SuperstructureState.SCORELOW) {
             led.setState(LED_STATE.RED);
         } else if (wantedState == SuperstructureState.SCOREMID) {
@@ -120,37 +120,26 @@ public class SuperStructure {
     public void nextState() {
         switch (currentState) {
             case IDLE:
-                lastState = currentState;
                 setWantedState(SuperstructureState.INTAKE);
                 break;
 
             case INTAKE:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.SCORELOW);
                 break;
 
             case SCORELOW:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.SCOREMID);
                 break;
 
             case SCOREMID:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.SCOREHIGH);
                 break;
 
             case SCOREHIGH:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.STOW);
                 break;
 
             case STOW:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.IDLE);
                 break;
 
