@@ -1,6 +1,10 @@
 package frc.robot.subsystems;
 
-import frc.robot.constants.SubsystemConstants.*;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.commands.drive.PathfindToPose;
+import frc.robot.commands.drive.SoftStagedAlign;
+import frc.robot.constants.SubsystemConstants;
 import frc.robot.constants.SubsystemConstants.LED_STATE;
 import frc.robot.constants.SubsystemConstants.SuperstructureState;
 import frc.robot.subsystems.arms.Arm;
@@ -10,7 +14,6 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.led.LED;
 
 public class SuperStructure {
-    @SuppressWarnings("unused")
     private final Drive drive;
 
     @SuppressWarnings("unused")
@@ -33,6 +36,7 @@ public class SuperStructure {
     }
 
     public void setWantedState(SuperstructureState wantedState) {
+        lastState = currentState;
         if (wantedState == SuperstructureState.SCORELOW) {
             led.setState(LED_STATE.RED);
         } else if (wantedState == SuperstructureState.SCOREMID) {
@@ -85,41 +89,57 @@ public class SuperStructure {
                 return false;
         }
     }
-    // TODO add a verb like "set" or "goto" if that's the intent
+    public SequentialCommandGroup getSuperStructureCommand(){
+        switch(wantedState){
+            case INTAKE:
+                currentState = SuperstructureState.INTAKE;
+                PathfindToPose command;
+                command = new PathfindToPose(drive, SubsystemConstants.PathConstants.TARG_POSE2D, SubsystemConstants.PathConstants.ROUG_CONSTRAINTS);
+
+                return new SequentialCommandGroup(
+                    command
+                ).andThen(new InstantCommand(() -> nextState()));
+            case STOW:
+                currentState = SuperstructureState.STOW;
+                SoftStagedAlign softCommand;
+                softCommand = new SoftStagedAlign(
+                    drive, 
+                    SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D, 
+                    SubsystemConstants.PathConstants.TARG_POSE2D.getTranslation(), 
+                    SubsystemConstants.PathConstants.ROUG_CONSTRAINTS, 
+                    SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS);
+                return new SequentialCommandGroup(
+                    softCommand
+                ).andThen(new InstantCommand(() -> nextState()));
+                
+        default:
+            return null;
+        }
+    }        
+
     public void nextState() {
         switch (currentState) {
             case IDLE:
-                lastState = currentState;
                 setWantedState(SuperstructureState.INTAKE);
                 break;
 
             case INTAKE:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.SCORELOW);
                 break;
 
             case SCORELOW:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.SCOREMID);
                 break;
 
             case SCOREMID:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.SCOREHIGH);
                 break;
 
             case SCOREHIGH:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.STOW);
                 break;
 
             case STOW:
-                lastState = currentState;
-
                 setWantedState(SuperstructureState.IDLE);
                 break;
 
