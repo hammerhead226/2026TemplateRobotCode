@@ -37,9 +37,9 @@ public class Flywheel extends SubsystemBase {
   private final SysIdRoutine sysId;
 
   private static final String flywheelName = FlywheelConstants.FLYWHEEL_STRING;
-  private static LoggedTunableNumber kP = new LoggedTunableNumber(flywheelName + "/kP", 0);
-  private static LoggedTunableNumber kI = new LoggedTunableNumber(flywheelName + "/kI", 0);
-  private static LoggedTunableNumber kD = new LoggedTunableNumber(flywheelName + "/kD", 0);
+  private static final LoggedTunableNumber kV = new LoggedTunableNumber("Flywheel/kV", 1);
+  private static final LoggedTunableNumber kS = new LoggedTunableNumber("Flywheel/kS", 1);
+  private static final LoggedTunableNumber kA = new LoggedTunableNumber("Flywheel/kA", 1);
 
   /** Creates a new Flywheel. */
   public Flywheel(FlywheelIO flywheel) {
@@ -50,15 +50,15 @@ public class Flywheel extends SubsystemBase {
     switch (SimConstants.currentMode) {
       case REAL:
       case REPLAY:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        flywheel.configurePID(kP.get(), kI.get(), kD.get());
+        ffModel = new SimpleMotorFeedforward(kV.get(), kS.get(), kA.get());
+        flywheel.configurePID(0, 0, 0);
         break;
       case SIM:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        flywheel.configurePID(kP.get(), kI.get(), kD.get());
+        ffModel = new SimpleMotorFeedforward(kV.get(), kS.get(), kA.get());
+        flywheel.configurePID(0, 0, 0);
         break;
       default:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.0);
+        ffModel = new SimpleMotorFeedforward(kV.get(), kS.get(), kA.get());
         break;
     }
 
@@ -71,6 +71,8 @@ public class Flywheel extends SubsystemBase {
                 null,
                 (state) -> Logger.recordOutput("Flywheel/SysIdState", state.toString())),
             new SysIdRoutine.Mechanism((voltage) -> runVolts(voltage.in(Volts)), null, this));
+
+    updateTunableNumbers();
   }
 
   @Override
@@ -139,8 +141,8 @@ public class Flywheel extends SubsystemBase {
   }
 
   public void updateTunableNumbers() {
-    if(kP.hasChanged(hashCode()) || kI.hasChanged(hashCode()) || kD.hasChanged(hashCode())) {
-      flywheel.configurePID(kP.get(), kI.get(), kD.get());
+    if (kV.hasChanged(hashCode()) || kA.hasChanged(hashCode()) || kS.hasChanged(hashCode())) {
+      ffModel = new SimpleMotorFeedforward(kS.get(), kV.get(), kA.get());
     }
   }
 }
