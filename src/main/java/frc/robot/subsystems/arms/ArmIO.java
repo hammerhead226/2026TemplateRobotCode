@@ -3,18 +3,18 @@ package frc.robot.subsystems.arms;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ArmIO {
-  @AutoLog
-  public static class ArmIOInputs {
-    public double velocityDegsPerSec = 0;
-    public double positionDegs = 0;
-    public double statorCurrentAmps = 0;
-    public double supplyCurrentAmps = 0;
-    public double appliedVolts = 0;
-    public double positionSetpointDegs;
+    @AutoLog
+    public static class ArmIOInputs {
+        public double velocityDegsPerSec = 0;
+        public double positionDegs = 0;
+        public double statorCurrentAmps = 0;
+        public double supplyCurrentAmps = 0;
+        public double appliedVolts = 0;
+        public double positionSetpointDegs;
 
-    public boolean cancoderConnected = false;
-    public double pitch = 0;
-  }
+        public boolean cancoderConnected = false;
+        public double pitch = 0;
+    }
 
     public default void updateInputs(ArmIOInputs inputs) {}
 

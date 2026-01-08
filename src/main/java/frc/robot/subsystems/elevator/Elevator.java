@@ -8,8 +8,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.SubsystemConstants;
+import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 // TODO Add alerts for disconnects and motor temp, add subsystem vis
 // TODO It looks like this class was based on the 2025 template code. I highly highly recommend basing it on the 2025
@@ -21,15 +21,13 @@ public class Elevator extends SubsystemBase {
 
     private final ElevatorIOInputsAutoLogged eInputs = new ElevatorIOInputsAutoLogged();
 
-    private static final LoggedNetworkNumber kP = new LoggedNetworkNumber("Elevator/kP");
-    private static final LoggedNetworkNumber kI = new LoggedNetworkNumber("Elevator/kI");
+    private static final LoggedTunableNumber kP = new LoggedTunableNumber("Elevator/kP");
+    private static final LoggedTunableNumber kI = new LoggedTunableNumber("Elevator/kI");
 
-    private static final LoggedNetworkNumber kS = new LoggedNetworkNumber("Elevator/kS");
-    private static final LoggedNetworkNumber kG = new LoggedNetworkNumber("Elevator/kG");
-    private static final LoggedNetworkNumber kV = new LoggedNetworkNumber("Elevator/kV");
-    private static final LoggedNetworkNumber kA = new LoggedNetworkNumber("Elevator/kA");
-
-    private static final LoggedNetworkNumber barkG = new LoggedNetworkNumber("Bar/kG");
+    private static final LoggedTunableNumber kS = new LoggedTunableNumber("Elevator/kS");
+    private static final LoggedTunableNumber kG = new LoggedTunableNumber("Elevator/kG");
+    private static final LoggedTunableNumber kV = new LoggedTunableNumber("Elevator/kV");
+    private static final LoggedTunableNumber kA = new LoggedTunableNumber("Elevator/kA");
 
     // CHANGE THESE VALUES TO MATCH THE ELEVATOR
     private static final int maxVelocityExtender = 1;
@@ -42,55 +40,51 @@ public class Elevator extends SubsystemBase {
     private TrapezoidProfile.State extenderCurrent = new TrapezoidProfile.State();
 
     private double goal;
-    private final ElevatorFeedforward elevatorFFModel;
+    private ElevatorFeedforward elevatorFFModel;
 
     public Elevator(ElevatorIO elevator) {
         this.elevator = elevator;
 
         switch (SimConstants.currentMode) {
             case REAL:
-                kS.setDefault(0);
-                kG.setDefault(0);
-                kV.setDefault(0);
-                kA.setDefault(0);
+                kS.initDefault(0);
+                kG.initDefault(0);
+                kV.initDefault(0);
+                kA.initDefault(0);
 
-                kP.setDefault(0);
-                kI.setDefault(0);
+                kP.initDefault(0);
+                kI.initDefault(0);
 
-                barkG.setDefault(0);
                 break;
             case REPLAY:
-                kS.setDefault(0);
-                kG.setDefault(0);
-                kV.setDefault(0);
-                kA.setDefault(0);
+                kS.initDefault(0);
+                kG.initDefault(0);
+                kV.initDefault(0);
+                kA.initDefault(0);
 
-                kP.setDefault(0);
-                kI.setDefault(0);
+                kP.initDefault(0);
+                kI.initDefault(0);
 
-                barkG.setDefault(0);
                 break;
             case SIM:
-                kS.setDefault(0);
-                kG.setDefault(0);
-                kV.setDefault(0);
-                kA.setDefault(0);
+                kS.initDefault(0);
+                kG.initDefault(0);
+                kV.initDefault(0);
+                kA.initDefault(0);
 
-                kP.setDefault(1);
-                kI.setDefault(0);
+                kP.initDefault(1);
+                kI.initDefault(0);
 
-                barkG.setDefault(0);
                 break;
             default:
-                kS.setDefault(0);
-                kG.setDefault(0);
-                kV.setDefault(0);
-                kA.setDefault(0);
+                kS.initDefault(0);
+                kG.initDefault(0);
+                kV.initDefault(0);
+                kA.initDefault(0);
 
-                kP.setDefault(0);
-                kI.setDefault(0);
+                kP.initDefault(0);
+                kI.initDefault(0);
 
-                barkG.setDefault(0);
                 break;
         }
 
@@ -103,9 +97,13 @@ public class Elevator extends SubsystemBase {
         elevatorFFModel = new ElevatorFeedforward(kS.get(), kG.get(), kV.get(), kA.get());
     }
 
-    public boolean atGoal() {
-        return (Math.abs(eInputs.elevatorPositionInch - goal)
-                <= SubsystemConstants.ElevatorConstants.DEFAULT_THRESHOLD);
+    public void setBrake(boolean brake) {
+        elevator.setBrakeMode(brake);
+    }
+
+    public boolean atGoal(double threshold) {
+        Logger.recordOutput("Debug at elevator goal", Math.abs(eInputs.elevatorPositionInch - goal) <= threshold);
+        return (Math.abs(eInputs.elevatorPositionInch - goal) <= threshold);
     }
 
     public boolean hasReachedGoal(double thresholdInches) {
@@ -120,8 +118,8 @@ public class Elevator extends SubsystemBase {
         return eInputs.positionSetpointInch - eInputs.elevatorPositionInch;
     }
 
-    public boolean elevatorAtSetpoint(double thersholdInches) {
-        return (Math.abs(getElevatorError()) <= thersholdInches);
+    public boolean elevatorAtSetpoint(double thresholdInches) {
+        return (Math.abs(getElevatorError()) <= thresholdInches);
     }
 
     public void setExtenderGoal(double setpoint) {
@@ -135,11 +133,6 @@ public class Elevator extends SubsystemBase {
 
     public void elevatorStop() {
         elevator.stop();
-    }
-
-    public double calculateAngle() {
-        double angle = 0.0;
-        return angle;
     }
 
     public void setConstraints(double maxVelocityMetersPerSec, double maxAccelerationMetersPerSecSquared) {
@@ -170,5 +163,21 @@ public class Elevator extends SubsystemBase {
         setPositionExtend(extenderCurrent.position, extenderCurrent.velocity);
 
         Logger.processInputs("Elevator", eInputs);
+
+        updateTunableNumbers();
+    }
+
+    private void updateTunableNumbers() {
+        if (kP.hasChanged(hashCode()) || kI.hasChanged(hashCode())) {
+            elevator.configurePID(kP.get(), kI.get(), 0);
+        }
+
+        if (kS.hasChanged(hashCode())
+                || kG.hasChanged(hashCode())
+                || kV.hasChanged(hashCode())
+                || kA.hasChanged(hashCode())) {
+            elevatorFFModel = new ElevatorFeedforward(kS.get(), kG.get(), kV.get(), kA.get());
+        }
     }
 }
+ 
