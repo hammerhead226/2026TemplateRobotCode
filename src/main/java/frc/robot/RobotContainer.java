@@ -22,7 +22,6 @@ import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -32,20 +31,20 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.drive.HardStagedAlign;
 import frc.robot.commands.drive.HeadingLock;
 import frc.robot.commands.drive.PathfindToPose;
-import frc.robot.commands.drive.SoftStagedAlign;
 import frc.robot.commands.drive.holonomic.HolonomicDrive;
 import frc.robot.commands.drive.holonomic.JoystickController;
 import frc.robot.commands.drive.holonomic.PIDPoseController;
 import frc.robot.commands.drive.holonomic.ServoingController;
-import frc.robot.commands.drive.holonomic.TrigController;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.arms.Arm;
 import frc.robot.subsystems.arms.ArmIO;
 import frc.robot.subsystems.arms.ArmIOSim;
@@ -55,12 +54,16 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.headset.Headset;
 import frc.robot.subsystems.headset.HeadsetIO;
 import frc.robot.subsystems.headset.HeadsetIOQuestNav;
+import frc.robot.subsystems.led.LED;
+import frc.robot.subsystems.led.LED_IO;
 import frc.robot.subsystems.vision.ObjectDetection;
 import frc.robot.subsystems.vision.ObjectDetectionIO;
 import frc.robot.subsystems.vision.ObjectDetectionIOLimelight;
@@ -86,6 +89,9 @@ public class RobotContainer {
     private final Vision vision;
     private final Headset headset;
     private final ObjectDetection objectDetection;
+    private final SuperStructure superStructure;
+    private final LED led;
+    private final Elevator elevator;
 
     // Controller
     private final CommandXboxController controller = new CommandXboxController(0);
@@ -107,6 +113,8 @@ public class RobotContainer {
                         new ModuleIOTalonFX(TunerConstants.BackRight));
 
                 arm = new Arm(new ArmIOSim());
+                led = new LED(new LED_IO() {});
+                elevator = new Elevator(new ElevatorIO() {});
                 flywheel = new Flywheel(new FlywheelIOSim());
                 vision = new Vision(
                         drive::addVisionMeasurement,
@@ -117,11 +125,15 @@ public class RobotContainer {
                         new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
 
                 headset = new Headset(new HeadsetIOQuestNav());
+                superStructure = new SuperStructure(drive, flywheel, arm, led, elevator);
+
                 break;
 
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
                 arm = new Arm(new ArmIOSim());
+                led = new LED(new LED_IO() {});
+                elevator = new Elevator(new ElevatorIO() {});
                 drive = new Drive(
                         new GyroIO() {},
                         new ModuleIOSim(TunerConstants.FrontLeft),
@@ -135,17 +147,24 @@ public class RobotContainer {
                 objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 flywheel = new Flywheel(new FlywheelIOSim());
                 headset = new Headset(new HeadsetIO() {});
+
+                superStructure = new SuperStructure(drive, flywheel, arm, led, elevator);
                 break;
 
             default:
                 // Replayed robot, disable IO implementations
                 arm = new Arm(new ArmIO() {});
+                led = new LED(new LED_IO() {});
+                elevator = new Elevator(new ElevatorIO() {});
+
                 drive = new Drive(
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
                 objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 headset = new Headset(new HeadsetIO() {});
+                superStructure = new SuperStructure(drive, flywheel, arm, led, elevator);
+
                 break;
         }
 
@@ -220,10 +239,15 @@ public class RobotContainer {
                 drive.getMaxAngularSpeedRadPerSec() * 0.5,
                 Units.degreesToRadians(200),
                 12.0);
-        controller
-                .y()
-                .whileTrue(new SoftStagedAlign(
-                        drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints, preciseConstraints));
+        // controller
+        //         .y()
+        //         .whileTrue(new SoftStagedAlign(
+        //                 drive, roughTranslation2d, targetPose.getTranslation(), roughConstraints,
+        // preciseConstraints));
+
+        controller.y().whileTrue(new SequentialCommandGroup(superStructure.getSuperStructureCommand()));
+
+        controller.a().onTrue(new InstantCommand(() -> superStructure.nextState()));
         controller
                 .x()
                 .whileTrue(new DeferredCommand(
@@ -237,9 +261,10 @@ public class RobotContainer {
         controller.b().whileTrue(new PathfindToPose(drive, targetPose, roughConstraints));
 
         // pid based commands
-        controller
-                .rightBumper()
-                .whileTrue(new HolonomicDrive(drive, new PIDPoseController(drive, drive::getPose, () -> targetPose)));
+        // controller
+        //         .rightBumper()
+        //         .whileTrue(new HolonomicDrive(drive, new PIDPoseController(drive, drive::getPose, () ->
+        // targetPose)));
         controller
                 .leftBumper()
                 .whileTrue(new HeadingLock(drive, controller::getLeftX, controller::getLeftY, controller::getRightX));
@@ -248,16 +273,16 @@ public class RobotContainer {
         int cameraIndex = 0;
         int tagId = 13;
         operator.a().whileTrue(new HolonomicDrive(drive, new ServoingController(drive, vision, cameraIndex, tagId)));
-        controller
-                .a()
-                .whileTrue(new HolonomicDrive(
-                        drive,
-                        new TrigController(
-                                drive,
-                                vision,
-                                cameraIndex,
-                                tagId,
-                                new Transform2d(2, 1, Rotation2d.fromDegrees(210)))));
+        // controller
+        //         .a()
+        //         .whileTrue(new HolonomicDrive(
+        //                 drive,
+        //                 new TrigController(
+        //                         drive,
+        //                         vision,
+        //                         cameraIndex,
+        //                         tagId,
+        //                         new Transform2d(2, 1, Rotation2d.fromDegrees(210)))));
     }
 
     /**

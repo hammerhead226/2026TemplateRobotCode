@@ -16,14 +16,12 @@
 package frc.robot.constants;
 
 import com.pathplanner.lib.path.PathConstraints;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 
@@ -70,28 +68,38 @@ public final class SubsystemConstants {
         public static final double HIGH_SETPOINT_DEG = 0;
         public static final double INTAKE_ANGLE_DEGREES = 0;
     }
-    
-      static Drive drive = new Drive(
-                              new GyroIOPigeon2(),
-                              new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                              new ModuleIOTalonFX(TunerConstants.FrontRight),
-                              new ModuleIOTalonFX(TunerConstants.BackLeft),
-                              new ModuleIOTalonFX(TunerConstants.BackRight));
-              public static final class PathConstants {
-                  public static final PathConstraints DEFAULT_PATH_CONSTRAINTS = new PathConstraints(
-                          5, // m/s
-                          5, // m/s^2
-                          Math.toRadians(180), // rad/s
-                          Math.toRadians(200) // rad/s^2
-                          );
-          
-                  
-                public static final Pose2d TARG_POSE2D = new Pose2d(Units.feetToMeters(2), Units.feetToMeters(4), Rotation2d.kCCW_90deg);
-          
-                  // pathplanner.lib based commands
-                public static final Translation2d ROUGH_TRANSLATION2D = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
-                public static final PathConstraints ROUG_CONSTRAINTS = PathConstraints.unlimitedConstraints(12);
-                public static final PathConstraints PRECISE_CONSTRAINTS = new PathConstraints(
+
+    static Drive drive = new Drive(
+            new GyroIOPigeon2(),
+            new ModuleIOTalonFX(TunerConstants.FrontLeft),
+            new ModuleIOTalonFX(TunerConstants.FrontRight),
+            new ModuleIOTalonFX(TunerConstants.BackLeft),
+            new ModuleIOTalonFX(TunerConstants.BackRight));
+
+    public static final class PathConstants {
+        public static final PathConstraints DEFAULT_PATH_CONSTRAINTS = new PathConstraints(
+                5, // m/s
+                5, // m/s^2
+                Math.toRadians(180), // rad/s
+                Math.toRadians(200) // rad/s^2
+                );
+
+        public static final Pose2d TARG_POSE2D_1 =
+                new Pose2d(Units.feetToMeters(2), Units.feetToMeters(4), Rotation2d.kCCW_90deg);
+        public static final Pose2d TARG_POSE2D_2 =
+                new Pose2d(Units.feetToMeters(-2), Units.feetToMeters(-4), Rotation2d.kCCW_90deg);
+        public static final Pose2d TARG_POSE2D_3 =
+                new Pose2d(Units.feetToMeters(5), Units.feetToMeters(3), Rotation2d.kCCW_90deg);
+        public static final Pose2d TARG_POSE2D_4 =
+                new Pose2d(Units.feetToMeters(0), Units.feetToMeters(0), Rotation2d.kCCW_90deg);
+        public static final Pose2d TARG_POSE2D_5 =
+                new Pose2d(Units.feetToMeters(3), Units.feetToMeters(-2), Rotation2d.kCCW_90deg);
+
+        // pathplanner.lib based commands
+        public static final Translation2d ROUGH_TRANSLATION2D =
+                new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
+        public static final PathConstraints ROUG_CONSTRAINTS = PathConstraints.unlimitedConstraints(12);
+        public static final PathConstraints PRECISE_CONSTRAINTS = new PathConstraints(
                 drive.getMaxLinearSpeedMetersPerSec() * 0.5,
                 3.0,
                 drive.getMaxAngularSpeedRadPerSec() * 0.5,
