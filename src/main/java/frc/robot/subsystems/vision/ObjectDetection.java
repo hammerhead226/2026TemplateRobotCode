@@ -9,13 +9,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
 public class ObjectDetection extends SubsystemBase {
-    private final ObjectDetectionConsumer consumer;
     private final ObjectDetectionIO io;
     private final VisionDetectionIOInputsAutoLogged inputs = new VisionDetectionIOInputsAutoLogged();
 
-    public ObjectDetection(ObjectDetectionConsumer consumer, ObjectDetectionIO io) {
+    public ObjectDetection(ObjectDetectionIO io) {
         this.io = io;
-        this.consumer = consumer;
     }
     // TODO this needs to be updated to not be season specific, and to use the changes made to the io object
     // TODO stretch feature, we want to track the object in field coordinates for things like dynamic autos, but for
@@ -25,11 +23,14 @@ public class ObjectDetection extends SubsystemBase {
 
         double staticOffset = 0; // camera degrees
 
-        double distInch = (1 / (40 - ((30) * inputs.iTY / 23)) * 1000); // Convert degrees to inch
-        double noteYawAngleDegCorrected = -inputs.iTX - staticOffset; // account for static offset, reverse to be CCW+
+        double distInch =
+                (1 / (40 - ((30) * inputs.latestTarget.ty().getDegrees() / 23)) * 1000); // Convert degrees to inch
+        double noteYawAngleDegCorrected =
+                -inputs.latestTarget.tx().getDegrees() - staticOffset; // account for static offset, reverse to be CCW+
         double radiusInchCorrected = distInch / Math.cos(Units.degreesToRadians(noteYawAngleDegCorrected));
 
-        double noteYawAngleDegRaw = -inputs.iTX; // account for static offset, reverse to be CCW+
+        double noteYawAngleDegRaw =
+                -inputs.latestTarget.tx().getDegrees(); // account for static offset, reverse to be CCW+
         // double radiusInchRaw = distInch / Math.cos(Units.degreesToRadians(noteYawAngleDegRaw));
 
         Logger.recordOutput("NoteTracking/distInch", distInch);
@@ -84,15 +85,8 @@ public class ObjectDetection extends SubsystemBase {
         return new Pose2d(fieldRelNoteLocT2dCorrected, new Rotation2d());
     }
 
-    @FunctionalInterface
-    public static interface ObjectDetectionConsumer {
-        public void accept(Translation2d objectRobotRelativePoseMeters, double timeStampSeconds);
-    }
-
     @Override
     public void periodic() {
         io.updateInputs(inputs);
-        consumer.accept(getNotePositionRobotRelative(), inputs.timestamp);
     }
-    ;
 }

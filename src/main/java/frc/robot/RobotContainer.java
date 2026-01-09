@@ -68,7 +68,7 @@ import frc.robot.subsystems.headset.HeadsetIO;
 import frc.robot.subsystems.headset.HeadsetIOQuestNav;
 import frc.robot.subsystems.vision.ObjectDetection;
 import frc.robot.subsystems.vision.ObjectDetectionIO;
-import frc.robot.subsystems.vision.ObjectDetectionIOLimelight;
+import frc.robot.subsystems.vision.ObjectDetectionIOPhotonVision;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
@@ -117,9 +117,8 @@ public class RobotContainer {
                         drive::addVisionMeasurement,
                         new VisionIOLimelight(camera0Name, drive::getRotation),
                         new VisionIOLimelight(camera1Name, drive::getRotation));
-                objectDetection = new ObjectDetection(
-                        drive::addObjectMeasurement,
-                        new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
+                objectDetection = new ObjectDetection(new ObjectDetectionIOPhotonVision(
+                        VisionConstants.cameraObjectDetect, VisionConstants.robotToCameraObjectDetect));
 
                 headset = new Headset(drive::addVisionMeasurement, new HeadsetIOQuestNav());
                 break;
@@ -137,7 +136,7 @@ public class RobotContainer {
                         drive::addVisionMeasurement,
                         new VisionIOPhotonVisionSim(camera0Name, VisionConstants.robotToCamera0, drive::getPose),
                         new VisionIOPhotonVisionSim(camera1Name, VisionConstants.robotToCamera1, drive::getPose));
-                objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
+                objectDetection = new ObjectDetection(new ObjectDetectionIO() {});
                 flywheel = new Flywheel(new FlywheelIOSim());
                 headset = new Headset(drive::addVisionMeasurement, new HeadsetIO() {});
                 break;
@@ -149,7 +148,7 @@ public class RobotContainer {
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-                objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
+                objectDetection = new ObjectDetection(new ObjectDetectionIO() {});
                 headset = new Headset(drive::addVisionMeasurement, new HeadsetIO() {});
                 break;
         }
@@ -248,7 +247,7 @@ public class RobotContainer {
                                 roughConstraints,
                                 preciseConstraints,
                                 joystickController,
-                            1.0,
+                                1.0,
                                 0.6),
                         Set.of(drive)));
         driver.b()
