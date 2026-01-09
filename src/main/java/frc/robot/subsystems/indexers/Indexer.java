@@ -78,8 +78,8 @@ public class Indexer extends SubsystemBase {
     indexerCurrentStateRotations =
         indexerProfile.calculate(0, indexerCurrentStateRotations, indexerGoalStateRotations);
 
-    indexer.configurePID(kP, 0, 0);
-    ff = new ElevatorFeedforward(0, kG, kV);
+    indexer.configurePID(kP.get(), 0, 0);
+    ff = new ElevatorFeedforward(0, kG.get(), kV.get());
   }
 
   public boolean indexerAtGoal(double thersholdInches) {

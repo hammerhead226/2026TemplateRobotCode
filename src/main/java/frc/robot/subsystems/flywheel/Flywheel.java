@@ -13,12 +13,10 @@
 
 package frc.robot.subsystems.flywheel;
 
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -33,13 +31,14 @@ import org.littletonrobotics.junction.Logger;
 public class Flywheel extends SubsystemBase {
   private final FlywheelIO flywheel;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
-  private final SimpleMotorFeedforward ffModel;
+  private SimpleMotorFeedforward ffModel;
   private final SysIdRoutine sysId;
 
   private static final String flywheelName = FlywheelConstants.FLYWHEEL_STRING;
-  private static final LoggedTunableNumber kV = new LoggedTunableNumber("Flywheel/kV", 1);
-  private static final LoggedTunableNumber kS = new LoggedTunableNumber("Flywheel/kS", 1);
-  private static final LoggedTunableNumber kA = new LoggedTunableNumber("Flywheel/kA", 1);
+
+  private static final LoggedTunableNumber kV = new LoggedTunableNumber(flywheelName + "/kV", 1);
+  private static final LoggedTunableNumber kS = new LoggedTunableNumber(flywheelName + "/kS", 1);
+  private static final LoggedTunableNumber kA = new LoggedTunableNumber(flywheelName + "/kA", 1);
 
   /** Creates a new Flywheel. */
   public Flywheel(FlywheelIO flywheel) {
@@ -49,29 +48,39 @@ public class Flywheel extends SubsystemBase {
     // separate robot with different tuning)
     switch (SimConstants.currentMode) {
       case REAL:
+        kV.initDefault(0);
+        kS.initDefault(0);
+        kA.initDefault(0);
+        break;
+
       case REPLAY:
-        ffModel = new SimpleMotorFeedforward(kV.get(), kS.get(), kA.get());
-        flywheel.configurePID(0, 0, 0);
+        kV.initDefault(0);
+        kS.initDefault(0);
+        kA.initDefault(0);
         break;
       case SIM:
-        ffModel = new SimpleMotorFeedforward(kV.get(), kS.get(), kA.get());
-        flywheel.configurePID(0, 0, 0);
+        kV.initDefault(0);
+        kS.initDefault(0);
+        kA.initDefault(0);
         break;
       default:
-        ffModel = new SimpleMotorFeedforward(kV.get(), kS.get(), kA.get());
+        kV.initDefault(0);
+        kS.initDefault(0);
+        kA.initDefault(0);
         break;
+
     }
 
     // Configure SysId
-    sysId =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,
-                null,
-                null,
-                (state) -> Logger.recordOutput("Flywheel/SysIdState", state.toString())),
-            new SysIdRoutine.Mechanism((voltage) -> runVolts(voltage.in(Volts)), null, this));
+    sysId = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,
+            null,
+            null,
+            (state) -> Logger.recordOutput("Flywheel/SysIdState", state.toString())),
+        new SysIdRoutine.Mechanism((voltage) -> runVolts(voltage.in(Volts)), null, this));
 
+    ffModel = new SimpleMotorFeedforward(kS.get(), kV.get(), kA.get());
     updateTunableNumbers();
   }
 
@@ -117,6 +126,10 @@ public class Flywheel extends SubsystemBase {
   /** Stops the flywheel. */
   public void stop() {
     flywheel.stop();
+  }
+
+  public Command stopCommand() {
+    return new InstantCommand(() -> stop(), this);
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */

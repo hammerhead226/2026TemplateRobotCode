@@ -105,7 +105,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
 
-        flywheel = new Flywheel(new FlywheelIOTalonFX(RobotMap.flywheelIDs.DEFAULT_LEADER_ID, RobotMap.flywheelIDs.DEFAULT_FOLLOWER_ID));
+        flywheel = new Flywheel(new FlywheelIOTalonFX(RobotMap.flywheelIDs.DEFAULT_LEADER_ID));
         vision =
             new Vision(
                 drive::addVisionMeasurement,
