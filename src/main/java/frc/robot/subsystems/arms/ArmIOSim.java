@@ -62,7 +62,7 @@ public class ArmIOSim implements ArmIO {
         inputs.appliedVolts = appliedVolts;
         inputs.positionDegs = Math.toDegrees(positionRads);
         inputs.velocityDegsPerSec = Math.toDegrees(velocityRadsPerSec);
-        inputs.currentAmps = currentAmps;
+        inputs.statorCurrentAmps = sim.getCurrentDrawAmps();
 
         sim.update(SubsystemConstants.LOOP_PERIOD_SECONDS);
     }

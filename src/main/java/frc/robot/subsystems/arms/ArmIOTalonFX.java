@@ -1,25 +1,22 @@
 package frc.robot.subsystems.arms;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.SubsystemConstants;
 import frc.robot.util.Conversions;
 import org.littletonrobotics.junction.Logger;
@@ -28,8 +25,6 @@ import org.littletonrobotics.junction.Logger;
 
 public class ArmIOTalonFX implements ArmIO {
     private final TalonFX leader;
-    private final TalonFX follower;
-
 
     private final CANcoder encoder;
     private double positionSetpointDegs;
@@ -43,6 +38,10 @@ public class ArmIOTalonFX implements ArmIO {
     private final StatusSignal<Current> supplyCurrentAmps;
 
     public ArmIOTalonFX(int leadID, int followID, int canID) {
+        CANcoderConfiguration coderConfig = new CANcoderConfiguration();
+
+        coderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.CurrentLimits.StatorCurrentLimit = SubsystemConstants.ArmConstants.CURRENT_LIMIT;
         config.CurrentLimits.StatorCurrentLimitEnable = SubsystemConstants.ArmConstants.CURRENT_LIMIT_ENABLED;
@@ -50,24 +49,18 @@ public class ArmIOTalonFX implements ArmIO {
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
         leader = new TalonFX(leadID, SubsystemConstants.CANBUS);
-        follower = new TalonFX(followID, SubsystemConstants.CANBUS);
+
         encoder = new CANcoder(canID, SubsystemConstants.CANBUS);
-        
 
         leader.getConfigurator().apply(config);
 
-        follower.setControl(new Follower(leadID, true));
-
-        startAngleDegs = Units.rotationsToDegrees(encoder.getAbsolutePosition().getValueAsDouble());
-
-        leader.setPosition(
-            Units.degreesToRotations(startAngleDegs)
-                * SubsystemConstants.ArmConstants.ARM_GEAR_RATIO);
-      
-      // -- COMPLETED -- setPosition uses rotations not degrees or Falcons
-
-        follower.setPosition(
-                Units.degreesToRotations(startAngleDegs)*SubsystemConstants.ArmConstants.ARM_GEAR_RATIO);
+        if (encoder.isConnected()) {
+            leader.setPosition((encoder.getAbsolutePosition().getValueAsDouble() - Units.degreesToRotations(57 - 12))
+                    * SubsystemConstants.ArmConstants.ARM_GEAR_RATIO);
+        } else {
+            leader.setPosition(Units.degreesToRotations(SubsystemConstants.ArmConstants.STOW_SETPOINT_DEG)
+                    * SubsystemConstants.ArmConstants.ARM_GEAR_RATIO);
+        }
 
         leaderPositionRotations = leader.getPosition();
         velocityDegsPerSec = leader.getVelocity();
@@ -75,14 +68,12 @@ public class ArmIOTalonFX implements ArmIO {
         statorCurrentAmps = leader.getStatorCurrent();
         supplyCurrentAmps = leader.getSupplyCurrent();
 
-
         positionSetpointDegs = SubsystemConstants.ArmConstants.STOW_SETPOINT_DEG;
 
         Logger.recordOutput("Starting Angle", startAngleDegs);
 
         encoder.optimizeBusUtilization();
         leader.optimizeBusUtilization();
-        follower.optimizeBusUtilization();
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100, leaderPositionRotations, velocityDegsPerSec, appliedVolts, statorCurrentAmps, supplyCurrentAmps);
@@ -92,15 +83,16 @@ public class ArmIOTalonFX implements ArmIO {
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
-        BaseStatusSignal.refreshAll(leaderPositionRotations, velocityDegsPerSec, appliedVolts, statorCurrentAmps, supplyCurrentAmps);
-        inputs.pitch = pitch.getValueAsDouble() + SubsystemConstants.ArmConstants.ARM_ZERO_ANGLE;
-        inputs.positionDegs = Conversions.falconToDegrees(
-                (leaderPositionDegs.getValueAsDouble()), SubsystemConstants.ArmConstants.ARM_GEAR_RATIO)
-                + SubsystemConstants.ArmConstants.ARM_ZERO_ANGLE;
+        BaseStatusSignal.refreshAll(
+                leaderPositionRotations, velocityDegsPerSec, appliedVolts, statorCurrentAmps, supplyCurrentAmps);
+
+        inputs.positionDegs = Units.rotationsToDegrees(leaderPositionRotations.getValueAsDouble())
+                / SubsystemConstants.ArmConstants.ARM_GEAR_RATIO;
 
         inputs.velocityDegsPerSec = velocityDegsPerSec.getValueAsDouble();
         inputs.appliedVolts = appliedVolts.getValueAsDouble();
-        inputs.currentAmps = currentAmps.getValueAsDouble();
+        inputs.statorCurrentAmps = statorCurrentAmps.getValueAsDouble();
+        inputs.supplyCurrentAmps = supplyCurrentAmps.getValueAsDouble();
         inputs.positionSetpointDegs = positionSetpointDegs;
     }
 
@@ -114,7 +106,6 @@ public class ArmIOTalonFX implements ArmIO {
         }
 
         leader.getConfigurator().apply(config);
-        follower.getConfigurator().apply(config);
     }
 
     @Override
@@ -127,7 +118,7 @@ public class ArmIOTalonFX implements ArmIO {
 
     @Override
     public void stop() {
-        this.positionSetpointDegs = leaderPositionDegs.getValueAsDouble();
+        this.positionSetpointDegs = Units.rotationsToDegrees(leaderPositionRotations.getValueAsDouble());
         leader.stopMotor();
     }
 

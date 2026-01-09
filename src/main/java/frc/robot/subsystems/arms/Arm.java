@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.SubsystemConstants;
+import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
 
 // TODO Add alerts for disconnects and motor temp, add subsystem vis
@@ -22,9 +23,12 @@ public class Arm extends SubsystemBase {
     private final ArmIO arm;
     private final ArmIOInputsAutoLogged pInputs = new ArmIOInputsAutoLogged();
 
-    private static double kP;
-    private static double kG;
-    private static double kV;
+    private static LoggedTunableNumber kP;
+    private static LoggedTunableNumber kG;
+    private static LoggedTunableNumber kV;
+    private static LoggedTunableNumber kA;
+    private static LoggedTunableNumber kS;
+    private static LoggedTunableNumber kI;
 
     private static double maxVelocityDegPerSec;
     private static double maxAccelerationDegPerSecSquared;
@@ -44,24 +48,37 @@ public class Arm extends SubsystemBase {
         this.arm = arm;
         switch (SimConstants.currentMode) {
             case REAL:
-                kG = 0.29;
-                kV = 1;
-                kP = 1.123;
+                kG.initDefault(0.29);
+                kV.initDefault(1);
+                kP.initDefault(1.123);
+                kA.initDefault(0);
+                kS.initDefault(0);
+                kI.initDefault(0);
                 break;
             case REPLAY:
-                kG = 0.29;
-                kV = 1;
-                kP = 1.123;
+                kG.initDefault(0.29);
+                kV.initDefault(1);
+                kP.initDefault(1.123);
+                kA.initDefault(0);
+                kS.initDefault(0);
+                kI.initDefault(0);
                 break;
             case SIM:
-                kG = 0.29;
-                kV = 1;
-                kP = 1.123;
+                kG.initDefault(0.29);
+                kV.initDefault(1);
+                kP.initDefault(1.123);
+                kA.initDefault(0);
+                kS.initDefault(0);
+                kI.initDefault(0);
+
                 break;
             default:
-                kG = 0.29;
-                kV = 1;
-                kP = 1.123;
+                kG.initDefault(0.29);
+                kV.initDefault(1);
+                kP.initDefault(1.123);
+                kA.initDefault(0);
+                kS.initDefault(0);
+                kI.initDefault(0);
                 break;
         }
 
@@ -77,8 +94,8 @@ public class Arm extends SubsystemBase {
         // setArmCurrent(getArmPositionDegs());
         armCurrentStateDegrees = armProfile.calculate(0, armCurrentStateDegrees, armGoalStateDegrees);
 
-        arm.configurePID(kP, 0, 0);
-        armFFModel = new ArmFeedforward(0, kG, kV, 0);
+        arm.configurePID(kP.get(), kI.get(), 0);
+        armFFModel = new ArmFeedforward(kS.get(), kG.get(), kV.get(), 0);
     }
 
     public void setBrakeMode(boolean bool) {
@@ -99,6 +116,16 @@ public class Arm extends SubsystemBase {
 
     private double getArmError() {
         return pInputs.positionSetpointDegs - pInputs.positionDegs;
+    }
+
+    public boolean armAtSetpoint(double thresholdDegrees) {
+        return (Math.abs(getArmError()) <= thresholdDegrees);
+    }
+
+    public void setConstraints(double maxVelocityDegreesPerSec, double maxAccelerationDegreesPerSecSquared) {
+        armConstraints =
+                new TrapezoidProfile.Constraints(maxVelocityDegreesPerSec, maxAccelerationDegreesPerSecSquared);
+        armProfile = new TrapezoidProfile(armConstraints);
     }
 
     public void setPositionDegs(double positionDegs, double velocityDegsPerSec) {
@@ -140,5 +167,20 @@ public class Arm extends SubsystemBase {
 
         Logger.recordOutput("arm goal", goalDegrees);
         // This method will be called once per scheduler run
+
+        updateTunableNumbers();
+    }
+
+    private void updateTunableNumbers() {
+        if (kP.hasChanged(hashCode()) || kI.hasChanged(hashCode())) {
+            arm.configurePID(kP.get(), kI.get(), 0);
+        }
+
+        if (kS.hasChanged(hashCode())
+                || kG.hasChanged(hashCode())
+                || kV.hasChanged(hashCode())
+                || kA.hasChanged(hashCode())) {
+            armFFModel = new ArmFeedforward(kS.get(), kG.get(), kV.get(), kA.get());
+        }
     }
 }
