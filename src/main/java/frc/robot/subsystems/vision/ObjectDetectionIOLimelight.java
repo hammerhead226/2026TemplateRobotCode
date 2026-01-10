@@ -13,13 +13,11 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
-import frc.robot.LimelightHelpers;
 
 /** IO implementation for real Limelight hardware. */
 public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
@@ -61,23 +59,9 @@ public class ObjectDetectionIOLimelight implements ObjectDetectionIO {
         inputs.connected = (RobotController.getFPGATime() - latencySubscriber.getLastChange()) < 250;
         inputs.heartBeat = hbSubscriber.get();
         // Update target observation
-        inputs.latestTargetObservation = new TargetObservation(
-                Rotation2d.fromDegrees(txSubscriber.get()), Rotation2d.fromDegrees(tySubscriber.get()));
-
-        inputs.iTX = txSubscriber.get();
-        inputs.iTY = tySubscriber.get();
-        inputs.timestamp = txSubscriber.getAtomic().timestamp;
-    }
-    // TODO tx and ty don't both represent the objects distance from the camera necessarily, if the camera is mounted
-    // pointing out from the robot tx will represent the angle from the camera and ty will represent the distance
-    // TODO this should potentially be done at the objectdetection.java layer to follow the data flow logic of io
-    // layers, and LimelightHelpers.getTX this is doing the same thing as the txSubscriber is
-    public Pose2d getPose() {
-        return new Pose2d(
-                distanceToObjectX.get(Double.valueOf(LimelightHelpers.getTX(null))),
-                distanceToObjectY.get(Double.valueOf(LimelightHelpers.getTY(null))),
-                null
-                // 18/Math.tan(Width/constant)
-                );
+        inputs.latestTarget = new TargetObservation(
+                Rotation2d.fromDegrees(txSubscriber.get()),
+                Rotation2d.fromDegrees(tySubscriber.get()),
+                txSubscriber.getAtomic().timestamp);
     }
 }

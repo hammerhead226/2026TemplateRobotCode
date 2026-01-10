@@ -55,7 +55,6 @@ public interface VisionIO {
             double ty, // degrees, tncy for LimeLight
             double ta // portion of image [0,1]
             ) {}
-    ;
 
     public default void updateInputs(VisionIOInputs inputs) {}
 }
