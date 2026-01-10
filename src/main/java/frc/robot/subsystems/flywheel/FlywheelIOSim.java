@@ -52,11 +52,11 @@ public class FlywheelIOSim implements FlywheelIO {
 
         sim.update(SubsystemConstants.LOOP_PERIOD_SECONDS);
 
-    inputs.positionRad = 0.0;
-    inputs.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
-    inputs.appliedVolts = appliedVolts;
-    inputs.leaderStatorCurrentAmps = sim.getCurrentDrawAmps();
-  }
+        inputs.positionRad = 0.0;
+        inputs.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
+        inputs.appliedVolts = appliedVolts;
+        inputs.leaderStatorCurrentAmps = sim.getCurrentDrawAmps();
+    }
 
     @Override
     public void setVoltage(double volts) {

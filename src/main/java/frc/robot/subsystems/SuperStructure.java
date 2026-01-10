@@ -66,23 +66,23 @@ public class SuperStructure {
     public boolean atGoals() {
         switch (currentState) {
             case INTAKE:
-                return (arm.hasReachedGoal(ArmConstants.INTAKE_ANGLE_DEGREES)
+                return (arm.atPositionDegs(ArmConstants.INTAKE_ANGLE_DEGREES, ArmConstants.ARM_DEFAULT_TOLERANCE_DEG)
                         && elevator.hasReachedGoal(ElevatorConstants.INTAKE_SETPOINT_INCH));
 
             case SCORELOW:
-                return (arm.hasReachedGoal(ArmConstants.LOW_SETPOINT_DEG)
+                return (arm.atPositionDegs(ArmConstants.LOW_SETPOINT_DEG, ArmConstants.ARM_DEFAULT_TOLERANCE_DEG)
                         && elevator.hasReachedGoal(ElevatorConstants.LOW_SETPOINT_INCH));
 
             case SCOREMID:
-                return (arm.hasReachedGoal(ArmConstants.MID_SETPOINT_DEG)
+                return (arm.atPositionDegs(ArmConstants.MID_SETPOINT_DEG, ArmConstants.ARM_DEFAULT_TOLERANCE_DEG)
                         && elevator.hasReachedGoal(ElevatorConstants.MID_SETPOINT_INCH));
 
             case SCOREHIGH:
-                return (arm.hasReachedGoal(ArmConstants.HIGH_SETPOINT_DEG)
+                return (arm.atPositionDegs(ArmConstants.HIGH_SETPOINT_DEG, ArmConstants.ARM_DEFAULT_TOLERANCE_DEG)
                         && elevator.hasReachedGoal(ElevatorConstants.HIGH_SETPOINT_INCH));
 
             case STOW:
-                return (arm.hasReachedGoal(ArmConstants.STOW_SETPOINT_DEG)
+                return (arm.atPositionDegs(ArmConstants.STOW_SETPOINT_DEG, ArmConstants.ARM_DEFAULT_TOLERANCE_DEG)
                         && elevator.hasReachedGoal(ElevatorConstants.STOW_SETPOINT_INCH));
 
             default:

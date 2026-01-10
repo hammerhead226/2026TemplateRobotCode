@@ -68,7 +68,7 @@ public class ArmIOTalonFX implements ArmIO {
         statorCurrentAmps = leader.getStatorCurrent();
         supplyCurrentAmps = leader.getSupplyCurrent();
 
-    positionSetpointDegs = SubsystemConstants.ArmConstants.ARM_DEFAULT_POSITION;
+        positionSetpointDegs = SubsystemConstants.ArmConstants.ARM_DEFAULT_POSITION;
 
         Logger.recordOutput("Starting Angle", startAngleDegs);
 
@@ -77,8 +77,7 @@ public class ArmIOTalonFX implements ArmIO {
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100, leaderPositionRotations, velocityDegsPerSec, appliedVolts, statorCurrentAmps, supplyCurrentAmps);
-
-      }
+    }
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {

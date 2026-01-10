@@ -80,8 +80,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.util.ControlsUtil;
-
 import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -126,7 +124,7 @@ public class RobotContainer {
                 arm = new Arm(new ArmIOTalonFX(RobotMap.armIDs.DEFAULT_ID, 1, 0));
                 led = new LED(new LED_IO() {});
                 elevator = new Elevator(new ElevatorIO() {});
-                flywheel = new Flywheel(new FlywheelIOSim(RobotMap.flywheelIDs.DEFAULT_LEADER_ID));
+                flywheel = new Flywheel(new FlywheelIOSim());
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOLimelight(camera0Name, drive::getRotation),

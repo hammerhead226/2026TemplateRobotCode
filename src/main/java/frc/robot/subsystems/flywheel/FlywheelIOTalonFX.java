@@ -17,7 +17,6 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -30,46 +29,50 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.constants.SubsystemConstants.FlywheelConstants;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
-  private static final double GEAR_RATIO = FlywheelConstants.GEAR_RATIO;
+    private static final double GEAR_RATIO = FlywheelConstants.GEAR_RATIO;
 
-  private final TalonFX leader;
+    private final TalonFX leader;
 
-  private final StatusSignal<Angle> leaderPosition;
-  private final StatusSignal<AngularVelocity> leaderVelocity;
-  private final StatusSignal<Voltage> leaderAppliedVolts;
-  private final StatusSignal<Current> leaderStatorCurrentAmps;
-  private final StatusSignal<Current> leaderSupplyCurrentAmps;
+    private final StatusSignal<Angle> leaderPosition;
+    private final StatusSignal<AngularVelocity> leaderVelocity;
+    private final StatusSignal<Voltage> leaderAppliedVolts;
+    private final StatusSignal<Current> leaderStatorCurrentAmps;
+    private final StatusSignal<Current> leaderSupplyCurrentAmps;
 
-  public FlywheelIOTalonFX(int leaderID) {
-    leader = new TalonFX(leaderID);
+    public FlywheelIOTalonFX(int leaderID) {
+        leader = new TalonFX(leaderID);
 
-    var config = new TalonFXConfiguration();
-    config.CurrentLimits.SupplyCurrentLimit = 30.0;
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    leader.getConfigurator().apply(config);
-   
-    leaderPosition = leader.getPosition();
-    leaderVelocity = leader.getVelocity();
-    leaderAppliedVolts = leader.getMotorVoltage();
-    leaderStatorCurrentAmps = leader.getStatorCurrent();
-    leaderSupplyCurrentAmps = leader.getSupplyCurrent();
-    BaseStatusSignal.setUpdateFrequencyForAll(
-        50.0, leaderPosition, leaderVelocity, leaderAppliedVolts, leaderStatorCurrentAmps, leaderSupplyCurrentAmps);
-    leader.optimizeBusUtilization();
-  }
+        var config = new TalonFXConfiguration();
+        config.CurrentLimits.SupplyCurrentLimit = 30.0;
+        config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        leader.getConfigurator().apply(config);
 
-  @Override
-  public void updateInputs(FlywheelIOInputs inputs) {
-    BaseStatusSignal.refreshAll(
-        leaderPosition, leaderVelocity, leaderAppliedVolts, leaderStatorCurrentAmps, leaderSupplyCurrentAmps);
-    inputs.positionRad = Units.rotationsToRadians(leaderPosition.getValueAsDouble()) / GEAR_RATIO;
-    inputs.velocityRadPerSec =
-        Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) / GEAR_RATIO;
-    inputs.appliedVolts = leaderAppliedVolts.getValueAsDouble();
-    inputs.leaderStatorCurrentAmps = leaderStatorCurrentAmps.getValueAsDouble();
-    inputs.leaderSupplyCurrentAmps = leaderSupplyCurrentAmps.getValueAsDouble();
-  }
+        leaderPosition = leader.getPosition();
+        leaderVelocity = leader.getVelocity();
+        leaderAppliedVolts = leader.getMotorVoltage();
+        leaderStatorCurrentAmps = leader.getStatorCurrent();
+        leaderSupplyCurrentAmps = leader.getSupplyCurrent();
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                50.0,
+                leaderPosition,
+                leaderVelocity,
+                leaderAppliedVolts,
+                leaderStatorCurrentAmps,
+                leaderSupplyCurrentAmps);
+        leader.optimizeBusUtilization();
+    }
+
+    @Override
+    public void updateInputs(FlywheelIOInputs inputs) {
+        BaseStatusSignal.refreshAll(
+                leaderPosition, leaderVelocity, leaderAppliedVolts, leaderStatorCurrentAmps, leaderSupplyCurrentAmps);
+        inputs.positionRad = Units.rotationsToRadians(leaderPosition.getValueAsDouble()) / GEAR_RATIO;
+        inputs.velocityRadPerSec = Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) / GEAR_RATIO;
+        inputs.appliedVolts = leaderAppliedVolts.getValueAsDouble();
+        inputs.leaderStatorCurrentAmps = leaderStatorCurrentAmps.getValueAsDouble();
+        inputs.leaderSupplyCurrentAmps = leaderSupplyCurrentAmps.getValueAsDouble();
+    }
 
     @Override
     public void setVoltage(double volts) {

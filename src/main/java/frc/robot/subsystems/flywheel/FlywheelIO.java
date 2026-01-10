@@ -16,14 +16,14 @@ package frc.robot.subsystems.flywheel;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface FlywheelIO {
-  @AutoLog
-  public static class FlywheelIOInputs {
-    public double positionRad = 0.0;
-    public double velocityRadPerSec = 0.0;
-    public double appliedVolts = 0.0;
-    public double leaderStatorCurrentAmps = 0.0;
-    public double leaderSupplyCurrentAmps = 0.0;
-  }
+    @AutoLog
+    public static class FlywheelIOInputs {
+        public double positionRad = 0.0;
+        public double velocityRadPerSec = 0.0;
+        public double appliedVolts = 0.0;
+        public double leaderStatorCurrentAmps = 0.0;
+        public double leaderSupplyCurrentAmps = 0.0;
+    }
 
     /** Updates the set of loggable inputs. */
     public default void updateInputs(FlywheelIOInputs inputs) {}

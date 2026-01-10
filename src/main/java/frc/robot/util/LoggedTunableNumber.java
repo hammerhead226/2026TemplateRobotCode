@@ -50,7 +50,7 @@ public class LoggedTunableNumber {
         if (!hasDefault) {
             hasDefault = true;
             this.defaultValue = defaultValue;
-            if (SubsystemConstants.tuningMode) {
+            if (SubsystemConstants.TUNING_MODE) {
                 dashboardNumber = new LoggedNetworkNumber(key, defaultValue);
             }
         }
@@ -65,7 +65,7 @@ public class LoggedTunableNumber {
         if (!hasDefault) {
             return 0.0;
         } else {
-            return SubsystemConstants.tuningMode ? dashboardNumber.get() : defaultValue;
+            return SubsystemConstants.TUNING_MODE ? dashboardNumber.get() : defaultValue;
         }
     }
 
