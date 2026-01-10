@@ -23,7 +23,6 @@ import com.therekrab.autopilot.APTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -33,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.CharacterizationCommands;
@@ -51,6 +51,7 @@ import frc.robot.commands.drive.path.StagedPathSupplier;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.arms.Arm;
 import frc.robot.subsystems.arms.ArmIO;
 import frc.robot.subsystems.arms.ArmIOSim;
@@ -60,12 +61,16 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.headset.Headset;
 import frc.robot.subsystems.headset.HeadsetIO;
 import frc.robot.subsystems.headset.HeadsetIOQuestNav;
+import frc.robot.subsystems.led.LED;
+import frc.robot.subsystems.led.LED_IO;
 import frc.robot.subsystems.vision.ObjectDetection;
 import frc.robot.subsystems.vision.ObjectDetectionIO;
 import frc.robot.subsystems.vision.ObjectDetectionIOLimelight;
@@ -91,6 +96,9 @@ public class RobotContainer {
     private final Vision vision;
     private final Headset headset;
     private final ObjectDetection objectDetection;
+    private final SuperStructure superStructure;
+    private final LED led;
+    private final Elevator elevator;
 
     // Controllers
     private final CommandXboxController driver = new CommandXboxController(0);
@@ -112,6 +120,8 @@ public class RobotContainer {
                         new ModuleIOTalonFX(TunerConstants.BackRight));
 
                 arm = new Arm(new ArmIOSim());
+                led = new LED(new LED_IO() {});
+                elevator = new Elevator(new ElevatorIO() {});
                 flywheel = new Flywheel(new FlywheelIOSim());
                 vision = new Vision(
                         drive::addVisionMeasurement,
@@ -127,6 +137,8 @@ public class RobotContainer {
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
                 arm = new Arm(new ArmIOSim());
+                led = new LED(new LED_IO() {});
+                elevator = new Elevator(new ElevatorIO() {});
                 drive = new Drive(
                         new GyroIO() {},
                         new ModuleIOSim(TunerConstants.FrontLeft),
@@ -140,17 +152,24 @@ public class RobotContainer {
                 objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 flywheel = new Flywheel(new FlywheelIOSim());
                 headset = new Headset(drive::addVisionMeasurement, new HeadsetIO() {});
+
+                superStructure = new SuperStructure(drive, flywheel, arm, led, elevator);
                 break;
 
             default:
                 // Replayed robot, disable IO implementations
                 arm = new Arm(new ArmIO() {});
+                led = new LED(new LED_IO() {});
+                elevator = new Elevator(new ElevatorIO() {});
+
                 drive = new Drive(
                         new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 flywheel = new Flywheel(new FlywheelIO() {});
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
                 objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 headset = new Headset(drive::addVisionMeasurement, new HeadsetIO() {});
+                superStructure = new SuperStructure(drive, flywheel, arm, led, elevator);
+
                 break;
         }
 
