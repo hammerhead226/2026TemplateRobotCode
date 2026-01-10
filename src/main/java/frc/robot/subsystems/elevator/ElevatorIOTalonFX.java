@@ -8,6 +8,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -26,35 +27,61 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     private final StatusSignal<Angle> elevatorPosition;
     private final StatusSignal<AngularVelocity> elevatorVelocity;
     private final StatusSignal<Voltage> appliedVolts;
-    private final StatusSignal<Current> currentAmps;
+    private final StatusSignal<Current> leaderStatorCurrentAmps;
+    private final StatusSignal<Current> leaderSupplyCurrentAmps;
+    private final StatusSignal<Current> followerStatorCurrentAmps;
+    private final StatusSignal<Current> followerSupplyCurrentAmps;
 
     public ElevatorIOTalonFX(int lead, int follow) {
-        TalonFXConfiguration config = new TalonFXConfiguration();
-        config.CurrentLimits.StatorCurrentLimit = SubsystemConstants.ElevatorConstants.CURRENT_LIMIT;
-        config.CurrentLimits.StatorCurrentLimitEnable = SubsystemConstants.ElevatorConstants.CURRENT_LIMIT_ENABLED;
-        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+        TalonFXConfiguration leadConfig = new TalonFXConfiguration();
+        leadConfig.CurrentLimits.StatorCurrentLimit = SubsystemConstants.ElevatorConstants.CURRENT_LIMIT;
+        leadConfig.CurrentLimits.StatorCurrentLimitEnable = SubsystemConstants.ElevatorConstants.CURRENT_LIMIT_ENABLED;
+        leadConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        leadConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+        leadConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
         leader = new TalonFX(lead, SubsystemConstants.CANBUS);
         follower = new TalonFX(follow, SubsystemConstants.CANBUS);
 
-        leader.getConfigurator().apply(config);
+        leader.getConfigurator().apply(leadConfig);
 
         positionSetpoint = SubsystemConstants.ElevatorConstants.RETRACT_SETPOINT_INCH;
 
         follower.setControl(new Follower(lead, true));
 
+        TalonFXConfiguration followerConfig = new TalonFXConfiguration();
+        followerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        follower.getConfigurator().apply(followerConfig);
+
         elevatorPosition = leader.getPosition();
         elevatorVelocity = leader.getVelocity();
         appliedVolts = leader.getMotorVoltage();
-        currentAmps = leader.getStatorCurrent();
+        leaderStatorCurrentAmps = leader.getStatorCurrent();
+        leaderSupplyCurrentAmps = leader.getSupplyCurrent();
+        followerStatorCurrentAmps = follower.getStatorCurrent();
+        followerSupplyCurrentAmps = follower.getSupplyCurrent();
 
-        BaseStatusSignal.setUpdateFrequencyForAll(100, elevatorPosition, elevatorVelocity, appliedVolts, currentAmps);
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                100,
+                elevatorPosition,
+                elevatorVelocity,
+                appliedVolts,
+                leaderStatorCurrentAmps,
+                leaderSupplyCurrentAmps,
+                followerStatorCurrentAmps,
+                followerSupplyCurrentAmps);
     }
 
     @Override
     public void updateInputs(ElevatorIOInputs inputs) {
-        BaseStatusSignal.refreshAll(elevatorPosition, elevatorVelocity, appliedVolts, currentAmps);
+        BaseStatusSignal.refreshAll(
+                elevatorPosition,
+                elevatorVelocity,
+                appliedVolts,
+                leaderStatorCurrentAmps,
+                leaderSupplyCurrentAmps,
+                followerStatorCurrentAmps,
+                followerSupplyCurrentAmps);
         inputs.elevatorPositionInch = Conversions.motorRotToInches(
                 elevatorPosition.getValueAsDouble(),
                 SubsystemConstants.ElevatorConstants.SPROCKET_CIRCUMFERENCE_INCH,
@@ -64,7 +91,10 @@ public class ElevatorIOTalonFX implements ElevatorIO {
                 SubsystemConstants.ElevatorConstants.SPROCKET_CIRCUMFERENCE_INCH,
                 SubsystemConstants.ElevatorConstants.ELEVATOR_GEAR_RATIO);
         inputs.appliedVolts = appliedVolts.getValueAsDouble();
-        inputs.currentAmps = currentAmps.getValueAsDouble();
+        inputs.leaderStatorCurrentAmps = leaderStatorCurrentAmps.getValueAsDouble();
+        inputs.leaderSupplyCurrentAmps = leaderSupplyCurrentAmps.getValueAsDouble();
+        inputs.followerStatorCurrentAmps = followerStatorCurrentAmps.getValueAsDouble();
+        inputs.followerSupplyCurrentAmps = followerSupplyCurrentAmps.getValueAsDouble();
         inputs.positionSetpointInch = positionSetpoint;
     }
 
@@ -83,6 +113,10 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     }
 
     @Override
+    public void zeroElevator() {
+        leader.setPosition(0);
+    }
+
     public void stop() {
         this.positionSetpoint = elevatorPosition.getValueAsDouble();
         leader.stopMotor();
