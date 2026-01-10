@@ -61,7 +61,7 @@ public class HeadingLock extends Command {
             rotationController.setGoal(targetAngle.getRadians());
             double headingLockControl =
                     rotationController.calculate(drive.getRotation().getRadians())
-                            * drive.getMaxAngularSpeedRadPerSec();
+                            * Drive.getMaxAngularSpeedRadPerSec();
             return new ChassisSpeeds(
                     joystickControl.vxMetersPerSecond, joystickControl.vyMetersPerSecond, headingLockControl);
         });

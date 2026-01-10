@@ -238,14 +238,14 @@ public class RobotContainer {
         // pathplanner.lib based commands
         Translation2d roughTranslation2d = new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
         PathConstraints roughConstraints = new PathConstraints(
-                drive.getMaxLinearSpeedMetersPerSec(), 6.0, drive.getMaxAngularSpeedRadPerSec(), Math.toRadians(600));
+                Drive.getMaxLinearSpeedMetersPerSec(), 6.0, Drive.getMaxAngularSpeedRadPerSec(), Math.toRadians(600));
         // TODO improve consistency between getMaxAngularSpeedRadPerSec and degreesToRadians(200). using degrees is a
         // more human readable number,
         // but centeralization of key properties is good
         PathConstraints preciseConstraints = new PathConstraints(
-                drive.getMaxLinearSpeedMetersPerSec() * 0.25,
+                Drive.getMaxLinearSpeedMetersPerSec() * 0.25,
                 3.0,
-                drive.getMaxAngularSpeedRadPerSec() * 0.25,
+                Drive.getMaxAngularSpeedRadPerSec() * 0.25,
                 Math.toRadians(300));
         DriveController joystickController =
                 new JoystickController(drive, driver::getLeftX, driver::getLeftY, driver::getRightX);

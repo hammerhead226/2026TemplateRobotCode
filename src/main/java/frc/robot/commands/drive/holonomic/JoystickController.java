@@ -40,9 +40,9 @@ public class JoystickController implements DriveController {
         // speed we run in auto)
         // scale to drive's max speed
         ChassisSpeeds speeds = new ChassisSpeeds(
-                velocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                velocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                omega * drive.getMaxAngularSpeedRadPerSec());
+                velocity.getX() * Drive.getMaxLinearSpeedMetersPerSec(),
+                velocity.getY() * Drive.getMaxLinearSpeedMetersPerSec(),
+                omega * Drive.getMaxAngularSpeedRadPerSec());
 
         // make robot relative
         return ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation());

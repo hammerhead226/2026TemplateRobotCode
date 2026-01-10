@@ -20,10 +20,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.GyroIOPigeon2;
-import frc.robot.subsystems.drive.ModuleIOTalonFX;
 
 public final class SubsystemConstants {
 
@@ -70,13 +67,6 @@ public final class SubsystemConstants {
         public static final double INTAKE_ANGLE_DEGREES = 0;
     }
 
-    static Drive drive = new Drive(
-            new GyroIOPigeon2(),
-            new ModuleIOTalonFX(TunerConstants.FrontLeft),
-            new ModuleIOTalonFX(TunerConstants.FrontRight),
-            new ModuleIOTalonFX(TunerConstants.BackLeft),
-            new ModuleIOTalonFX(TunerConstants.BackRight));
-
     public static final class PathConstants {
         public static final PathConstraints DEFAULT_PATH_CONSTRAINTS = new PathConstraints(
                 5, // m/s
@@ -101,9 +91,9 @@ public final class SubsystemConstants {
                 new Translation2d(Units.feetToMeters(2), Units.feetToMeters(2));
         public static final PathConstraints ROUG_CONSTRAINTS = PathConstraints.unlimitedConstraints(12);
         public static final PathConstraints PRECISE_CONSTRAINTS = new PathConstraints(
-                drive.getMaxLinearSpeedMetersPerSec() * 0.5,
+                Drive.getMaxLinearSpeedMetersPerSec() * 0.5,
                 3.0,
-                drive.getMaxAngularSpeedRadPerSec() * 0.5,
+                Drive.getMaxAngularSpeedRadPerSec() * 0.5,
                 Units.degreesToRadians(200),
                 12.0);
     }

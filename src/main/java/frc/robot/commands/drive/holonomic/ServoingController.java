@@ -51,7 +51,7 @@ public class ServoingController implements DriveController {
         double robotToTargetRadians = robotToTargetRadians();
         double omega = angleController.calculate(robotToTargetRadians);
 
-        return new ChassisSpeeds(0, 0, omega * drive.getMaxAngularSpeedRadPerSec());
+        return new ChassisSpeeds(0, 0, omega * Drive.getMaxAngularSpeedRadPerSec());
     }
 
     private double robotToTargetRadians() {
