@@ -23,6 +23,7 @@ import com.therekrab.autopilot.APTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -32,7 +33,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.CharacterizationCommands;
@@ -132,6 +132,8 @@ public class RobotContainer {
                         new ObjectDetectionIOLimelight(VisionConstants.cameraObjectDetect));
 
                 headset = new Headset(drive::addVisionMeasurement, new HeadsetIOQuestNav());
+
+                superStructure = new SuperStructure(drive, flywheel, arm, led, elevator);
                 break;
 
             case SIM:
@@ -168,8 +170,8 @@ public class RobotContainer {
                 vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
                 objectDetection = new ObjectDetection(drive::addObjectMeasurement, new ObjectDetectionIO() {});
                 headset = new Headset(drive::addVisionMeasurement, new HeadsetIO() {});
-                superStructure = new SuperStructure(drive, flywheel, arm, led, elevator);
 
+                superStructure = new SuperStructure(drive, flywheel, arm, led, elevator);
                 break;
         }
 
@@ -267,7 +269,7 @@ public class RobotContainer {
                                 roughConstraints,
                                 preciseConstraints,
                                 joystickController,
-                            1.0,
+                                1.0,
                                 0.6),
                         Set.of(drive)));
         driver.b()

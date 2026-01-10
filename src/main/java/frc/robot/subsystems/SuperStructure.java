@@ -1,8 +1,12 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.commands.drive.FollowPathDrive;
+import frc.robot.commands.drive.PathfindToPoseDrive;
+import frc.robot.commands.drive.path.StagedPathSupplier;
+import frc.robot.constants.SubsystemConstants;
 import frc.robot.constants.SubsystemConstants.*;
-import frc.robot.constants.SubsystemConstants.LED_STATE;
-import frc.robot.constants.SubsystemConstants.SuperstructureState;
 import frc.robot.subsystems.arms.Arm;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -19,9 +23,9 @@ public class SuperStructure {
     private final Arm arm;
     private final LED led;
     private final Elevator elevator;
-    private SuperstructureState currentState = SubsystemConstants.SuperstructureState.IDLE;
-    private SuperstructureState wantedState = SubsystemConstants.SuperstructureState.IDLE;
-    private SuperstructureState lastState = SubsystemConstants.SuperstructureState.IDLE;
+    private SuperstructureState currentState = SuperstructureState.IDLE;
+    private SuperstructureState wantedState = SuperstructureState.IDLE;
+    private SuperstructureState lastState = SuperstructureState.IDLE;
 
     public SuperStructure(Drive drive, Flywheel flywheel, Arm arm, LED led, Elevator elevator) {
 
@@ -90,54 +94,57 @@ public class SuperStructure {
         switch (wantedState) {
             case INTAKE:
                 currentState = SuperstructureState.INTAKE;
-                PathfindToPose command;
-                command = new PathfindToPose(
-                        drive,
-                        SubsystemConstants.PathConstants.TARG_POSE2D_1,
-                        SubsystemConstants.PathConstants.ROUG_CONSTRAINTS);
-
-                return new SequentialCommandGroup(command).andThen(new InstantCommand(() -> nextState()));
+                return new PathfindToPoseDrive(
+                                drive,
+                                SubsystemConstants.PathConstants.TAG_POSE2D_1,
+                                SubsystemConstants.PathConstants.ROUG_CONSTRAINTS)
+                        .andThen(new InstantCommand(() -> nextState()));
 
             case STOW:
                 currentState = SuperstructureState.STOW;
-                SoftStagedAlign softCommand;
-                softCommand = new SoftStagedAlign(
-                        drive,
-                        SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D,
-                        SubsystemConstants.PathConstants.TARG_POSE2D_2.getTranslation(),
-                        SubsystemConstants.PathConstants.ROUG_CONSTRAINTS,
-                        SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS);
-                return softCommand.andThen(new InstantCommand(() -> nextState()));
+
+                return new FollowPathDrive(
+                                drive,
+                                new StagedPathSupplier(
+                                        drive,
+                                        SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D,
+                                        SubsystemConstants.PathConstants.TAG_POSE2D_2.getTranslation(),
+                                        SubsystemConstants.PathConstants.ROUG_CONSTRAINTS,
+                                        SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS))
+                        .andThen(new InstantCommand(() -> nextState()));
             case SCOREMID:
                 currentState = SuperstructureState.STOW;
-                SoftStagedAlign softCommandOne;
-                softCommandOne = new SoftStagedAlign(
-                        drive,
-                        SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D,
-                        SubsystemConstants.PathConstants.TARG_POSE2D_3.getTranslation(),
-                        SubsystemConstants.PathConstants.ROUG_CONSTRAINTS,
-                        SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS);
-                return softCommandOne.andThen(new InstantCommand(() -> nextState()));
+                return new FollowPathDrive(
+                                drive,
+                                new StagedPathSupplier(
+                                        drive,
+                                        SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D,
+                                        SubsystemConstants.PathConstants.TAG_POSE2D_3.getTranslation(),
+                                        SubsystemConstants.PathConstants.ROUG_CONSTRAINTS,
+                                        SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS))
+                        .andThen(new InstantCommand(() -> nextState()));
             case SCOREHIGH:
                 currentState = SuperstructureState.STOW;
-                SoftStagedAlign softCommandTwo;
-                softCommandTwo = new SoftStagedAlign(
-                        drive,
-                        SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D,
-                        SubsystemConstants.PathConstants.TARG_POSE2D_4.getTranslation(),
-                        SubsystemConstants.PathConstants.ROUG_CONSTRAINTS,
-                        SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS);
-                return softCommandTwo.andThen(new InstantCommand(() -> nextState()));
+                return new FollowPathDrive(
+                                drive,
+                                new StagedPathSupplier(
+                                        drive,
+                                        SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D,
+                                        SubsystemConstants.PathConstants.TAG_POSE2D_4.getTranslation(),
+                                        SubsystemConstants.PathConstants.ROUG_CONSTRAINTS,
+                                        SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS))
+                        .andThen(new InstantCommand(() -> nextState()));
             case SCORELOW:
                 currentState = SuperstructureState.STOW;
-                SoftStagedAlign softCommandThree;
-                softCommandThree = new SoftStagedAlign(
-                        drive,
-                        SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D,
-                        SubsystemConstants.PathConstants.TARG_POSE2D_5.getTranslation(),
-                        SubsystemConstants.PathConstants.ROUG_CONSTRAINTS,
-                        SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS);
-                return softCommandThree.andThen(new InstantCommand(() -> nextState()));
+                return new FollowPathDrive(
+                                drive,
+                                new StagedPathSupplier(
+                                        drive,
+                                        SubsystemConstants.PathConstants.ROUGH_TRANSLATION2D,
+                                        SubsystemConstants.PathConstants.TAG_POSE2D_5.getTranslation(),
+                                        SubsystemConstants.PathConstants.ROUG_CONSTRAINTS,
+                                        SubsystemConstants.PathConstants.PRECISE_CONSTRAINTS))
+                        .andThen(new InstantCommand(() -> nextState()));
 
             default:
                 return new SequentialCommandGroup().andThen(new InstantCommand(() -> nextState()));

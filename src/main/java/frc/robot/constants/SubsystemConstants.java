@@ -85,15 +85,15 @@ public final class SubsystemConstants {
                 Math.toRadians(200) // rad/s^2
                 );
 
-        public static final Pose2d TARG_POSE2D_1 =
+        public static final Pose2d TAG_POSE2D_1 =
                 new Pose2d(Units.feetToMeters(2), Units.feetToMeters(4), Rotation2d.kCCW_90deg);
-        public static final Pose2d TARG_POSE2D_2 =
+        public static final Pose2d TAG_POSE2D_2 =
                 new Pose2d(Units.feetToMeters(-2), Units.feetToMeters(-4), Rotation2d.kCCW_90deg);
-        public static final Pose2d TARG_POSE2D_3 =
+        public static final Pose2d TAG_POSE2D_3 =
                 new Pose2d(Units.feetToMeters(5), Units.feetToMeters(3), Rotation2d.kCCW_90deg);
-        public static final Pose2d TARG_POSE2D_4 =
+        public static final Pose2d TAG_POSE2D_4 =
                 new Pose2d(Units.feetToMeters(0), Units.feetToMeters(0), Rotation2d.kCCW_90deg);
-        public static final Pose2d TARG_POSE2D_5 =
+        public static final Pose2d TAG_POSE2D_5 =
                 new Pose2d(Units.feetToMeters(3), Units.feetToMeters(-2), Rotation2d.kCCW_90deg);
 
         // pathplanner.lib based commands
