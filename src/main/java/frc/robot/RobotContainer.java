@@ -48,6 +48,7 @@ import frc.robot.commands.drive.holonomic.PIDPoseController;
 import frc.robot.commands.drive.holonomic.ServoingController;
 import frc.robot.commands.drive.holonomic.TrigController;
 import frc.robot.commands.drive.path.StagedPathSupplier;
+import frc.robot.constants.RobotMap;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.VisionConstants;
 import frc.robot.generated.TunerConstants;
@@ -55,6 +56,7 @@ import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.arms.Arm;
 import frc.robot.subsystems.arms.ArmIO;
 import frc.robot.subsystems.arms.ArmIOSim;
+import frc.robot.subsystems.arms.ArmIOTalonFX;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -78,6 +80,8 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.util.ControlsUtil;
+
 import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -119,10 +123,10 @@ public class RobotContainer {
                         new ModuleIOTalonFX(TunerConstants.BackLeft),
                         new ModuleIOTalonFX(TunerConstants.BackRight));
 
-                arm = new Arm(new ArmIOSim());
+                arm = new Arm(new ArmIOTalonFX(RobotMap.armIDs.DEFAULT_ID, 1, 0));
                 led = new LED(new LED_IO() {});
                 elevator = new Elevator(new ElevatorIO() {});
-                flywheel = new Flywheel(new FlywheelIOSim());
+                flywheel = new Flywheel(new FlywheelIOSim(RobotMap.flywheelIDs.DEFAULT_LEADER_ID));
                 vision = new Vision(
                         drive::addVisionMeasurement,
                         new VisionIOLimelight(camera0Name, drive::getRotation),

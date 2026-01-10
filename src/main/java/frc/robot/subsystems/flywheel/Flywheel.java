@@ -22,59 +22,89 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.SimConstants;
+import frc.robot.constants.SubsystemConstants.FlywheelConstants;
+import frc.robot.util.LoggedTunableNumber;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 // TODO Add alerts for disconnects and motor temp
 
 public class Flywheel extends SubsystemBase {
-    private final FlywheelIO io;
-    private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
-    private final SimpleMotorFeedforward ffModel;
-    private final SysIdRoutine sysId;
+  private final FlywheelIO flywheel;
+  private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
+  private SimpleMotorFeedforward ffModel;
+  private final SysIdRoutine sysId;
 
-    /** Creates a new Flywheel. */
-    public Flywheel(FlywheelIO io) {
-        this.io = io;
+  private static final String flywheelName = FlywheelConstants.FLYWHEEL_STRING;
 
-        // Switch constants based on mode (the physics simulator is treated as a
-        // separate robot with different tuning)
-        switch (SimConstants.currentMode) {
-            case REAL:
-            case REPLAY:
-                ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-                io.configurePID(0.0, 0.0, 0.0);
-                break;
-            case SIM:
-                ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-                io.configurePID(0.0, 0.0, 0.0);
-                break;
-            default:
-                ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-                break;
-        }
+  private static final LoggedTunableNumber kV = new LoggedTunableNumber(flywheelName + "/kV", 1);
+  private static final LoggedTunableNumber kS = new LoggedTunableNumber(flywheelName + "/kS", 1);
+  private static final LoggedTunableNumber kA = new LoggedTunableNumber(flywheelName + "/kA", 1);
 
-        // Configure SysId
-        sysId = new SysIdRoutine(
-                new SysIdRoutine.Config(
-                        null, null, null, (state) -> Logger.recordOutput("Flywheel/SysIdState", state.toString())),
-                new SysIdRoutine.Mechanism((voltage) -> runVolts(voltage.in(Volts)), null, this));
+  /** Creates a new Flywheel. */
+  public Flywheel(FlywheelIO flywheel) {
+    this.flywheel = flywheel;
+
+    // Switch constants based on mode (the physics simulator is treated as a
+    // separate robot with different tuning)
+    switch (SimConstants.currentMode) {
+      case REAL:
+        kV.initDefault(0);
+        kS.initDefault(0);
+        kA.initDefault(0);
+        break;
+
+      case REPLAY:
+        kV.initDefault(0);
+        kS.initDefault(0);
+        kA.initDefault(0);
+        break;
+      case SIM:
+        kV.initDefault(0);
+        kS.initDefault(0);
+        kA.initDefault(0);
+        break;
+      default:
+        kV.initDefault(0);
+        kS.initDefault(0);
+        kA.initDefault(0);
+        break;
+
     }
 
-    @Override
-    public void periodic() {
-        io.updateInputs(inputs);
-        Logger.processInputs("Flywheel", inputs);
-    }
+    // Configure SysId
+    sysId = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,
+            null,
+            null,
+            (state) -> Logger.recordOutput("Flywheel/SysIdState", state.toString())),
+        new SysIdRoutine.Mechanism((voltage) -> runVolts(voltage.in(Volts)), null, this));
 
-    /** Run open loop at the specified voltage. */
-    public void runVolts(double volts) {
-        io.setVoltage(volts);
-    }
+    ffModel = new SimpleMotorFeedforward(kS.get(), kV.get(), kA.get());
+    updateTunableNumbers();
+  }
 
-    /** Run closed loop at the specified velocity. */
-    public void runVelocity(double velocityRPM) {
-        var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
-        io.setVelocity(velocityRadPerSec, ffModel.calculate(velocityRadPerSec));
+  @Override
+  public void periodic() {
+    flywheel.updateInputs(inputs);
+    Logger.processInputs("Flywheel", inputs);
+
+    updateTunableNumbers();
+  }
+
+  /** Run open loop at the specified voltage. */
+  public void runVolts(double volts) {
+    flywheel.setVoltage(volts);
+  }
+
+  /** Run closed loop at the specified velocity. */
+  public void runVelocity(double velocityRPM) {
+    var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
+    flywheel.setVelocity(
+        velocityRadPerSec,
+        ffModel
+            .calculate(velocityRadPerSec));
 
         // Log flywheel setpoint
         Logger.recordOutput("Flywheel/SetpointRPM", velocityRPM);
@@ -94,10 +124,14 @@ public class Flywheel extends SubsystemBase {
         return new InstantCommand(() -> stop(), this);
     }
 
-    /** Stops the flywheel. */
-    public void stop() {
-        io.stop();
-    }
+  /** Stops the flywheel. */
+  public void stop() {
+    flywheel.stop();
+  }
+
+  public Command stopCommand() {
+    return new InstantCommand(() -> stop(), this);
+  }
 
     /** Returns a command to run a quasistatic test in the specified direction. */
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
@@ -115,8 +149,14 @@ public class Flywheel extends SubsystemBase {
         return Units.radiansPerSecondToRotationsPerMinute(inputs.velocityRadPerSec);
     }
 
-    /** Returns the current velocity in radians per second. */
-    public double getCharacterizationVelocity() {
-        return inputs.velocityRadPerSec;
+  /** Returns the current velocity in radians per second. */
+  public double getCharacterizationVelocity() {
+    return inputs.velocityRadPerSec;
+  }
+
+  public void updateTunableNumbers() {
+    if (kV.hasChanged(hashCode()) || kA.hasChanged(hashCode()) || kS.hasChanged(hashCode())) {
+      ffModel = new SimpleMotorFeedforward(kS.get(), kV.get(), kA.get());
     }
+  }
 }

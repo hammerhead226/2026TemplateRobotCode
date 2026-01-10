@@ -11,7 +11,9 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.SubsystemConstants;
+import frc.robot.constants.SubsystemConstants.IndexerConstants;
 import org.littletonrobotics.junction.Logger;
+import frc.robot.util.LoggedTunableNumber;
 
 // TODO Add alerts for disconnects and motor temp, add subsystem vis
 // TODO It looks like this class was based on the 2025 template code. I highly highly recommend basing it on the 2025
@@ -23,9 +25,10 @@ public class Indexer extends SubsystemBase {
 
     private final IndexerIOInputsAutoLogged iInputs = new IndexerIOInputsAutoLogged();
 
-    private static double kP;
-    private static double kG;
-    private static double kV;
+  private static final String indexerName = IndexerConstants.INDEXER_STRING;
+  private static LoggedTunableNumber kP = new LoggedTunableNumber(indexerName + "/ kP");
+  private static LoggedTunableNumber kG = new LoggedTunableNumber(indexerName + "/ kG");
+  private static LoggedTunableNumber kV = new LoggedTunableNumber(indexerName + "/ kV");
 
     private static double maxVelocityRotPerSec;
     private static double maxAccelerationRotPerSecSquared;
@@ -41,28 +44,28 @@ public class Indexer extends SubsystemBase {
     public Indexer(IndexerIO indexer) {
         this.indexer = indexer;
 
-        switch (SimConstants.currentMode) {
-            case REAL:
-                kG = 0.0;
-                kV = 0.0;
-                kP = 0.0;
-                break;
-            case REPLAY:
-                kG = 0.0;
-                kV = 0.0;
-                kP = 0.0;
-                break;
-            case SIM:
-                kG = 0.0;
-                kV = 0.0;
-                kP = 0.0;
-                break;
-            default:
-                kG = 0.0;
-                kV = 0.0;
-                kP = 0.0;
-                break;
-        }
+    switch (SimConstants.currentMode) {
+      case REAL:
+        kG.initDefault(0);
+        kV.initDefault(0);
+        kP.initDefault(0);
+        break;
+      case REPLAY:
+        kG.initDefault(0);
+        kV.initDefault(0);
+        kP.initDefault(0);
+        break;
+      case SIM:
+        kG.initDefault(0);
+        kV.initDefault(0);
+        kP.initDefault(0);
+        break;
+      default:
+        kG.initDefault(0);
+        kV.initDefault(0);
+        kP.initDefault(0);
+        break;
+    }
 
         // CHANGE THESE VALUES TO MATCH THE INDEXER
         maxVelocityRotPerSec = 1;
@@ -74,9 +77,9 @@ public class Indexer extends SubsystemBase {
         indexerCurrentStateRotations =
                 indexerProfile.calculate(0, indexerCurrentStateRotations, indexerGoalStateRotations);
 
-        indexer.configurePID(kP, 0, 0);
-        ff = new ElevatorFeedforward(0, kG, kV);
-    }
+    indexer.configurePID(kP.get(), 0, 0);
+    ff = new ElevatorFeedforward(0, kG.get(), kV.get());
+  }
 
     public boolean indexerAtGoal(double thersholdInches) {
 
